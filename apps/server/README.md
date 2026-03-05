@@ -195,7 +195,7 @@ cargo build -p server --release
 ### Docker (Optional)
 
 ```dockerfile
-FROM rust:1.88 as builder
+FROM rust:1.93 as builder
 WORKDIR /app
 COPY . .
 RUN cargo build -p server --release

@@ -11,7 +11,7 @@ Thank you for your interest in contributing!
    ```
 
 2. **Install dependencies**:
-   - Rust 1.88+
+   - Rust 1.93+
    - Docker (for testing containers)
    - Trunk: `cargo install trunk`
 

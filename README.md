@@ -57,7 +57,7 @@ multiplayer-bevy/
 
 ### Prerequisites
 
-- Rust 1.88+ (edition 2024)
+- Rust 1.93+ (edition 2024)
 - For web builds: [Trunk](https://trunkrs.dev/) (`cargo install trunk`)
 
 ### Build Everything
