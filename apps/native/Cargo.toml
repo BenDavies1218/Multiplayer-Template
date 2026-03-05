@@ -1,0 +1,43 @@
+[package]
+name = "native"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish = false
+
+[[bin]]
+name = "native"
+doc = false
+
+[dependencies]
+# Internal crates
+game-core = { workspace = true, features = ["client", "gui"] }
+game-client.workspace = true
+
+# External dependencies
+bevy = { workspace = true, features = [
+    "bevy_state",
+    "bevy_log",
+    "serialize",
+    "bevy_asset",
+    "bevy_color",
+    "multi_threaded",
+    "sysinfo_plugin",
+    "zstd_rust",
+    "keyboard",
+    "3d",
+    "3d_bevy_render",
+    "3d_api",
+    "bevy_pbr",
+    "bevy_image",
+    "bevy_render",
+    "x11",
+] }
+lightyear = { workspace = true, features = [
+    "client",
+    "netcode",
+    "udp",
+] }
+clap.workspace = true
+tracing.workspace = true

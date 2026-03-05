@@ -1,0 +1,37 @@
+# Multi-stage build for production server binary
+
+# Build stage
+FROM rust:1.88-bookworm as builder
+
+WORKDIR /app
+
+# Copy workspace files
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY apps ./apps
+
+# Build release binary
+RUN cargo build --release -p server
+
+# Runtime stage - minimal image
+FROM debian:bookworm-slim
+
+# Install runtime dependencies
+RUN apt-get update && \
+    apt-get install -y ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy binary from builder
+COPY --from=builder /app/target/release/server /usr/local/bin/server
+
+# Copy certificates (required for WebTransport)
+COPY certificates /certificates
+
+# Expose game server port
+EXPOSE 5888
+
+# Set working directory
+WORKDIR /
+
+# Run server
+CMD ["server", "server"]

@@ -1,0 +1,36 @@
+# Multi-stage build for WASM web client
+
+# Build stage
+FROM rust:1.88-bookworm as builder
+
+# Install trunk for WASM builds
+RUN cargo install --locked trunk
+
+# Install wasm target
+RUN rustup target add wasm32-unknown-unknown
+
+WORKDIR /app
+
+# Copy workspace files
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY apps ./apps
+COPY certificates ./certificates
+
+# Build web client
+WORKDIR /app/apps/web
+RUN trunk build --release
+
+# Runtime stage - nginx to serve static files
+FROM nginx:alpine
+
+# Copy built files from builder
+COPY --from=builder /app/apps/web/dist /usr/share/nginx/html
+
+# Copy custom nginx config (optional)
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose HTTP port
+EXPOSE 80
+
+# Nginx runs automatically

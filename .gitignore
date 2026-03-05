@@ -1,0 +1,31 @@
+# Rust
+/target/
+**/target/
+**/*.rs.bk
+Cargo.lock
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Trunk
+**/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Old standalone directory (can be removed after migration verified)
+standalone_avian_3d_character/target/
+standalone_avian_3d_character/dist/

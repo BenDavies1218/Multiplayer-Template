@@ -1,0 +1,42 @@
+# Rust build artifacts
+target/
+**/target/
+**/*.rs.bk
+
+# Trunk build artifacts
+dist/
+**/dist/
+
+# Environment files (don't include in image)
+.env
+.env.*
+!.env.example
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# CI/CD
+.github/
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# Old standalone
+standalone_avian_3d_character/

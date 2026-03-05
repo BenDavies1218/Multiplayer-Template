@@ -1,0 +1,50 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/game-core",
+    "crates/game-client",
+    "crates/game-server",
+    "apps/server",
+    "apps/native",
+    "apps/web",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/BenDavies1218/Multiplayer-Template"
+
+[workspace.dependencies]
+# Internal crates
+game-core = { path = "crates/game-core" }
+game-client = { path = "crates/game-client" }
+game-server = { path = "crates/game-server" }
+
+# External dependencies - versions shared across all crates
+bevy = { version = "0.18", default-features = false }
+lightyear = { version = "0.26.4", default-features = false }
+lightyear_frame_interpolation = "0.26.4"
+avian3d = { version = "0.5", default-features = false }
+leafwing-input-manager = { version = "0.20", default-features = false }
+serde = { version = "1", default-features = false }
+clap = { version = "4.5.4", features = ["derive"] }
+tracing = "0.1.40"
+async-compat = "0.2"
+cfg-if = "1.0"
+dotenvy = "0.15"
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+incremental = false
+debug = false

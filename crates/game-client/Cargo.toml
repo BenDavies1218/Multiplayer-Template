@@ -1,0 +1,65 @@
+[package]
+name = "game-client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+# Internal
+game-core.workspace = true
+
+# Workspace dependencies
+bevy = { workspace = true, features = [
+    "bevy_state",
+    "bevy_log",
+    "serialize",
+    "bevy_asset",
+    "bevy_color",
+    "multi_threaded",
+    "sysinfo_plugin",
+    "zstd_rust",
+    "keyboard",
+    "3d",
+    "3d_bevy_render",
+    "3d_api",
+    "bevy_pbr",
+    "bevy_image",
+    "bevy_render",
+] }
+lightyear = { workspace = true, features = [
+    "client",
+    "interpolation",
+    "prediction",
+    "replication",
+    "leafwing",
+    "avian3d",
+    "webtransport",
+    "webtransport_self_signed",
+    "webtransport_dangerous_configuration",
+    "websocket",
+    "websocket_self_signed",
+] }
+lightyear_frame_interpolation.workspace = true
+avian3d = { workspace = true, features = [
+    "3d",
+    "f32",
+    "parry-f32",
+    "parallel",
+    "serialize",
+] }
+leafwing-input-manager = { workspace = true, features = [
+    "keyboard",
+    "gamepad",
+] }
+serde = { workspace = true, features = ["alloc", "derive"] }
+tracing.workspace = true
+
+[target."cfg(not(target_family = \"wasm\"))".dependencies]
+bevy = { workspace = true, features = ["x11"] }
+
+[target."cfg(target_family = \"wasm\")".dependencies]
+console_error_panic_hook = "0.1.7"
+rand = "0.9"
+getrandom = { version = "0.2", features = ["js"] }

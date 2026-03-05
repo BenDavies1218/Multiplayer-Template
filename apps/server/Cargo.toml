@@ -1,0 +1,32 @@
+[package]
+name = "server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish = false
+
+[[bin]]
+name = "server"
+doc = false
+
+[dependencies]
+# Internal crates
+game-core = { workspace = true, features = ["server"] }
+game-server.workspace = true
+
+# External dependencies
+bevy = { workspace = true, features = [
+    "bevy_state",
+    "bevy_log",
+    "serialize",
+    "multi_threaded",
+    "x11",
+] }
+lightyear = { workspace = true, features = [
+    "server",
+    "netcode",
+    "udp",
+] }
+clap.workspace = true
+tracing.workspace = true

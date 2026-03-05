@@ -1,0 +1,51 @@
+[package]
+name = "web"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish = false
+
+[[bin]]
+name = "web"
+doc = false
+
+[dependencies]
+# Internal crates
+game-core = { workspace = true, features = ["client", "gui"] }
+game-client.workspace = true
+
+# External dependencies
+bevy = { workspace = true, features = [
+    "bevy_state",
+    "bevy_log",
+    "serialize",
+    "bevy_asset",
+    "bevy_color",
+    "multi_threaded",
+    "sysinfo_plugin",
+    "zstd_rust",
+    "keyboard",
+    "3d",
+    "3d_bevy_render",
+    "3d_api",
+    "bevy_pbr",
+    "bevy_image",
+    "bevy_render",
+] }
+lightyear = { workspace = true, features = [
+    "client",
+    "netcode",
+] }
+clap.workspace = true
+tracing.workspace = true
+
+[target."cfg(target_family = \"wasm\")".dependencies]
+console_error_panic_hook = "0.1.7"
+rand = "0.9"
+getrandom = { version = "0.2", features = ["js"] }
+
+[package.metadata.bevy_cli.web]
+rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]
+default-features = false
+features = ["client", "netcode"]

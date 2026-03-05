@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: multiplayer-server
+    ports:
+      - "${SERVER_PORT:-5888}:5888"
+    volumes:
+      - ./certificates:/certificates:ro
+    env_file:
+      - .env  # Load environment variables from .env file
+    environment:
+      - RUST_LOG=${RUST_LOG:-info}
+      - SERVER_HOST=0.0.0.0  # Listen on all interfaces in Docker
+      - SERVER_PORT=${SERVER_PORT:-5888}
+    restart: unless-stopped
+    networks:
+      - game-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "5888"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: multiplayer-web
+    ports:
+      - "8080:80"
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - game-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  game-network:
+    driver: bridge
+
+volumes:
+  certificates:
