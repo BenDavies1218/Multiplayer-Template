@@ -42,7 +42,7 @@ tracing.workspace = true
 
 [target."cfg(target_family = \"wasm\")".dependencies]
 console_error_panic_hook = "0.1.7"
-rand = "0.9"
+rand = "0.10"
 getrandom = { version = "0.2", features = ["js"] }
 
 [package.metadata.bevy_cli.web]
