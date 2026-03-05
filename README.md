@@ -11,7 +11,7 @@ A multiplayer 3D character controller game template built with Bevy, featuring c
 ## Features
 
 - **Client-Side Prediction**: Immediate local player response with server reconciliation
-- **Smooth Interpolation**: 100ms interpolation buffer for remote players (industry standard)
+- **Smooth Interpolation**: 100ms interpolation buffer for remote players
 - **Rollback & Correction**: Visual error smoothing over multiple frames
 - **Physics**: Avian3d physics engine with networked replication
 - **Multiple Transports**: Support for UDP, WebSocket, and WebTransport
@@ -66,7 +66,7 @@ multiplayer-bevy/
 # Build all workspace crates and binaries
 cargo build --all
 
-# Build in release mode (much faster)
+# Build in release mode (Production Optimised)
 cargo build --all --release
 ```
 
@@ -87,7 +87,6 @@ cargo run -p native -- client --client-id 1
 **Controls:**
 - WASD: Move
 - Space: Jump
-- Left Click: Shoot
 
 ### Run a Web Client
 
@@ -205,16 +204,8 @@ If `trunk build` fails:
 - Check that Trunk.toml has correct configuration
 - Verify getrandom backend is set for WASM
 
-### Import Errors
-
-If you see "use of undeclared crate" errors:
-- Verify the crate is in the workspace dependencies
-- Check import paths use correct crate names (`game_core::`, not `crate::`)
-
 ## License
 
 MIT OR Apache-2.0
 
-## Credits
 
-Based on the [Lightyear examples](https://github.com/cBournhonesque/lightyear) by Charles Bournhonesque.
