@@ -2,7 +2,7 @@
 /target/
 **/target/
 **/*.rs.bk
-Cargo.lock
+# Cargo.lock should be committed for binary projects
 
 # Environment variables
 .env
