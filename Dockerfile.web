@@ -1,7 +1,7 @@
 # Multi-stage build for WASM web client
 
 # Build stage
-FROM rust:1.88-bookworm as builder
+FROM rust:1.93-bookworm as builder
 
 # Install trunk for WASM builds
 RUN cargo install --locked trunk
