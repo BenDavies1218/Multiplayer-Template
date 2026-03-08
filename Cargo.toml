@@ -7,13 +7,14 @@ members = [
     "apps/server",
     "apps/native",
     "apps/web",
+    "apps/world-viewer",
 ]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.93"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Ben Davies <bendavies600@gmail.com>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/BenDavies1218/Multiplayer-Template"
 

@@ -17,6 +17,14 @@ gui = []
 bevy = { workspace = true, features = [
     "bevy_state",
     "serialize",
+    "bevy_gltf",
+    "bevy_pbr",
+    "bevy_render",
+    "bevy_scene",
+    "bevy_core_pipeline",
+    "bevy_mesh",
+    "bevy_light",
+    "bevy_camera",
 ] }
 lightyear = { workspace = true, features = [
     "client",

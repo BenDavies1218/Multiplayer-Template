@@ -22,6 +22,9 @@ bevy = { workspace = true, features = [
     "serialize",
     "multi_threaded",
     "x11",
+    "png",
+    "jpeg",
+    "ktx2",
 ] }
 lightyear = { workspace = true, features = [
     "server",

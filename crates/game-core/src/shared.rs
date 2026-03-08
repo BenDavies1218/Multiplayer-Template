@@ -22,6 +22,27 @@ pub const BLOCK_HEIGHT: f32 = 1.0;
 pub const CHARACTER_CAPSULE_RADIUS: f32 = 0.5;
 pub const CHARACTER_CAPSULE_HEIGHT: f32 = 0.5;
 
+// World asset constants
+pub const WORLD_VISUAL_PATH: &str = "models/example_world_visual.glb";
+pub const WORLD_COLLISION_PATH: &str = "models/example_world_collision.glb";
+
+// World transform - adjust if your world is rotated or offset
+// If your Blender export is upside down, uncomment this:
+// pub const WORLD_ROTATION: Quat = Quat::from_rotation_x(std::f32::consts::PI);
+// Or if it needs 90 degree rotation:
+// pub const WORLD_ROTATION: Quat = Quat::from_rotation_x(std::f32::consts::FRAC_PI_2);
+
+// Skybox asset constants
+pub const DAY_CLEAR_SKYBOX: &str = "skyboxes/day_clear.jpg";
+pub const EVENING_MOUNTAINS_SKYBOX: &str = "skyboxes/evening_mountains.jpg";
+pub const EVENING_SKY_SKYBOX: &str = "skyboxes/evening_sky.jpg";
+pub const SUNSET_SKY_SKYBOX: &str = "skyboxes/sunset_sky.jpg";
+pub const WINTER_DAY_SKYBOX: &str = "skyboxes/winter_day.jpg";
+
+// Lighting constants
+pub const DEFAULT_SUN_INTENSITY: f32 = 15000.0;
+pub const DEFAULT_AMBIENT_BRIGHTNESS: f32 = 0.2;
+
 #[derive(Bundle)]
 pub struct CharacterPhysicsBundle {
     collider: Collider,
@@ -81,6 +102,10 @@ impl Plugin for SharedPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(ProtocolPlugin);
 
+        // Register types needed for scene spawning
+        app.register_type::<Transform>();
+        app.register_type::<GlobalTransform>();
+
         // Physics
         app.add_plugins(lightyear::avian3d::plugin::LightyearAvianPlugin {
             replication_mode: AvianReplicationMode::Position,
@@ -96,6 +121,9 @@ impl Plugin for SharedPlugin {
                 .disable::<IslandPlugin>()
                 .disable::<IslandSleepingPlugin>(),
         );
+
+        // World loading (visual and collision)
+        app.add_plugins(crate::world::WorldPlugin);
 
         // Debug
         app.add_systems(FixedLast, fixed_last_log);

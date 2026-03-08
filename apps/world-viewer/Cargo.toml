@@ -1,0 +1,42 @@
+[package]
+name = "world-viewer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish = false
+
+[[bin]]
+name = "world-viewer"
+doc = false
+
+[dependencies]
+# Internal crates - only game-core for world loading
+game-core = { workspace = true, features = [] }
+
+# Bevy with 3D rendering features
+bevy = { workspace = true, features = [
+    "bevy_state",
+    "bevy_log",
+    "bevy_asset",
+    "bevy_color",
+    "multi_threaded",
+    "zstd_rust",
+    "keyboard",
+    "3d",
+    "3d_bevy_render",
+    "3d_api",
+    "bevy_pbr",
+    "bevy_image",
+    "bevy_render",
+    "x11",
+    "png",
+    "jpeg",
+    "ktx2",
+] }
+
+# Physics for collision visualization
+avian3d = { workspace = true, features = ["3d", "f32", "default-collider"] }
+
+# Logging
+tracing.workspace = true

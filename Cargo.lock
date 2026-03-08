@@ -3276,7 +3276,7 @@ dependencies = [
 
 [[package]]
 name = "game-client"
-version = "0.26.4"
+version = "0.1.0"
 dependencies = [
  "avian3d",
  "bevy",
@@ -3293,7 +3293,7 @@ dependencies = [
 
 [[package]]
 name = "game-core"
-version = "0.26.4"
+version = "0.1.0"
 dependencies = [
  "async-compat",
  "avian3d",
@@ -3313,7 +3313,7 @@ dependencies = [
 
 [[package]]
 name = "game-server"
-version = "0.26.4"
+version = "0.1.0"
 dependencies = [
  "async-compat",
  "avian3d",
@@ -3989,6 +3989,8 @@ dependencies = [
  "moxcms",
  "num-traits",
  "png",
+ "zune-core",
+ "zune-jpeg",
 ]
 
 [[package]]
@@ -5145,7 +5147,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.26.4"
+version = "0.1.0"
 dependencies = [
  "bevy",
  "clap",
@@ -6766,7 +6768,7 @@ dependencies = [
 
 [[package]]
 name = "server"
-version = "0.26.4"
+version = "0.1.0"
 dependencies = [
  "bevy",
  "clap",
@@ -7895,7 +7897,7 @@ dependencies = [
 
 [[package]]
 name = "web"
-version = "0.26.4"
+version = "0.1.0"
 dependencies = [
  "bevy",
  "clap",
@@ -8830,6 +8832,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "world-viewer"
+version = "0.1.0"
+dependencies = [
+ "avian3d",
+ "bevy",
+ "game-core",
+ "tracing",
+]
+
+[[package]]
 name = "writeable"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9142,3 +9154,18 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
+
+[[package]]
+name = "zune-core"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb8a0807f7c01457d0379ba880ba6322660448ddebc890ce29bb64da71fb40f9"
+
+[[package]]
+name = "zune-jpeg"
+version = "0.5.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "410e9ecef634c709e3831c2cfdb8d9c32164fae1c67496d5b68fff728eec37fe"
+dependencies = [
+ "zune-core",
+]

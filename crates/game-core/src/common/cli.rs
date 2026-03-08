@@ -294,6 +294,8 @@ pub fn new_gui_app(add_inspector: bool) -> App {
         DefaultPlugins
             .build()
             .set(AssetPlugin {
+                // Point to root assets folder from apps/native or apps/web
+                file_path: "../../assets".to_string(),
                 // https://github.com/bevyengine/bevy/issues/10157
                 meta_check: bevy::asset::AssetMetaCheck::Never,
                 ..default()
@@ -317,6 +319,12 @@ pub fn new_headless_app() -> App {
     let mut app = App::new();
     app.add_plugins((
         MinimalPlugins,
+        AssetPlugin {
+            // Point to root assets folder from apps/server
+            file_path: "../../assets".to_string(),
+            meta_check: bevy::asset::AssetMetaCheck::Never,
+            ..default()
+        },
         log_plugin(),
         StatesPlugin,
         DiagnosticsPlugin,
