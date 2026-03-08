@@ -1,36 +1,33 @@
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-#![allow(dead_code)]
-
 use bevy::prelude::*;
 use core::time::Duration;
 use lightyear::prelude::*;
-use lightyear::prelude::client::InputTimelineConfig;
 
-use game_core::common::cli::{Cli, Mode};
+use game_core::common::cli::Cli;
 use game_core::common::shared;
 use game_core::config;
 use game_core::SharedPlugin;
-use game_client::{ExampleClientPlugin, FirstPersonPlugin};
+use game_core::world::{WorldPlugin, WorldPluginConfig};
+use game_client::app::{build_client_app, spawn_client_connection};
+use game_client::{ClientPlugin, FirstPersonPlugin};
 
 fn main() {
     // Load environment variables from .env file
     config::init();
 
     let cli = Cli::default();
+    let tick = Duration::from_secs_f64(1.0 / shared::fixed_timestep_hz());
 
-    let mut app = cli.build_app(Duration::from_secs_f64(1.0 / shared::fixed_timestep_hz()), true);
+    let mut app = build_client_app(tick, true);
 
     app.add_plugins(SharedPlugin);
-    app.add_plugins(ExampleClientPlugin);
+    app.add_plugins(WorldPlugin { config: WorldPluginConfig::client() });
+    app.add_plugins(ClientPlugin);
     app.add_plugins(FirstPersonPlugin::default());
 
-    cli.spawn_connections(&mut app);
+    let client_id = cli.client_id().expect("You need to specify a client_id via `-c ID`");
+    spawn_client_connection(&mut app, client_id);
 
-    // Set input delay configuration
-    if let Some(Mode::Client { .. }) = cli.mode {
-        add_input_delay(&mut app);
-    }
+    add_input_delay(&mut app);
 
     app.run();
 }

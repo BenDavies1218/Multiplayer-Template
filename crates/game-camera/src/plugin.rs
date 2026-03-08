@@ -52,10 +52,6 @@ impl GameCamera {
     }
 }
 
-/// Component to mark the player entity that the camera should follow
-#[derive(Component)]
-pub struct CameraTarget;
-
 /// System to update camera rotation based on mouse input
 fn update_camera_rotation(
     mouse_motion: Res<AccumulatedMouseMotion>,

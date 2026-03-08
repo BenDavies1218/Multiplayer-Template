@@ -12,7 +12,7 @@ doc = false
 
 [dependencies]
 # Internal crates - only game-core for world loading
-game-core = { workspace = true, features = [] }
+game-core.workspace = true
 
 # Bevy with 3D rendering features
 bevy = { workspace = true, features = [

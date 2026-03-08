@@ -28,6 +28,7 @@ bevy = { workspace = true, features = [
     "bevy_pbr",
     "bevy_image",
     "bevy_render",
+    "bevy_winit",
 ] }
 lightyear = { workspace = true, features = [
     "client",
@@ -41,6 +42,7 @@ lightyear = { workspace = true, features = [
     "webtransport_dangerous_configuration",
     "websocket",
     "websocket_self_signed",
+    "netcode",
 ] }
 lightyear_frame_interpolation.workspace = true
 avian3d = { workspace = true, features = [

@@ -35,6 +35,8 @@ pub struct CameraOrientation {
 pub enum CharacterAction {
     Move,
     Jump,
+    Sprint,
+    Crouch,
     Shoot,
     Look,  // Camera yaw/pitch as DualAxis
 }
@@ -45,10 +47,17 @@ impl Actionlike for CharacterAction {
             Self::Move => InputControlKind::DualAxis,
             Self::Look => InputControlKind::DualAxis,
             Self::Jump => InputControlKind::Button,
+            Self::Sprint => InputControlKind::Button,
+            Self::Crouch => InputControlKind::Button,
             Self::Shoot => InputControlKind::Button,
         }
     }
 }
+
+/// Tracks whether a character is currently crouching.
+/// Replicated for collider sync between client and server.
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
+pub struct CrouchState(pub bool);
 
 // Protocol
 #[derive(Clone)] // Added Clone
@@ -79,6 +88,9 @@ impl Plugin for ProtocolPlugin {
         // Camera orientation - NOT predicted, client authority
         // Client updates this and server reads it directly
         app.register_component::<CameraOrientation>();
+
+        app.register_component::<CrouchState>()
+            .add_prediction();
 
         // Fully replicated, but not visual, so no need for lerp/corrections:
         app.register_component::<LinearVelocity>()
@@ -124,9 +136,4 @@ fn linear_velocity_should_rollback(this: &LinearVelocity, that: &LinearVelocity)
 
 fn angular_velocity_should_rollback(this: &AngularVelocity, that: &AngularVelocity) -> bool {
     (this.0 - that.0).length() >= 0.01
-}
-
-fn camera_orientation_should_rollback(this: &CameraOrientation, that: &CameraOrientation) -> bool {
-    // Only rollback if yaw or pitch differ significantly (about 1 degree)
-    (this.yaw - that.yaw).abs() >= 0.02 || (this.pitch - that.pitch).abs() >= 0.02
 }

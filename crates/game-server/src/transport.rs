@@ -1,4 +1,4 @@
-//! This module introduces a settings struct that can be used to configure the server.
+//! Server transport and connection setup
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 use core::net::{Ipv4Addr, SocketAddr};
@@ -6,7 +6,7 @@ use core::net::{Ipv4Addr, SocketAddr};
 use bevy::prelude::*;
 use core::time::Duration;
 
-use crate::common::shared::SharedSettings;
+use game_core::common::shared::SharedSettings;
 #[cfg(not(target_family = "wasm"))]
 use async_compat::Compat;
 use bevy::ecs::lifecycle::HookContext;
@@ -22,10 +22,6 @@ use tracing::warn;
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum ServerTransports {
-    #[cfg(feature = "udp")]
-    Udp {
-        local_port: u16,
-    },
     WebTransport {
         local_port: u16,
         certificate: WebTransportCertificateSettings,
@@ -68,12 +64,6 @@ impl ExampleServer {
                 }));
             };
             match settings.transport {
-                #[cfg(feature = "udp")]
-                ServerTransports::Udp { local_port } => {
-                    add_netcode(&mut entity_mut);
-                    let server_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), local_port);
-                    entity_mut.insert((LocalAddr(server_addr), ServerUdpIo::default()));
-                }
                 ServerTransports::WebTransport {
                     local_port,
                     certificate,
@@ -102,21 +92,13 @@ impl ExampleServer {
                         );
                     entity_mut.insert((LocalAddr(server_addr), WebSocketServerIo { config }));
                 }
-                #[cfg(feature = "steam")]
-                ServerTransports::Steam { local_port } => {
-                    let server_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), local_port);
-                    entity_mut.insert(SteamServerIo {
-                        target: ListenTarget::Addr(server_addr),
-                        config: SessionConfig::default(),
-                    });
-                }
             };
             Ok(())
         });
     }
 }
 
-pub(crate) fn start(mut commands: Commands, server: Single<Entity, With<Server>>) {
+pub fn start(mut commands: Commands, server: Single<Entity, With<Server>>) {
     commands.trigger(Start {
         entity: server.into_inner(),
     });

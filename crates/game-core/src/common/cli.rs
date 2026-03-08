@@ -1,32 +1,8 @@
-//! Utilities for building the Bevy app
-#![allow(unused_imports)]
-#![allow(unused_variables)]
-#![allow(dead_code)]
-
-use core::str::FromStr;
-use core::time::Duration;
+//! Shared CLI utilities for parsing command-line arguments
 
 use bevy::log::{Level, LogPlugin};
-use bevy::prelude::*;
-
-use bevy::DefaultPlugins;
-use bevy::diagnostic::DiagnosticsPlugin;
-use bevy::state::app::StatesPlugin;
-use bevy::prelude::Image;
+use bevy::prelude::default;
 use clap::{Parser, Subcommand};
-
-#[cfg(feature = "client")]
-use crate::common::client::{ClientTransports, ExampleClient, connect};
-#[cfg(feature = "server")]
-use crate::common::server::{ExampleServer, ServerTransports, WebTransportCertificateSettings, start};
-use crate::common::shared::{CLIENT_PORT, server_addr, server_port, SHARED_SETTINGS, STEAM_APP_ID};
-use lightyear::link::RecvLinkConditioner;
-#[cfg(feature = "client")]
-use lightyear::prelude::client::*;
-use lightyear::prelude::*;
-
-use bevy::window::PresentMode;
-use bevy::winit::{UpdateMode, WinitSettings};
 
 /// CLI options to create an [`App`]
 #[derive(Parser, Debug)]
@@ -40,174 +16,31 @@ impl Cli {
     /// Get the client id from the CLI
     pub fn client_id(&self) -> Option<u64> {
         match &self.mode {
-            #[cfg(feature = "client")]
             Some(Mode::Client { client_id }) => *client_id,
-            #[cfg(all(feature = "client", feature = "server"))]
             Some(Mode::Separate { client_id }) => *client_id,
-            #[cfg(all(feature = "client", feature = "server"))]
             Some(Mode::HostClient { client_id }) => *client_id,
             _ => None,
-        }
-    }
-
-    pub fn create_app(add_inspector: bool) -> App {
-        #[cfg(feature = "gui")]
-        let app = new_gui_app(add_inspector);
-        #[cfg(not(feature = "gui"))]
-        let app = new_headless_app();
-
-        app
-    }
-
-    pub fn build_app(&self, tick_duration: Duration, add_inspector: bool) -> App {
-        let mut app = Cli::create_app(add_inspector);
-        match self.mode {
-            #[cfg(feature = "client")]
-            Some(Mode::Client { client_id }) => {
-                #[cfg(feature = "steam")]
-                app.add_steam_resources(STEAM_APP_ID);
-                app.add_plugins(lightyear::prelude::client::ClientPlugins { tick_duration });
-                app
-            }
-            #[cfg(feature = "server")]
-            Some(Mode::Server) => {
-                #[cfg(feature = "steam")]
-                app.add_steam_resources(STEAM_APP_ID);
-                app.add_plugins(lightyear::prelude::server::ServerPlugins { tick_duration });
-                app
-            }
-            #[cfg(all(feature = "client", feature = "server"))]
-            Some(Mode::HostClient { client_id }) => {
-                #[cfg(feature = "steam")]
-                app.add_steam_resources(STEAM_APP_ID);
-                app.add_plugins((
-                    lightyear::prelude::client::ClientPlugins { tick_duration },
-                    lightyear::prelude::server::ServerPlugins { tick_duration },
-                ));
-                app
-            }
-            None => {
-                panic!("Mode is required");
-            }
-            _ => {
-                todo!()
-            }
-        }
-    }
-
-    pub fn spawn_connections(&self, app: &mut App) {
-        let conditioner = LinkConditionerConfig::average_condition();
-        match self.mode {
-            #[cfg(feature = "client")]
-            Some(Mode::Client { client_id }) => {
-                let client = app
-                    .world_mut()
-                    .spawn(ExampleClient {
-                        client_id: client_id.expect("You need to specify a client_id via `-c ID`"),
-                        client_port: CLIENT_PORT,
-                        server_addr: server_addr(),
-                        conditioner: Some(RecvLinkConditioner::new(conditioner.clone())),
-                        // transport: ClientTransports::Udp,
-                        // transport: ClientTransports::WebSocket,
-                        transport: ClientTransports::WebTransport,
-                        // #[cfg(feature = "steam")]
-                        // transport: ClientTransports::Steam,
-                        shared: SHARED_SETTINGS,
-                    })
-                    .id();
-                app.add_systems(Startup, connect);
-            }
-            #[cfg(feature = "server")]
-            Some(Mode::Server) => {
-                let server = app
-                    .world_mut()
-                    .spawn(ExampleServer {
-                        conditioner: None,
-                        // transport: ServerTransports::Udp {
-                        //     local_port: server_port(),
-                        // },
-                        // transport: ServerTransports::WebSocket {
-                        //     local_port: server_port(),
-                        // },
-                        transport: ServerTransports::WebTransport {
-                            local_port: server_port(),
-                            certificate: WebTransportCertificateSettings::FromFile {
-                                cert: "./certificates/cert.pem".to_string(),
-                                key: "./certificates/key.pem".to_string(),
-                            },
-                        },
-                        // #[cfg(feature = "steam")]
-                        // transport: ServerTransports::Steam {
-                        //     local_port: server_port(),
-                        // },
-                        shared: SHARED_SETTINGS,
-                    })
-                    .id();
-                app.add_systems(Startup, start);
-            }
-            #[cfg(all(feature = "client", feature = "server"))]
-            Some(Mode::HostClient { client_id }) => {
-                // Spawn the client and server connections here
-                // This is where you would set up the client and server entities
-                let server = app
-                    .world_mut()
-                    .spawn(ExampleServer {
-                        conditioner: None,
-                        // transport: ServerTransports::Udp {
-                        //     local_port: server_port(),
-                        // },
-                        // transport: ServerTransports::WebSocket {
-                        //     local_port: server_port(),
-                        // },
-                        transport: ServerTransports::WebTransport {
-                            local_port: server_port(),
-                            certificate: WebTransportCertificateSettings::FromFile {
-                                cert: "./certificates/cert.pem".to_string(),
-                                key: "./certificates/key.pem".to_string(),
-                            },
-                        },
-                        shared: SHARED_SETTINGS,
-                    })
-                    .id();
-
-                let client = app
-                    .world_mut()
-                    .spawn((
-                        Client::default(),
-                        Name::new("HostClient"),
-                        LinkOf { server },
-                    ))
-                    .id();
-                // NOTE: it's ugly but i believe that you need to start the server before
-                //  connecting the host-client for things to work properly
-                app.add_systems(Startup, (start, connect).chain());
-            }
-            _ => {}
         }
     }
 }
 
 #[derive(Subcommand, Debug)]
 pub enum Mode {
-    #[cfg(feature = "client")]
     /// Runs the app in client mode
     Client {
         #[arg(short, long, default_value = None)]
         client_id: Option<u64>,
     },
-    #[cfg(feature = "server")]
     /// Runs the app in server mode
     Server,
-    #[cfg(all(feature = "client", feature = "server"))]
     /// Creates two bevy apps: a client app and a server app.
     /// Data gets passed between the two via channels.
     Separate {
         #[arg(short, long, default_value = None)]
         client_id: Option<u64>,
     },
-    #[cfg(all(feature = "client", feature = "server"))]
     /// Run the app in host-client mode.
-    /// The client and the server will run inside the same app. The peer acts both as a client and a server.
+    /// The client and the server will run inside the same app.
     HostClient {
         #[arg(short, long, default_value = None)]
         client_id: Option<u64>,
@@ -216,29 +49,7 @@ pub enum Mode {
 
 impl Default for Mode {
     fn default() -> Self {
-        cfg_if::cfg_if! {
-            if #[cfg(all(feature = "client", feature = "server"))] {
-                Mode::HostClient { client_id: None }
-            } else if #[cfg(feature = "server")] {
-                Mode::Server
-            } else if #[cfg(feature = "client")] {
-                Mode::Client { client_id: None }
-            } else {
-                compile_error!("At least one of 'client' or 'server' features must be enabled")
-            }
-        }
-    }
-}
-
-/// App that is Send.
-/// Used as a convenient workaround to send an App to a separate thread,
-/// if we know that the App doesn't contain NonSend resources.
-struct SendApp(App);
-
-unsafe impl Send for SendApp {}
-impl SendApp {
-    fn run(&mut self) {
-        self.0.run();
+        Mode::Client { client_id: None }
     }
 }
 
@@ -252,7 +63,7 @@ impl Default for Cli {
 /// `clap` doesn't run in wasm, so we simply run in Client mode with a random ClientId
 pub fn cli() -> Cli {
     cfg_if::cfg_if! {
-        if #[cfg(all(target_family = "wasm", feature = "client"))] {
+        if #[cfg(target_family = "wasm")] {
             let client_id = rand::random::<u64>();
             Cli {
                 mode: Some(Mode::Client {
@@ -265,85 +76,10 @@ pub fn cli() -> Cli {
     }
 }
 
-#[cfg(feature = "gui")]
-pub fn window_plugin() -> WindowPlugin {
-    WindowPlugin {
-        primary_window: Some(Window {
-            title: format!("Lightyear Example: {}", env!("CARGO_PKG_NAME")),
-            resolution: (1024, 768).into(),
-            present_mode: PresentMode::AutoVsync,
-            // set to true if we want to capture tab etc in wasm
-            prevent_default_event_handling: true,
-            ..Default::default()
-        }),
-        ..default()
-    }
-}
-
 pub fn log_plugin() -> LogPlugin {
     LogPlugin {
         level: Level::INFO,
         filter: "wgpu=error,bevy_render=info,bevy_ecs=warn,bevy_time=warn,naga=warn,bevy_enhanced_input::action::fns=error".to_string(),
         ..default()
     }
-}
-
-#[cfg(feature = "gui")]
-pub fn new_gui_app(add_inspector: bool) -> App {
-    let mut app = App::new();
-    app.add_plugins(
-        DefaultPlugins
-            .build()
-            .set(AssetPlugin {
-                // Point to root assets folder from apps/native or apps/web
-                file_path: "../../assets".to_string(),
-                // https://github.com/bevyengine/bevy/issues/10157
-                meta_check: bevy::asset::AssetMetaCheck::Never,
-                ..default()
-            })
-            .set(log_plugin())
-            .set(window_plugin()),
-    );
-    // we want the same frequency of updates for both focused and unfocused
-    // Otherwise when testing the movement can look choppy for unfocused windows
-    app.insert_resource(WinitSettings::continuous());
-
-    if add_inspector {
-        // Note: bevy_inspector_egui would need to be added as a dependency
-        // app.add_plugins(bevy_inspector_egui::bevy_egui::EguiPlugin::default());
-        // app.add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new());
-    }
-    app
-}
-
-pub fn new_headless_app() -> App {
-    let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        AssetPlugin {
-            file_path: "../../assets".to_string(),
-            meta_check: bevy::asset::AssetMetaCheck::Never,
-            ..default()
-        },
-        log_plugin(),
-        StatesPlugin,
-        DiagnosticsPlugin,
-    ));
-
-    // Add minimal plugins for loading collision meshes from GLTF files
-    // Server needs these to load collision geometry from .glb files
-    // GLTF is a complex format that references many asset types
-    #[cfg(feature = "server")]
-    {
-        app.add_plugins(bevy::gltf::GltfPlugin::default());
-        app.add_plugins(bevy::transform::TransformPlugin);
-        app.add_plugins(bevy::scene::ScenePlugin);
-        // Initialize all asset types that GLTF files might reference
-        app.init_asset::<bevy::pbr::StandardMaterial>();
-        app.init_asset::<bevy::mesh::Mesh>();
-        app.init_asset::<bevy::scene::Scene>();
-        app.init_asset::<Image>();
-    }
-
-    app
 }

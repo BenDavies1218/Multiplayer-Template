@@ -12,7 +12,7 @@ doc = false
 
 [dependencies]
 # Internal crates
-game-core = { workspace = true, features = ["client", "gui"] }
+game-core.workspace = true
 game-client.workspace = true
 
 # External dependencies

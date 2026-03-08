@@ -10,7 +10,7 @@ use game_core::common::shared::send_interval;
 
 use game_core::protocol::*;
 use game_core::shared::CharacterPhysicsBundle;
-use game_core::movement::server::apply_server_movement;
+use game_core::movement::{apply_character_movement, update_crouch_collider};
 
 #[derive(Clone)]
 pub struct ServerPlugin;
@@ -19,7 +19,7 @@ impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (handle_character_actions, player_shoot, despawn_system),
+            (handle_character_actions, update_crouch_collider, player_shoot, despawn_system).chain(),
         );
         app.add_observer(handle_new_client);
         app.add_observer(handle_connected);
@@ -29,13 +29,13 @@ impl Plugin for ServerPlugin {
 fn handle_character_actions(
     time: Res<Time>,
     spatial_query: SpatialQuery,
-    mut query: Query<(Entity, &ComputedMass, &ActionState<CharacterAction>, &mut CameraOrientation, Forces)>,
+    mut query: Query<(Entity, &ComputedMass, &ActionState<CharacterAction>, &mut CameraOrientation, Forces, &mut CrouchState)>,
 ) {
-    for (entity, mass, action_state, mut camera_orientation, forces) in &mut query {
+    for (entity, mass, action_state, mut camera_orientation, forces, mut crouch_state) in &mut query {
         let look = action_state.axis_pair(&CharacterAction::Look);
         camera_orientation.yaw = look.x;
         camera_orientation.pitch = look.y;
-        apply_server_movement(
+        apply_character_movement(
             entity,
             mass,
             &time,
@@ -43,6 +43,7 @@ fn handle_character_actions(
             action_state,
             forces,
             camera_orientation.yaw,
+            &mut crouch_state,
         );
     }
 }
@@ -194,6 +195,7 @@ pub(crate) fn handle_connected(
             ColorComponent(color.into()),
             CharacterMarker,
             CameraOrientation { yaw: 0.0, pitch: 0.0 },
+            CrouchState::default(),
         ))
         .id();
 

@@ -12,7 +12,7 @@ doc = false
 
 [dependencies]
 # Internal crates
-game-core = { workspace = true, features = ["client", "gui"] }
+game-core.workspace = true
 game-client.workspace = true
 
 # External dependencies
@@ -48,4 +48,4 @@ getrandom = { version = "0.2", features = ["js"] }
 [package.metadata.bevy_cli.web]
 rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]
 default-features = false
-features = ["client", "netcode"]
+features = ["netcode"]

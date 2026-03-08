@@ -1,5 +1,6 @@
 use game_core::{
-    protocol::{CharacterMarker, ColorComponent, FloorMarker, ProjectileMarker},
+    movement::CROUCH_CAPSULE_HEIGHT,
+    protocol::{CharacterMarker, ColorComponent, CrouchState, FloorMarker, ProjectileMarker},
     shared::{CHARACTER_CAPSULE_HEIGHT, CHARACTER_CAPSULE_RADIUS},
 };
 use game_camera::{CameraConfig, CameraPlugin, GameCamera};
@@ -72,14 +73,15 @@ fn setup_cursor_grab(
 
 fn fps_camera_follow(
     mut camera_query: Query<&mut Transform, (With<GameCamera>, Without<CharacterMarker>)>,
-    player_query: Query<&Transform, (With<CharacterMarker>, With<Predicted>, Without<GameCamera>)>,
+    player_query: Query<(&Transform, &CrouchState), (With<CharacterMarker>, With<Predicted>, Without<GameCamera>)>,
 ) {
     let Ok(mut camera_transform) = camera_query.single_mut() else {
         return;
     };
 
-    if let Some(player_transform) = player_query.iter().next() {
-        let eye_height = CHARACTER_CAPSULE_HEIGHT / 2.0 + CHARACTER_CAPSULE_RADIUS + 0.5;
+    if let Some((player_transform, crouch_state)) = player_query.iter().next() {
+        let capsule_height = if crouch_state.0 { CROUCH_CAPSULE_HEIGHT } else { CHARACTER_CAPSULE_HEIGHT };
+        let eye_height = capsule_height / 2.0 + CHARACTER_CAPSULE_RADIUS + 0.5;
         camera_transform.translation = player_transform.translation + Vec3::new(0.0, eye_height, 0.0);
     }
 }

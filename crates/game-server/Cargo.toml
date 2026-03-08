@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 # Internal
-game-core = { path = "../game-core", default-features = false, features = ["server"] }
+game-core.workspace = true
 
 # Workspace dependencies
 bevy = { workspace = true, features = [
@@ -16,6 +16,10 @@ bevy = { workspace = true, features = [
     "bevy_log",
     "serialize",
     "multi_threaded",
+    "bevy_gltf",
+    "bevy_asset",
+    "bevy_scene",
+    "bevy_pbr",
 ] }
 lightyear = { workspace = true, features = [
     "server",
@@ -28,6 +32,7 @@ lightyear = { workspace = true, features = [
     "webtransport_dangerous_configuration",
     "websocket",
     "websocket_self_signed",
+    "netcode",
 ] }
 avian3d = { workspace = true, features = [
     "3d",

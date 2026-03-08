@@ -1,12 +1,12 @@
-//! This module introduces a settings struct that can be used to configure the client.
+//! Client transport and connection setup
 #![allow(unused_imports)]
 #![allow(unused_variables)]
 use core::net::{Ipv4Addr, SocketAddr};
 
 use bevy::prelude::*;
 
-use crate::common::shared::SharedSettings;
-use crate::config::Config;
+use game_core::common::shared::SharedSettings;
+use game_core::config::Config;
 use bevy::ecs::lifecycle::HookContext;
 use bevy::ecs::world::DeferredWorld;
 use core::time::Duration;
@@ -24,8 +24,6 @@ pub enum ClientTransports {
     Udp,
     WebTransport,
     WebSocket,
-    #[cfg(feature = "steam")]
-    Steam,
 }
 
 /// Event that examples can trigger to spawn a client.
@@ -123,20 +121,13 @@ impl ExampleClient {
                         target: WebSocketTarget::Addr(Default::default()),
                     });
                 }
-                #[cfg(feature = "steam")]
-                ClientTransports::Steam => {
-                    entity_mut.insert(SteamClientIo {
-                        target: ConnectTarget::Addr(settings.server_addr),
-                        config: Default::default(),
-                    });
-                }
             };
             Ok(())
         });
     }
 }
 
-pub(crate) fn connect(mut commands: Commands, client: Single<Entity, With<Client>>) {
+pub fn connect(mut commands: Commands, client: Single<Entity, With<Client>>) {
     commands.trigger(Connect {
         entity: client.into_inner(),
     });

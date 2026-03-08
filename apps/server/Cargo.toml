@@ -12,7 +12,7 @@ doc = false
 
 [dependencies]
 # Internal crates
-game-core = { path = "../../crates/game-core", default-features = false, features = ["server"] }
+game-core.workspace = true
 game-server.workspace = true
 
 # External dependencies
@@ -21,10 +21,10 @@ bevy = { workspace = true, features = [
     "bevy_log",
     "serialize",
     "multi_threaded",
-    "bevy_gltf",        # Required for loading collision meshes from GLTF files
-    "bevy_asset",       # Required for asset loading
-    "bevy_scene",       # Required by GLTF loader
-    "bevy_pbr",         # Required for StandardMaterial in GLTF files
+    "bevy_gltf",
+    "bevy_asset",
+    "bevy_scene",
+    "bevy_pbr",
 ] }
 lightyear = { workspace = true, features = [
     "server",

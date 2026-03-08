@@ -5,15 +5,15 @@ use lightyear::prelude::Controlled;
 use lightyear::prelude::*;
 use game_core::protocol::*;
 use game_core::shared::*;
-use game_core::movement::client::apply_client_movement;
+use game_core::movement::{apply_character_movement, update_crouch_collider};
 use game_camera::GameCamera;
 
-pub struct ExampleClientPlugin;
+pub struct ClientPlugin;
 
-impl Plugin for ExampleClientPlugin {
+impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
         // Sync camera BEFORE movement in FixedUpdate so it's sent as input
-        app.add_systems(FixedUpdate, (sync_camera_to_character, handle_character_actions).chain());
+        app.add_systems(FixedUpdate, (sync_camera_to_character, handle_character_actions, update_crouch_collider).chain());
         app.add_systems(Update, handle_new_character);
     }
 }
@@ -23,15 +23,15 @@ fn handle_character_actions(
     time: Res<Time>,
     spatial_query: SpatialQuery,
     mut query: Query<
-        (Entity, &ComputedMass, &ActionState<CharacterAction>, Forces),
+        (Entity, &ComputedMass, &ActionState<CharacterAction>, Forces, &mut CrouchState),
         With<Predicted>,
     >,
 ) {
-    for (entity, computed_mass, action_state, forces) in &mut query {
+    for (entity, computed_mass, action_state, forces, mut crouch_state) in &mut query {
         // Get camera yaw from the Look action
         let camera_yaw = action_state.axis_pair(&CharacterAction::Look).x;
 
-        apply_client_movement(
+        apply_character_movement(
             entity,
             computed_mass,
             &time,
@@ -39,6 +39,7 @@ fn handle_character_actions(
             action_state,
             forces,
             camera_yaw,
+            &mut crouch_state,
         );
     }
 }
@@ -56,6 +57,10 @@ fn handle_new_character(
             commands.entity(entity).insert(
                 InputMap::new([(CharacterAction::Jump, KeyCode::Space)])
                     .with(CharacterAction::Jump, GamepadButton::South)
+                    .with(CharacterAction::Sprint, KeyCode::ShiftLeft)
+                    .with(CharacterAction::Sprint, GamepadButton::LeftThumb)
+                    .with(CharacterAction::Crouch, KeyCode::KeyC)
+                    .with(CharacterAction::Crouch, GamepadButton::East)
                     .with(CharacterAction::Shoot, KeyCode::KeyQ)
                     .with_dual_axis(CharacterAction::Move, GamepadStick::LEFT)
                     .with_dual_axis(CharacterAction::Move, VirtualDPad::wasd()),
@@ -69,6 +74,7 @@ fn handle_new_character(
             .insert((
                 CharacterPhysicsBundle::default(),
                 CameraOrientation { yaw: 0.0, pitch: 0.0 },
+                CrouchState::default(),
             ));
     }
 }

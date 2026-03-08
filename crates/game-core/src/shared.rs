@@ -1,10 +1,7 @@
 use bevy::prelude::*;
-use bevy::math::VectorSpace;
 
-use crate::protocol::{ProtocolPlugin, CharacterAction};
+use crate::protocol::ProtocolPlugin;
 use avian3d::prelude::*;
-use avian3d::prelude::forces::ForcesItem;
-use leafwing_input_manager::prelude::ActionState;
 use lightyear::avian3d::plugin::AvianReplicationMode;
 
 pub const CHARACTER_CAPSULE_RADIUS: f32 = 0.5;
@@ -62,91 +59,6 @@ impl Plugin for SharedPlugin {
                 .disable::<IslandSleepingPlugin>(),
         );
 
-        // World loading (visual and collision)
-        // Configure based on whether this is server-only or has client features
-        #[cfg(all(feature = "server", not(feature = "client")))]
-        {
-            // Server-only: collision only, no visuals, no debug
-            app.add_plugins(crate::world::WorldPlugin {
-                config: crate::world::WorldPluginConfig::server(),
-            });
-            info!("WorldPlugin configured for server (collision only)");
-        }
-
-        #[cfg(feature = "client")]
-        {
-            // Client or hybrid: full features with debug
-            app.add_plugins(crate::world::WorldPlugin {
-                config: crate::world::WorldPluginConfig::client(),
-            });
-            info!("WorldPlugin configured for client (visual + collision + debug)");
-        }
+        // WorldPlugin is added separately by each app with the appropriate config
     }
-}
-
-/// Apply character movement (shared between client and server)
-/// This uses world-space movement for simplicity and determinism
-pub fn apply_character_movement(
-    entity: Entity,
-    mass: &ComputedMass,
-    time: &Res<Time>,
-    spatial_query: &SpatialQuery,
-    action_state: &ActionState<CharacterAction>,
-    mut forces: ForcesItem,
-) {
-    const MAX_SPEED: f32 = 5.0;
-    const MAX_ACCELERATION: f32 = 20.0;
-    const JUMP_IMPULSE: f32 = 5.0;
-
-    // How much velocity can change in a single tick
-    let max_velocity_delta_per_tick = MAX_ACCELERATION * time.delta_secs();
-
-    // === JUMPING ===
-    if action_state.just_pressed(&CharacterAction::Jump) {
-        let ray_cast_origin = forces.position().0
-            + Vec3::new(
-                0.0,
-                -CHARACTER_CAPSULE_HEIGHT / 2.0 - CHARACTER_CAPSULE_RADIUS,
-                0.0,
-            );
-
-        // Only jump if on the ground
-        if spatial_query
-            .cast_ray(
-                ray_cast_origin,
-                Dir3::NEG_Y,
-                0.01,
-                true,
-                &SpatialQueryFilter::from_excluded_entities([entity]),
-            )
-            .is_some()
-        {
-            forces.apply_linear_impulse(Vec3::new(0.0, JUMP_IMPULSE, 0.0));
-        }
-    }
-
-    // === MOVEMENT (World-Space) ===
-    // This is simpler than camera-relative movement and works identically on client/server
-    let input = action_state
-        .axis_pair(&CharacterAction::Move)
-        .clamp_length_max(1.0);
-
-    // World-space movement: input.x = strafe left/right, input.y = forward/back
-    let move_dir = Vec3::new(-input.x, 0.0, input.y);
-
-    // Get current horizontal velocity
-    let linear_velocity = forces.linear_velocity();
-    let ground_velocity = Vec3::new(linear_velocity.x, 0.0, linear_velocity.z);
-
-    // Calculate desired velocity
-    let desired_velocity = move_dir * MAX_SPEED;
-
-    // Smoothly move toward desired velocity
-    let new_velocity = ground_velocity.move_towards(desired_velocity, max_velocity_delta_per_tick);
-
-    // Calculate required acceleration to reach new velocity
-    let required_acceleration = (new_velocity - ground_velocity) / time.delta_secs();
-
-    // Apply force to achieve the acceleration
-    forces.apply_force(required_acceleration * mass.value());
 }
