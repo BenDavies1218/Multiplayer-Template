@@ -1,23 +1,11 @@
-use bevy::ecs::query::QueryData;
-use bevy::math::VectorSpace;
 use bevy::prelude::*;
-use core::hash::Hash;
+use bevy::math::VectorSpace;
 
-use crate::protocol::*;
-use avian3d::prelude::forces::ForcesItem;
+use crate::protocol::{ProtocolPlugin, CharacterAction};
 use avian3d::prelude::*;
+use avian3d::prelude::forces::ForcesItem;
 use leafwing_input_manager::prelude::ActionState;
 use lightyear::avian3d::plugin::AvianReplicationMode;
-use lightyear::connection::client_of::ClientOf;
-use lightyear::input::leafwing::prelude::LeafwingBuffer;
-use lightyear::prelude::*;
-use lightyear_frame_interpolation::FrameInterpolate;
-
-pub const FLOOR_WIDTH: f32 = 100.0;
-pub const FLOOR_HEIGHT: f32 = 1.0;
-
-pub const BLOCK_WIDTH: f32 = 1.0;
-pub const BLOCK_HEIGHT: f32 = 1.0;
 
 pub const CHARACTER_CAPSULE_RADIUS: f32 = 0.5;
 pub const CHARACTER_CAPSULE_HEIGHT: f32 = 0.5;
@@ -25,23 +13,6 @@ pub const CHARACTER_CAPSULE_HEIGHT: f32 = 0.5;
 // World asset constants
 pub const WORLD_VISUAL_PATH: &str = "models/example_world_visual.glb";
 pub const WORLD_COLLISION_PATH: &str = "models/example_world_collision.glb";
-
-// World transform - adjust if your world is rotated or offset
-// If your Blender export is upside down, uncomment this:
-// pub const WORLD_ROTATION: Quat = Quat::from_rotation_x(std::f32::consts::PI);
-// Or if it needs 90 degree rotation:
-// pub const WORLD_ROTATION: Quat = Quat::from_rotation_x(std::f32::consts::FRAC_PI_2);
-
-// Skybox asset constants
-pub const DAY_CLEAR_SKYBOX: &str = "skyboxes/day_clear.jpg";
-pub const EVENING_MOUNTAINS_SKYBOX: &str = "skyboxes/evening_mountains.jpg";
-pub const EVENING_SKY_SKYBOX: &str = "skyboxes/evening_sky.jpg";
-pub const SUNSET_SKY_SKYBOX: &str = "skyboxes/sunset_sky.jpg";
-pub const WINTER_DAY_SKYBOX: &str = "skyboxes/winter_day.jpg";
-
-// Lighting constants
-pub const DEFAULT_SUN_INTENSITY: f32 = 15000.0;
-pub const DEFAULT_AMBIENT_BRIGHTNESS: f32 = 0.2;
 
 #[derive(Bundle)]
 pub struct CharacterPhysicsBundle {
@@ -65,44 +36,15 @@ impl Default for CharacterPhysicsBundle {
     }
 }
 
-#[derive(Bundle)]
-pub struct FloorPhysicsBundle {
-    collider: Collider,
-    rigid_body: RigidBody,
-}
-
-impl Default for FloorPhysicsBundle {
-    fn default() -> Self {
-        Self {
-            collider: Collider::cuboid(FLOOR_WIDTH, FLOOR_HEIGHT, FLOOR_WIDTH),
-            rigid_body: RigidBody::Static,
-        }
-    }
-}
-
-#[derive(Bundle)]
-pub struct BlockPhysicsBundle {
-    collider: Collider,
-    rigid_body: RigidBody,
-}
-
-impl Default for BlockPhysicsBundle {
-    fn default() -> Self {
-        Self {
-            collider: Collider::cuboid(BLOCK_WIDTH, BLOCK_HEIGHT, BLOCK_WIDTH),
-            rigid_body: RigidBody::Dynamic,
-        }
-    }
-}
-
 #[derive(Clone)]
 pub struct SharedPlugin;
 
 impl Plugin for SharedPlugin {
     fn build(&self, app: &mut App) {
+        // Neetworking protocols
         app.add_plugins(ProtocolPlugin);
 
-        // Register types needed for scene spawning
+        // types needed for replication and interpolation
         app.register_type::<Transform>();
         app.register_type::<GlobalTransform>();
 
@@ -114,34 +56,37 @@ impl Plugin for SharedPlugin {
         app.add_plugins(
             PhysicsPlugins::default()
                 .build()
-                // disable the position<>transform sync plugins as it is handled by lightyear_avian
                 .disable::<PhysicsTransformPlugin>()
                 .disable::<PhysicsInterpolationPlugin>()
-                // disable Sleeping plugin as it can mess up physics rollbacks
                 .disable::<IslandPlugin>()
                 .disable::<IslandSleepingPlugin>(),
         );
 
         // World loading (visual and collision)
-        app.add_plugins(crate::world::WorldPlugin);
+        // Configure based on whether this is server-only or has client features
+        #[cfg(all(feature = "server", not(feature = "client")))]
+        {
+            // Server-only: collision only, no visuals, no debug
+            app.add_plugins(crate::world::WorldPlugin {
+                config: crate::world::WorldPluginConfig::server(),
+            });
+            info!("WorldPlugin configured for server (collision only)");
+        }
 
-        // Debug
-        app.add_systems(FixedLast, fixed_last_log);
-        app.add_systems(Last, last_log);
+        #[cfg(feature = "client")]
+        {
+            // Client or hybrid: full features with debug
+            app.add_plugins(crate::world::WorldPlugin {
+                config: crate::world::WorldPluginConfig::client(),
+            });
+            info!("WorldPlugin configured for client (visual + collision + debug)");
+        }
     }
 }
 
-/// Generate pseudo-random color based on `client_id`.
-// Updated to use PeerId
-pub(crate) fn color_from_id(client_id: PeerId) -> Color {
-    let h = (((client_id.to_bits().wrapping_mul(30)) % 360) as f32) / 360.0;
-    let s = 1.0;
-    let l = 0.5;
-    Color::hsl(h, s, l)
-}
-
-/// Apply the character actions `action_state` to the character entity `character`.
-pub fn apply_character_action(
+/// Apply character movement (shared between client and server)
+/// This uses world-space movement for simplicity and determinism
+pub fn apply_character_movement(
     entity: Entity,
     mass: &ComputedMass,
     time: &Res<Time>,
@@ -151,11 +96,12 @@ pub fn apply_character_action(
 ) {
     const MAX_SPEED: f32 = 5.0;
     const MAX_ACCELERATION: f32 = 20.0;
+    const JUMP_IMPULSE: f32 = 5.0;
 
-    // How much velocity can change in a single tick given the max acceleration.
+    // How much velocity can change in a single tick
     let max_velocity_delta_per_tick = MAX_ACCELERATION * time.delta_secs();
 
-    // Handle jumping.
+    // === JUMPING ===
     if action_state.just_pressed(&CharacterAction::Jump) {
         let ray_cast_origin = forces.position().0
             + Vec3::new(
@@ -164,10 +110,7 @@ pub fn apply_character_action(
                 0.0,
             );
 
-        // Only jump if the character is on the ground.
-        //
-        // Check if we are touching the ground by sending a ray from the bottom
-        // of the character downwards.
+        // Only jump if on the ground
         if spatial_query
             .cast_ray(
                 ray_cast_origin,
@@ -178,96 +121,32 @@ pub fn apply_character_action(
             )
             .is_some()
         {
-            forces.apply_linear_impulse(Vec3::new(0.0, 5.0, 0.0));
+            forces.apply_linear_impulse(Vec3::new(0.0, JUMP_IMPULSE, 0.0));
         }
     }
 
-    // Handle moving.
-    let move_dir = action_state
+    // === MOVEMENT (World-Space) ===
+    // This is simpler than camera-relative movement and works identically on client/server
+    let input = action_state
         .axis_pair(&CharacterAction::Move)
         .clamp_length_max(1.0);
-    let move_dir = Vec3::new(-move_dir.x, 0.0, move_dir.y);
 
-    // Linear velocity of the character ignoring vertical speed.
+    // World-space movement: input.x = strafe left/right, input.y = forward/back
+    let move_dir = Vec3::new(-input.x, 0.0, input.y);
+
+    // Get current horizontal velocity
     let linear_velocity = forces.linear_velocity();
-    let ground_linear_velocity = Vec3::new(linear_velocity.x, 0.0, linear_velocity.z);
+    let ground_velocity = Vec3::new(linear_velocity.x, 0.0, linear_velocity.z);
 
-    let desired_ground_linear_velocity = move_dir * MAX_SPEED;
+    // Calculate desired velocity
+    let desired_velocity = move_dir * MAX_SPEED;
 
-    let new_ground_linear_velocity = ground_linear_velocity
-        .move_towards(desired_ground_linear_velocity, max_velocity_delta_per_tick);
+    // Smoothly move toward desired velocity
+    let new_velocity = ground_velocity.move_towards(desired_velocity, max_velocity_delta_per_tick);
 
-    // Acceleration required to change the linear velocity from
-    // `ground_linear_velocity` to `new_ground_linear_velocity` in the duration
-    // of a single tick.
-    //
-    // There is no need to clamp the acceleration's length to
-    // `MAX_ACCELERATION`. The difference between `ground_linear_velocity` and
-    // `new_ground_linear_velocity` is never great enough to require more than
-    // `MAX_ACCELERATION` in a single tick, This is because
-    // `new_ground_linear_velocity` is calculated using
-    // `max_velocity_delta_per_tick` which restricts how much the velocity can
-    // change in a single tick based on `MAX_ACCELERATION`.
-    let required_acceleration =
-        (new_ground_linear_velocity - ground_linear_velocity) / time.delta_secs();
+    // Calculate required acceleration to reach new velocity
+    let required_acceleration = (new_velocity - ground_velocity) / time.delta_secs();
 
+    // Apply force to achieve the acceleration
     forces.apply_force(required_acceleration * mass.value());
-}
-
-pub(crate) fn fixed_last_log(
-    timeline: Res<LocalTimeline>,
-    players: Query<
-        (
-            Entity,
-            &Position,
-            Option<&VisualCorrection<Position>>,
-            Option<&ActionState<CharacterAction>>,
-            Option<&LeafwingBuffer<CharacterAction>>,
-        ),
-        With<CharacterMarker>,
-    >,
-) {
-    let tick = timeline.tick();
-
-    for (entity, position, correction, action_state, input_buffer) in players.iter() {
-        let pressed = action_state.map(|a| a.axis_pair(&CharacterAction::Move));
-        let last_buffer_tick = input_buffer.and_then(|b| b.get_last_with_tick().map(|(t, _)| t));
-        info!(
-            ?tick,
-            ?entity,
-            ?position,
-            ?correction,
-            ?pressed,
-            ?last_buffer_tick,
-            "Player - FixedLast"
-        );
-    }
-}
-
-pub(crate) fn last_log(
-    timeline: Res<LocalTimeline>,
-    players: Query<
-        (
-            Entity,
-            &Position,
-            &Transform,
-            Option<&FrameInterpolate<Position>>,
-            Option<&VisualCorrection<Position>>,
-        ),
-        With<CharacterMarker>,
-    >,
-) {
-    let tick = timeline.tick();
-
-    for (entity, position, transform, interpolate, correction) in players.iter() {
-        info!(
-            ?tick,
-            ?entity,
-            ?position,
-            ?transform,
-            ?interpolate,
-            ?correction,
-            "Player - Last"
-        );
-    }
 }

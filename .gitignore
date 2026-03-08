@@ -11,6 +11,9 @@
 
 .claude/
 
+/plans/
+**/plans/
+
 # Trunk
 **/dist/
 

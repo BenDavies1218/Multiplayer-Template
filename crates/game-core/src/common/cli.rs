@@ -12,6 +12,7 @@ use bevy::prelude::*;
 use bevy::DefaultPlugins;
 use bevy::diagnostic::DiagnosticsPlugin;
 use bevy::state::app::StatesPlugin;
+use bevy::prelude::Image;
 use clap::{Parser, Subcommand};
 
 #[cfg(feature = "client")]
@@ -320,7 +321,6 @@ pub fn new_headless_app() -> App {
     app.add_plugins((
         MinimalPlugins,
         AssetPlugin {
-            // Point to root assets folder from apps/server
             file_path: "../../assets".to_string(),
             meta_check: bevy::asset::AssetMetaCheck::Never,
             ..default()
@@ -329,5 +329,21 @@ pub fn new_headless_app() -> App {
         StatesPlugin,
         DiagnosticsPlugin,
     ));
+
+    // Add minimal plugins for loading collision meshes from GLTF files
+    // Server needs these to load collision geometry from .glb files
+    // GLTF is a complex format that references many asset types
+    #[cfg(feature = "server")]
+    {
+        app.add_plugins(bevy::gltf::GltfPlugin::default());
+        app.add_plugins(bevy::transform::TransformPlugin);
+        app.add_plugins(bevy::scene::ScenePlugin);
+        // Initialize all asset types that GLTF files might reference
+        app.init_asset::<bevy::pbr::StandardMaterial>();
+        app.init_asset::<bevy::mesh::Mesh>();
+        app.init_asset::<bevy::scene::Scene>();
+        app.init_asset::<Image>();
+    }
+
     app
 }

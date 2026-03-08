@@ -3275,12 +3275,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "game-camera"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "serde",
+ "tracing",
+]
+
+[[package]]
 name = "game-client"
 version = "0.1.0"
 dependencies = [
  "avian3d",
  "bevy",
  "console_error_panic_hook",
+ "game-camera",
  "game-core",
  "getrandom 0.2.17",
  "leafwing-input-manager",

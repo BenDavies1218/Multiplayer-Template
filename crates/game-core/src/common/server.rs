@@ -33,10 +33,6 @@ pub enum ServerTransports {
     WebSocket {
         local_port: u16,
     },
-    #[cfg(feature = "steam")]
-    Steam {
-        local_port: u16,
-    },
 }
 
 #[derive(Component, Debug)]

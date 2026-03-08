@@ -10,10 +10,7 @@ pub mod shared;
 pub mod common;
 pub mod config;
 pub mod world;
-pub mod lighting;
-// TODO: Skybox API changed in Bevy 0.18 - needs to be updated
-// pub mod skybox;
-pub mod lightmaps;
+pub mod movement;
 
 // Re-export commonly used items
 pub use protocol::*;

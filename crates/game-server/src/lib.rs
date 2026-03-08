@@ -8,4 +8,4 @@
 pub mod server;
 
 // Re-export
-pub use server::ExampleServerPlugin;
+pub use server::ServerPlugin;

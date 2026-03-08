@@ -4,6 +4,7 @@ members = [
     "crates/game-core",
     "crates/game-client",
     "crates/game-server",
+    "crates/game-camera",
     "apps/server",
     "apps/native",
     "apps/web",
@@ -23,6 +24,7 @@ repository = "https://github.com/BenDavies1218/Multiplayer-Template"
 game-core = { path = "crates/game-core" }
 game-client = { path = "crates/game-client" }
 game-server = { path = "crates/game-server" }
+game-camera = { path = "crates/game-camera" }
 
 # External dependencies - versions shared across all crates
 bevy = { version = "0.18", default-features = false }

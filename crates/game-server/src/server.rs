@@ -1,11 +1,6 @@
-use core::f32::consts::TAU;
-
 use avian3d::prelude::*;
 use bevy::color::palettes::css;
-use bevy::math::VectorSpace;
-use bevy::platform::collections::HashMap;
 use bevy::prelude::*;
-use bevy::time::common_conditions::on_timer;
 use core::time::Duration;
 use leafwing_input_manager::prelude::*;
 use lightyear::connection::client::Connected;
@@ -14,22 +9,13 @@ use lightyear::prelude::*;
 use game_core::common::shared::send_interval;
 
 use game_core::protocol::*;
-use game_core::shared;
-use game_core::shared::apply_character_action;
-use game_core::shared::BlockPhysicsBundle;
-use game_core::shared::CharacterPhysicsBundle;
-use game_core::shared::FloorPhysicsBundle;
-use game_core::shared::CHARACTER_CAPSULE_HEIGHT;
-use game_core::shared::CHARACTER_CAPSULE_RADIUS;
-use game_core::shared::FLOOR_HEIGHT;
-use game_core::shared::FLOOR_WIDTH;
+use game_core::shared::{CharacterPhysicsBundle, apply_character_movement};
 
 #[derive(Clone)]
-pub struct ExampleServerPlugin;
+pub struct ServerPlugin;
 
-impl Plugin for ExampleServerPlugin {
+impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
         app.add_systems(
             FixedUpdate,
             (handle_character_actions, player_shoot, despawn_system),
@@ -45,7 +31,7 @@ fn handle_character_actions(
     mut query: Query<(Entity, &ComputedMass, &ActionState<CharacterAction>, Forces)>,
 ) {
     for (entity, mass, action_state, forces) in &mut query {
-        apply_character_action(entity, mass, &time, &spatial_query, action_state, forces);
+        apply_character_movement(entity, mass, &time, &spatial_query, action_state, forces);
     }
 }
 
@@ -69,7 +55,7 @@ fn despawn_system(
 
 fn player_shoot(
     mut commands: Commands,
-    timeline: Res<LocalTimeline>,
+    _timeline: Res<LocalTimeline>,
     query: Query<(&ActionState<CharacterAction>, &Position, &ControlledBy), Without<Predicted>>,
     time: Res<Time<Fixed>>,
 ) {
@@ -131,26 +117,6 @@ fn player_shoot(
             ));
         }
     }
-}
-
-// Renamed from init, removed start_server
-fn setup(mut commands: Commands) {
-    commands.spawn((
-        Name::new("Floor"),
-        FloorPhysicsBundle::default(),
-        FloorMarker,
-        Position::new(Vec3::ZERO),
-        Replicate::to_clients(NetworkTarget::All),
-    ));
-
-    commands.spawn((
-        Name::new("Block"),
-        BlockPhysicsBundle::default(),
-        BlockMarker,
-        Position::new(Vec3::new(1.0, 1.0, 0.0)),
-        Replicate::to_clients(NetworkTarget::All),
-        PredictionTarget::to_clients(NetworkTarget::All),
-    ));
 }
 
 /// Add the ReplicationSender component to new clients

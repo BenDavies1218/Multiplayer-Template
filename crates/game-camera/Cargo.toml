@@ -1,0 +1,23 @@
+[package]
+name = "game-camera"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish = false
+
+[features]
+default = ["client"]
+client = []
+server = []
+
+[dependencies]
+bevy = { workspace = true, features = [
+    "bevy_state",
+    "bevy_camera",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_winit",
+] }
+serde = { workspace = true, features = ["alloc", "derive"] }
+tracing.workspace = true

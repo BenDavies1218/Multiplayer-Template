@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 # Internal
-game-core.workspace = true
+game-core = { path = "../game-core", default-features = false, features = ["server"] }
 
 # Workspace dependencies
 bevy = { workspace = true, features = [

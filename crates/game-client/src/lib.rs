@@ -10,4 +10,4 @@ pub mod renderer;
 
 // Re-export
 pub use client::ExampleClientPlugin;
-pub use renderer::ExampleRendererPlugin;
+pub use renderer::FirstPersonPlugin;

@@ -6,8 +6,6 @@
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use avian3d::prelude::*;
-use game_core::world::WorldPlugin;
-use game_core::lighting;
 use game_core::shared::{WORLD_VISUAL_PATH, CHARACTER_CAPSULE_HEIGHT, CHARACTER_CAPSULE_RADIUS};
 
 fn main() {
@@ -29,7 +27,9 @@ fn main() {
             ..default()
         }))
         .add_plugins(PhysicsPlugins::default())
-        .add_plugins(WorldPlugin)
+        .add_plugins(game_core::world::WorldPlugin {
+            config: game_core::world::WorldPluginConfig::viewer(),
+        })
         .add_systems(Startup, setup)
         .add_systems(Update, camera_controller)
         .run();
@@ -66,6 +66,7 @@ fn setup(
     info!("  Mouse - Look around");
     info!("  Click - Grab cursor");
     info!("  Escape - Release cursor");
+    info!("  C - Toggle collision mesh visualization");
     info!("");
     info!("Loading world from: {}", WORLD_VISUAL_PATH);
 
@@ -74,8 +75,6 @@ fn setup(
         Transform::from_xyz(0.0, 5.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y),
         FlyCamera::default(),
     ));
-
-    lighting::presets::outdoor_day(&mut commands, lighting::ShadowQuality::High);
 
     // Spawn a test character capsule with physics to test collision
     // This capsule will fall due to gravity and collide with the world

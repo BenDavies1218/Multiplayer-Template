@@ -11,7 +11,7 @@ use game_core::common::cli::{Cli, Mode};
 use game_core::common::shared;
 use game_core::config;
 use game_core::SharedPlugin;
-use game_client::{ExampleClientPlugin, ExampleRendererPlugin};
+use game_client::{ExampleClientPlugin, FirstPersonPlugin};
 
 fn main() {
     // Load environment variables from .env file (won't exist in WASM, uses defaults)
@@ -23,7 +23,7 @@ fn main() {
 
     app.add_plugins(SharedPlugin);
     app.add_plugins(ExampleClientPlugin);
-    app.add_plugins(ExampleRendererPlugin);
+    app.add_plugins(FirstPersonPlugin::default());
 
     cli.spawn_connections(&mut app);
 
