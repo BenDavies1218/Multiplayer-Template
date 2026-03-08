@@ -9,7 +9,8 @@ use lightyear::prelude::*;
 use game_core::common::shared::send_interval;
 
 use game_core::protocol::*;
-use game_core::shared::{CharacterPhysicsBundle, apply_character_movement};
+use game_core::shared::CharacterPhysicsBundle;
+use game_core::movement::server::apply_server_movement;
 
 #[derive(Clone)]
 pub struct ServerPlugin;
@@ -28,10 +29,21 @@ impl Plugin for ServerPlugin {
 fn handle_character_actions(
     time: Res<Time>,
     spatial_query: SpatialQuery,
-    mut query: Query<(Entity, &ComputedMass, &ActionState<CharacterAction>, Forces)>,
+    mut query: Query<(Entity, &ComputedMass, &ActionState<CharacterAction>, &mut CameraOrientation, Forces)>,
 ) {
-    for (entity, mass, action_state, forces) in &mut query {
-        apply_character_movement(entity, mass, &time, &spatial_query, action_state, forces);
+    for (entity, mass, action_state, mut camera_orientation, forces) in &mut query {
+        let look = action_state.axis_pair(&CharacterAction::Look);
+        camera_orientation.yaw = look.x;
+        camera_orientation.pitch = look.y;
+        apply_server_movement(
+            entity,
+            mass,
+            &time,
+            &spatial_query,
+            action_state,
+            forces,
+            camera_orientation.yaw,
+        );
     }
 }
 
@@ -181,6 +193,7 @@ pub(crate) fn handle_connected(
             CharacterPhysicsBundle::default(),
             ColorComponent(color.into()),
             CharacterMarker,
+            CameraOrientation { yaw: 0.0, pitch: 0.0 },
         ))
         .id();
 

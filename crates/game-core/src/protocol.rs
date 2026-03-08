@@ -23,17 +23,27 @@ pub struct ProjectileMarker;
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct BlockMarker;
 
+/// Camera orientation component
+/// Client updates this locally, server reads from ActionState metadata via replication
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct CameraOrientation {
+    pub yaw: f32,
+    pub pitch: f32,
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Reflect, Serialize, Deserialize)]
 pub enum CharacterAction {
     Move,
     Jump,
     Shoot,
+    Look,  // Camera yaw/pitch as DualAxis
 }
 
 impl Actionlike for CharacterAction {
     fn input_control_kind(&self) -> InputControlKind {
         match self {
             Self::Move => InputControlKind::DualAxis,
+            Self::Look => InputControlKind::DualAxis,
             Self::Jump => InputControlKind::Button,
             Self::Shoot => InputControlKind::Button,
         }
@@ -46,6 +56,7 @@ pub(crate) struct ProtocolPlugin;
 
 impl Plugin for ProtocolPlugin {
     fn build(&self, app: &mut App) {
+        // Leafwing input for WASD/Jump/Shoot
         app.add_plugins(leafwing::InputPlugin::<CharacterAction> {
             config: InputConfig::<CharacterAction> {
                 rebroadcast_inputs: true,
@@ -64,6 +75,10 @@ impl Plugin for ProtocolPlugin {
         app.register_component::<FloorMarker>();
 
         app.register_component::<BlockMarker>();
+
+        // Camera orientation - NOT predicted, client authority
+        // Client updates this and server reads it directly
+        app.register_component::<CameraOrientation>();
 
         // Fully replicated, but not visual, so no need for lerp/corrections:
         app.register_component::<LinearVelocity>()
@@ -109,4 +124,9 @@ fn linear_velocity_should_rollback(this: &LinearVelocity, that: &LinearVelocity)
 
 fn angular_velocity_should_rollback(this: &AngularVelocity, that: &AngularVelocity) -> bool {
     (this.0 - that.0).length() >= 0.01
+}
+
+fn camera_orientation_should_rollback(this: &CameraOrientation, that: &CameraOrientation) -> bool {
+    // Only rollback if yaw or pitch differ significantly (about 1 degree)
+    (this.yaw - that.yaw).abs() >= 0.02 || (this.pitch - that.pitch).abs() >= 0.02
 }

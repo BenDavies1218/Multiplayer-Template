@@ -3,21 +3,22 @@ use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 use lightyear::prelude::Controlled;
 use lightyear::prelude::*;
-
 use game_core::protocol::*;
 use game_core::shared::*;
+use game_core::movement::client::apply_client_movement;
+use game_camera::GameCamera;
 
 pub struct ExampleClientPlugin;
 
 impl Plugin for ExampleClientPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, handle_character_actions);
+        // Sync camera BEFORE movement in FixedUpdate so it's sent as input
+        app.add_systems(FixedUpdate, (sync_camera_to_character, handle_character_actions).chain());
         app.add_systems(Update, handle_new_character);
     }
 }
 
-/// Process character actions and apply them to their associated character
-/// entity. Uses the shared movement function that works identically on client and server.
+/// Process character actions and apply camera-relative movement
 fn handle_character_actions(
     time: Res<Time>,
     spatial_query: SpatialQuery,
@@ -27,19 +28,21 @@ fn handle_character_actions(
     >,
 ) {
     for (entity, computed_mass, action_state, forces) in &mut query {
-        apply_character_movement(
+        // Get camera yaw from the Look action
+        let camera_yaw = action_state.axis_pair(&CharacterAction::Look).x;
+
+        apply_client_movement(
             entity,
             computed_mass,
             &time,
             &spatial_query,
             action_state,
             forces,
+            camera_yaw,
         );
     }
 }
 
-/// Add physics to characters that are newly predicted. If the client controls
-/// the character then add an input component.
 fn handle_new_character(
     mut commands: Commands,
     mut character_query: Query<
@@ -63,6 +66,22 @@ fn handle_new_character(
         info!(?entity, "Adding physics to character");
         commands
             .entity(entity)
-            .insert(CharacterPhysicsBundle::default());
+            .insert((
+                CharacterPhysicsBundle::default(),
+                CameraOrientation { yaw: 0.0, pitch: 0.0 },
+            ));
+    }
+}
+
+fn sync_camera_to_character(
+    camera_query: Query<&GameCamera>,
+    mut character_query: Query<&mut ActionState<CharacterAction>, (With<CharacterMarker>, With<Predicted>, With<Controlled>)>,
+) {
+    let Ok(game_camera) = camera_query.single() else {
+        return;
+    };
+
+    for mut action_state in &mut character_query {
+        action_state.set_axis_pair(&CharacterAction::Look, Vec2::new(game_camera.yaw, game_camera.pitch));
     }
 }
