@@ -6,13 +6,17 @@ use bevy::prelude::*;
 use bevy::diagnostic::DiagnosticsPlugin;
 use bevy::state::app::StatesPlugin;
 
-use game_core::utils::cli::log_plugin;
+use game_core::utils::cli::log_plugin_from_config;
 use game_core::networking::settings::shared_settings_from_config;
 use game_core::GameCoreConfig;
 
 use crate::transport::{ExampleServer, ServerTransports, start};
 
 pub fn new_headless_app() -> App {
+    new_headless_app_from_config(&GameCoreConfig::default())
+}
+
+pub fn new_headless_app_from_config(core_config: &GameCoreConfig) -> App {
     let mut app = App::new();
     app.add_plugins((
         MinimalPlugins,
@@ -21,7 +25,7 @@ pub fn new_headless_app() -> App {
             meta_check: bevy::asset::AssetMetaCheck::Never,
             ..default()
         },
-        log_plugin(),
+        log_plugin_from_config(core_config),
         StatesPlugin,
         DiagnosticsPlugin,
     ));
@@ -40,9 +44,14 @@ pub fn new_headless_app() -> App {
     app
 }
 
-/// Build a server app with headless mode and lightyear server plugins
+/// Build a server app with headless mode and lightyear server plugins (uses defaults)
 pub fn build_server_app(tick_duration: Duration) -> App {
-    let mut app = new_headless_app();
+    build_server_app_from_config(tick_duration, &GameCoreConfig::default())
+}
+
+/// Build a server app with headless mode and lightyear server plugins using config
+pub fn build_server_app_from_config(tick_duration: Duration, core_config: &GameCoreConfig) -> App {
+    let mut app = new_headless_app_from_config(core_config);
     app.add_plugins(lightyear::prelude::server::ServerPlugins { tick_duration });
     app
 }

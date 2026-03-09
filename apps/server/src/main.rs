@@ -5,7 +5,7 @@ use game_core::networking::config;
 use game_core::{GameCoreConfig, SharedPlugin};
 use game_core::world::{WorldPlugin, WorldPluginConfig};
 use game_core::zones::{ZonePlugin, ZonePluginConfig};
-use game_server::app::{build_server_app, spawn_server_connection_from_config};
+use game_server::app::{build_server_app_from_config, spawn_server_connection_from_config};
 use game_server::{GameServerConfig, ServerPlugin};
 
 fn main() {
@@ -16,7 +16,7 @@ fn main() {
 
     let tick = Duration::from_secs_f64(1.0 / core_config.networking.fixed_timestep_hz);
 
-    let mut app = build_server_app(tick);
+    let mut app = build_server_app_from_config(tick, &core_config);
 
     app.insert_resource(server_config);
     app.add_plugins(SharedPlugin { config: core_config.clone() });

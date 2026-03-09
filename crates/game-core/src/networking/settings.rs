@@ -32,6 +32,10 @@ pub fn shared_settings_from_config(config: &GameCoreConfig) -> SharedSettings {
     }
 }
 
+pub fn send_interval_from_config(config: &GameCoreConfig) -> Duration {
+    Duration::from_secs_f64(1.0 / config.networking.send_interval_hz)
+}
+
 pub fn steam_app_id_from_config(config: &GameCoreConfig) -> u32 {
     config.networking.steam_app_id
 }

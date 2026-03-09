@@ -5,8 +5,9 @@ use core::net::{Ipv4Addr, SocketAddr};
 
 use bevy::prelude::*;
 
-use game_core::common::shared::SharedSettings;
-use game_core::config::Config;
+use game_core::networking::settings::SharedSettings;
+use game_core::networking::config::Config;
+use game_core::GameCoreConfig;
 use bevy::ecs::lifecycle::HookContext;
 use bevy::ecs::world::DeferredWorld;
 use core::time::Duration;
@@ -16,6 +17,7 @@ use lightyear::prelude::client::*;
 use lightyear::prelude::*;
 use lightyear::{netcode::NetcodeClient, websocket::client::WebSocketTarget};
 use serde::{Deserialize, Serialize};
+use crate::client_config::GameClientConfig;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[non_exhaustive]
@@ -46,9 +48,15 @@ impl ExampleClient {
     fn on_add(mut world: DeferredWorld, context: HookContext) {
         let entity = context.entity;
         world.commands().queue(move |world: &mut World| -> Result {
+            let client_config = world.get_resource::<GameClientConfig>()
+                .cloned()
+                .unwrap_or_default();
+            let core_config = world.get_resource::<GameCoreConfig>()
+                .cloned()
+                .unwrap_or_default();
             let mut entity_mut = world.entity_mut(entity);
             let settings = entity_mut.take::<ExampleClient>().unwrap();
-            let config = Config::load();
+            let config = Config::from_core_config(&core_config);
             let client_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), settings.client_port);
             entity_mut.insert((
                 Client::default(),
@@ -60,7 +68,7 @@ impl ExampleClient {
                 // Add interpolation delay to smooth out visual stuttering of remote entities
                 // Configurable via INTERPOLATION_BUFFER_MS environment variable
                 InterpolationConfig::default()
-                    .with_send_interval_ratio(2.0)
+                    .with_send_interval_ratio(client_config.rendering.interpolation_send_ratio)
                     .with_min_delay(config.interpolation_buffer()),
                 Name::from("Client"),
             ));
@@ -77,7 +85,7 @@ impl ExampleClient {
                     // Make sure that the server times out clients when their connection is closed
                     // Configurable via CLIENT_TIMEOUT_SECS environment variable
                     client_timeout_secs: config.client_timeout_secs,
-                    token_expire_secs: -1,
+                    token_expire_secs: client_config.transport.token_expiration,
                     ..default()
                 };
                 entity_mut.insert(NetcodeClient::new(auth, netcode_config)?);

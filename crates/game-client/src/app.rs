@@ -9,7 +9,7 @@ use bevy::winit::WinitSettings;
 use lightyear::link::RecvLinkConditioner;
 use lightyear::prelude::*;
 
-use game_core::utils::cli::log_plugin;
+use game_core::utils::cli::log_plugin_from_config;
 use game_core::networking::settings::{shared_settings_from_config};
 use game_core::GameCoreConfig;
 
@@ -35,10 +35,10 @@ pub fn window_plugin_from_config(config: &GameClientConfig) -> WindowPlugin {
 }
 
 pub fn new_gui_app(add_inspector: bool) -> App {
-    new_gui_app_from_config(add_inspector, &GameClientConfig::default())
+    new_gui_app_from_config(add_inspector, &GameClientConfig::default(), &GameCoreConfig::default())
 }
 
-pub fn new_gui_app_from_config(add_inspector: bool, config: &GameClientConfig) -> App {
+pub fn new_gui_app_from_config(add_inspector: bool, config: &GameClientConfig, core_config: &GameCoreConfig) -> App {
     let mut app = App::new();
     app.add_plugins(
         DefaultPlugins
@@ -50,7 +50,7 @@ pub fn new_gui_app_from_config(add_inspector: bool, config: &GameClientConfig) -
                 meta_check: bevy::asset::AssetMetaCheck::Never,
                 ..default()
             })
-            .set(log_plugin())
+            .set(log_plugin_from_config(core_config))
             .set(window_plugin_from_config(config)),
     );
     // we want the same frequency of updates for both focused and unfocused
@@ -74,8 +74,8 @@ pub fn build_client_app(tick_duration: Duration, add_inspector: bool) -> App {
 }
 
 /// Build a client app using config
-pub fn build_client_app_from_config(tick_duration: Duration, add_inspector: bool, config: &GameClientConfig) -> App {
-    let mut app = new_gui_app_from_config(add_inspector, config);
+pub fn build_client_app_from_config(tick_duration: Duration, add_inspector: bool, config: &GameClientConfig, core_config: &GameCoreConfig) -> App {
+    let mut app = new_gui_app_from_config(add_inspector, config, core_config);
     app.add_plugins(lightyear::prelude::client::ClientPlugins { tick_duration });
     app
 }

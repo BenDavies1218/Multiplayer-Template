@@ -22,7 +22,7 @@ fn main() {
     let cli = Cli::default();
     let tick = Duration::from_secs_f64(1.0 / core_config.networking.fixed_timestep_hz);
 
-    let mut app = build_client_app_from_config(tick, true, &client_config);
+    let mut app = build_client_app_from_config(tick, true, &client_config, &core_config);
 
     app.insert_resource(camera_config.clone());
     app.add_plugins(SharedPlugin { config: core_config.clone() });

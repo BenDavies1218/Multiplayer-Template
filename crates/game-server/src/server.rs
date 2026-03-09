@@ -5,7 +5,7 @@ use leafwing_input_manager::prelude::*;
 use lightyear::connection::client::Connected;
 use lightyear::prelude::server::*;
 use lightyear::prelude::*;
-use game_core::networking::settings::send_interval;
+use game_core::networking::settings::send_interval_from_config;
 
 use game_core::networking::protocol::*;
 use game_core::networking::shared::CharacterPhysicsBundle;
@@ -140,11 +140,12 @@ fn player_shoot(
 }
 
 /// Add the ReplicationSender component to new clients
-pub(crate) fn handle_new_client(trigger: On<Add, LinkOf>, mut commands: Commands) {
+pub(crate) fn handle_new_client(trigger: On<Add, LinkOf>, mut commands: Commands, config: Res<GameCoreConfig>) {
+    let interval = send_interval_from_config(&config);
     commands
         .entity(trigger.entity)
         .insert(ReplicationSender::new(
-            send_interval(),
+            interval,
             SendUpdatesMode::SinceLastAck,
             false,
         ));
