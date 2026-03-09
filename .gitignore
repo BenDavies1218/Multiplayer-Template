@@ -17,6 +17,10 @@
 # Trunk
 **/dist/
 
+# Large assets
+*.exr
+Screenshot*
+
 # IDE
 .vscode/
 .idea/
