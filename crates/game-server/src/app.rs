@@ -6,10 +6,11 @@ use bevy::prelude::*;
 use bevy::diagnostic::DiagnosticsPlugin;
 use bevy::state::app::StatesPlugin;
 
-use game_core::common::cli::log_plugin;
-use game_core::common::shared::{server_port, SHARED_SETTINGS};
+use game_core::utils::cli::log_plugin;
+use game_core::networking::settings::shared_settings_from_config;
+use game_core::GameCoreConfig;
 
-use crate::transport::{ExampleServer, ServerTransports, WebTransportCertificateSettings, start};
+use crate::transport::{ExampleServer, ServerTransports, start};
 
 pub fn new_headless_app() -> App {
     let mut app = App::new();
@@ -46,19 +47,21 @@ pub fn build_server_app(tick_duration: Duration) -> App {
     app
 }
 
-/// Spawn the server connection entity and add the start system
+/// Spawn the server connection entity and add the start system (uses defaults)
 pub fn spawn_server_connection(app: &mut App) {
+    let core_config = GameCoreConfig::default();
+    spawn_server_connection_from_config(app, &core_config);
+}
+
+/// Spawn the server connection entity using config values
+pub fn spawn_server_connection_from_config(app: &mut App, core_config: &GameCoreConfig) {
     app.world_mut()
         .spawn(ExampleServer {
             conditioner: None,
-            transport: ServerTransports::WebTransport {
-                local_port: server_port(),
-                certificate: WebTransportCertificateSettings::FromFile {
-                    cert: "./certificates/cert.pem".to_string(),
-                    key: "./certificates/key.pem".to_string(),
-                },
+            transport: ServerTransports::Udp {
+                local_port: core_config.networking.server_port,
             },
-            shared: SHARED_SETTINGS,
+            shared: shared_settings_from_config(core_config),
         });
     app.add_systems(Startup, start);
 }

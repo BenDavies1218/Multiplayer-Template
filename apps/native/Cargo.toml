@@ -14,6 +14,7 @@ doc = false
 # Internal crates
 game-core.workspace = true
 game-client.workspace = true
+game-camera.workspace = true
 
 # External dependencies
 bevy = { workspace = true, features = [

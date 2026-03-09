@@ -7,27 +7,32 @@ use game_core::utils::config_loader::load_config;
 use game_core::networking::config;
 use game_core::{GameCoreConfig, SharedPlugin};
 use game_core::world::{WorldPlugin, WorldPluginConfig};
-use game_client::app::{build_client_app, spawn_client_connection};
-use game_client::{ClientPlugin, FirstPersonPlugin};
+use game_client::app::{build_client_app_from_config, spawn_client_connection_from_config};
+use game_client::{ClientPlugin, FirstPersonPlugin, GameClientConfig};
+use game_camera::GameCameraFileConfig;
 
 fn main() {
-    // Load environment variables from .env file
     config::init();
 
     let core_config: GameCoreConfig = load_config("../../assets", "game_core_config.json");
+    let client_config: GameClientConfig = load_config("../../assets", "game_client_config.json");
+    let camera_config: GameCameraFileConfig = load_config("../../assets", "game_camera_config.json");
 
     let cli = Cli::default();
     let tick = Duration::from_secs_f64(1.0 / core_config.networking.fixed_timestep_hz);
 
-    let mut app = build_client_app(tick, true);
+    let mut app = build_client_app_from_config(tick, true, &client_config);
 
-    app.add_plugins(SharedPlugin { config: core_config });
+    app.insert_resource(camera_config.clone());
+    app.add_plugins(SharedPlugin { config: core_config.clone() });
     app.add_plugins(WorldPlugin { config: WorldPluginConfig::client() });
     app.add_plugins(ClientPlugin);
-    app.add_plugins(FirstPersonPlugin::default());
+    app.add_plugins(FirstPersonPlugin {
+        camera_config: game_camera::CameraConfig::first_person_from_config(&camera_config),
+    });
 
     let client_id = cli.client_id().expect("You need to specify a client_id via `-c ID`");
-    spawn_client_connection(&mut app, client_id);
+    spawn_client_connection_from_config(&mut app, client_id, &core_config);
 
     add_input_delay(&mut app);
 
