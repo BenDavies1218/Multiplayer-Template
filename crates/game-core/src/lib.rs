@@ -5,14 +5,15 @@
 //! - Shared game logic
 //! - Common utilities and settings
 
-pub mod protocol;
-pub mod shared;
-pub mod common;
-pub mod config;
+pub mod core_config;
+pub mod networking;
+pub mod utils;
 pub mod world;
 pub mod movement;
+pub mod zones;
 
 // Re-export commonly used items
-pub use protocol::*;
-pub use shared::*;
-pub use config::Config;
+pub use networking::protocol::*;
+pub use networking::shared::*;
+pub use networking::config::Config;
+pub use core_config::GameCoreConfig;

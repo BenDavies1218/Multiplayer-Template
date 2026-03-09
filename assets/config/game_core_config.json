@@ -1,0 +1,57 @@
+{
+  "networking": {
+    "server_host": "127.0.0.1",
+    "server_port": 5888,
+    "fixed_timestep_hz": 64.0,
+    "send_interval_hz": 64.0,
+    "client_timeout_secs": 3,
+    "interpolation_buffer_ms": 100,
+    "client_port": 0,
+    "protocol_id": 0,
+    "steam_app_id": 480
+  },
+  "movement": {
+    "max_speed": 5.0,
+    "max_acceleration": 20.0,
+    "jump_impulse": 5.0,
+    "sprint_multiplier": 1.8,
+    "crouch_multiplier": 0.4,
+    "crouch_capsule_height": 0.25,
+    "ground_tolerance": 0.15
+  },
+  "character": {
+    "capsule_radius": 0.5,
+    "capsule_height": 0.5
+  },
+  "world_assets": {
+    "visual_path": "models/example_world_visual.glb",
+    "collision_path": "models/example_world_collision.glb",
+    "zones_path": "models/example_world_zones.glb"
+  },
+  "rollback_thresholds": {
+    "position": 0.01,
+    "rotation": 0.01,
+    "linear_velocity": 0.01,
+    "angular_velocity": 0.01
+  },
+  "zones": {
+    "default_damage": 10.0,
+    "default_damage_interval": 1.0,
+    "default_spawn_position": [0.0, 3.0, 0.0]
+  },
+  "debug_colors": {
+    "collision": [1.0, 0.0, 0.0, 0.3],
+    "death_zone": [1.0, 0.0, 0.0, 0.3],
+    "damage_zone": [1.0, 1.0, 0.0, 0.3],
+    "trigger_zone": [0.0, 0.5, 1.0, 0.3],
+    "spawn_point": [0.0, 1.0, 0.0, 0.3]
+  },
+  "debug_toggle_keys": {
+    "collision": "KeyC",
+    "zone": "KeyZ"
+  },
+  "logging": {
+    "default_level": "info",
+    "filter": "wgpu=error,bevy_render=info,bevy_ecs=warn,bevy_time=warn,naga=warn,bevy_enhanced_input::action::fns=error"
+  }
+}
