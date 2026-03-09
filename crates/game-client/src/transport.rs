@@ -103,7 +103,10 @@ impl ExampleClient {
                     let certificate_digest = {
                         #[cfg(target_family = "wasm")]
                         {
-                            include_str!("../../../certificates/digest.txt").to_string()
+                            // Lightyear expects hex digest without colons
+                            include_str!("../../../certificates/digest.txt")
+                                .trim()
+                                .replace(':', "")
                         }
                         #[cfg(not(target_family = "wasm"))]
                         {

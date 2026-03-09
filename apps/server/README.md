@@ -5,6 +5,7 @@ The dedicated game server for the multiplayer Bevy game. This binary runs the au
 ## Purpose
 
 The server is the authority for:
+
 - Player positions and physics
 - Game state and world entities
 - Input validation and processing
@@ -14,12 +15,13 @@ The server is the authority for:
 
 - **Headless Mode**: Runs without graphics, optimized for server deployment
 - **Multiple Transport Protocols**:
-  - UDP (fast, unreliable)
+  - UDP (fast, default)
   - WebSocket (browser-compatible, TCP-based)
   - WebTransport (modern, QUIC-based with TLS)
 - **Netcode Security**: Token-based authentication
 - **Physics Simulation**: Avian3d running in FixedUpdate
 - **Player Management**: Automatic spawning/despawning on connect/disconnect
+- **JSON Configuration**: All settings driven by config files
 
 ## Building
 
@@ -45,38 +47,68 @@ The binary will be in `target/release/server`.
 cargo run -p server -- server
 ```
 
-Or with the built binary:
+### Fast Development Build
+
+```bash
+cargo dev-server
+```
+
+This uses dynamic linking for faster incremental builds.
+
+### With the Built Binary
 
 ```bash
 ./target/release/server server
 ```
 
-### Configuration
+## Configuration
 
-The server uses WebTransport by default on port **5000**.
+All server settings are loaded from JSON config files in `assets/config/`:
 
-To change transport protocols, edit `crates/game-core/src/common/cli.rs`:
+### Network Settings (`game_core_config.json`)
 
-```rust
-// UDP
-transport: ServerTransports::Udp {
-    local_port: SERVER_PORT,
-}
-
-// WebSocket
-transport: ServerTransports::WebSocket {
-    local_port: SERVER_PORT,
-}
-
-// WebTransport (default)
-transport: ServerTransports::WebTransport {
-    local_port: SERVER_PORT,
-    certificate: WebTransportCertificateSettings::FromFile {
-        cert: "./certificates/cert.pem".to_string(),
-        key: "./certificates/key.pem".to_string(),
-    },
+```json
+{
+  "networking": {
+    "server_host": "127.0.0.1",
+    "server_port": 5888,
+    "fixed_timestep_hz": 64.0,
+    "send_interval_hz": 64.0,
+    "client_timeout_secs": 3,
+    "interpolation_buffer_ms": 100
+  }
 }
 ```
+
+### Server Settings (`game_server_config.json`)
+
+```json
+{
+  "projectile": {
+    "lifetime_ms": 5000,
+    "velocity": 10.0
+  },
+  "spawning": {
+    "player_colors": ["limegreen", "pink", "yellow", "aqua", "crimson", "gold"]
+  },
+  "transport": {
+    "transport_type": "udp",
+    "certificate_sans": ["localhost", "127.0.0.1", "::1"]
+  }
+}
+```
+
+### Changing Transport Protocol
+
+Edit `transport_type` in `assets/config/game_server_config.json`:
+
+- `"udp"` — UDP (default, fastest)
+- `"websocket"` — WebSocket (browser-compatible)
+- `"webtransport"` — WebTransport (QUIC-based, requires TLS certificates)
+
+### Changing Port
+
+Edit `server_port` in `assets/config/game_core_config.json`. Default is **5888**.
 
 ## WebTransport Certificates
 
@@ -101,8 +133,11 @@ openssl x509 -in certificates/cert.pem -outform der | \
 ### Certificate Paths
 
 The server expects certificates at:
+
 - `./certificates/cert.pem`
 - `./certificates/key.pem`
+
+The server writes the certificate digest to `./certificates/digest.txt` automatically when using self-signed certificates.
 
 Run the server from the repository root so these paths resolve correctly.
 
@@ -111,46 +146,16 @@ Run the server from the repository root so these paths resolve correctly.
 ### Dependencies
 
 The server binary depends on:
-- **game-core**: Shared protocol and game logic
-- **game-server**: Server-specific systems and logic
+
+- **game-core**: Shared protocol, game logic, and configuration
+- **game-server**: Server-specific systems, transport, and logic
 
 ### Key Systems
 
-1. **handle_connected** (crates/game-server/src/server.rs:168)
-   - Spawns player character when client connects
-   - Assigns color and spawn position
-   - Creates replicated entity
-
-2. **handle_character_actions** (crates/game-server/src/server.rs:42)
-   - Processes player input (movement, jumping)
-   - Applies physics forces
-   - Runs in FixedUpdate
-
-3. **player_shoot** (crates/game-server/src/server.rs:70)
-   - Handles shoot action
-   - Spawns projectiles with replicate-once
-   - Broadcasts to all clients
-
-4. **despawn_system** (crates/game-server/src/server.rs:58)
-   - Cleans up projectiles after lifetime expires
-
-## Network Configuration
-
-### Default Settings
-
-- **Port**: 5000 (defined in `game-core/src/common/shared.rs`)
-- **Protocol**: WebTransport
-- **Send Interval**: 64Hz (every 15.625ms)
-- **Fixed Timestep**: 64Hz
-- **Client Timeout**: 3 seconds
-
-### Modify Port
-
-Edit `crates/game-core/src/common/shared.rs`:
-
-```rust
-pub const SERVER_PORT: u16 = 5000; // Change this
-```
+1. **handle_connected** — Spawns player character when client connects, assigns color and spawn position
+2. **handle_character_actions** — Processes player input (movement, jumping), applies physics forces in FixedUpdate
+3. **player_shoot** — Handles shoot action, spawns projectiles with replicate-once
+4. **despawn_system** — Cleans up projectiles after lifetime expires
 
 ## Performance
 
@@ -173,6 +178,7 @@ opt-level = 1  # Fast incremental builds
 lto = true              # Link-time optimization
 opt-level = 3           # Maximum optimization
 codegen-units = 1       # Better optimization
+incremental = false     # Consistent builds
 ```
 
 ## Deployment
@@ -192,25 +198,20 @@ cargo build -p server --release
 - **Minimum**: 1 CPU core, 512MB RAM
 - **Recommended**: 2+ CPU cores, 1GB+ RAM for 10+ players
 
-### Docker (Optional)
+### Docker
 
-```dockerfile
-FROM rust:1.93 as builder
-WORKDIR /app
-COPY . .
-RUN cargo build -p server --release
-
-FROM debian:bookworm-slim
-COPY --from=builder /app/target/release/server /usr/local/bin/
-COPY certificates /certificates
-CMD ["server", "server"]
+```bash
+docker build -f Dockerfile.server -t multiplayer-server .
+docker run -p 5888:5888 -v ./certificates:/certificates multiplayer-server
 ```
+
+The Docker image uses `rust:1.93-bookworm` for building and `debian:bookworm-slim` for the runtime.
 
 ## Monitoring
 
 The server logs important events:
 
-```
+```text
 INFO server: Client connected with client-id 12345. Spawning character entity.
 INFO server: Created entity Entity { index: 5, generation: 1 } for client 12345
 ```
@@ -220,9 +221,10 @@ INFO server: Created entity Entity { index: 5, generation: 1 } for client 12345
 ### Port Already in Use
 
 If you see "address already in use":
+
 ```bash
-# Find process using port 5000
-lsof -i :5000
+# Find process using port 5888
+lsof -i :5888
 
 # Kill process (replace PID)
 kill -9 <PID>
@@ -231,17 +233,19 @@ kill -9 <PID>
 ### Certificate Not Found
 
 Ensure you're running from the repository root:
+
 ```bash
-cd /path/to/Multiplayer-Template
+cd /path/to/multiplayer-bevy
 cargo run -p server -- server
 ```
 
 ### Connection Timeouts
 
-Check firewall settings allow incoming connections on port 5000:
+Check firewall settings allow incoming connections on port 5888:
+
 ```bash
 # Linux (ufw)
-sudo ufw allow 5000
+sudo ufw allow 5888
 
 # macOS
 # System Settings > Network > Firewall > Options
@@ -252,3 +256,4 @@ sudo ufw allow 5000
 - [Root README](../../README.md)
 - [Native Client README](../native/README.md)
 - [Web Client README](../web/README.md)
+- [World Viewer README](../world-viewer/README.md)

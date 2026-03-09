@@ -18,6 +18,8 @@ A multiplayer 3D character controller game template built with Bevy, featuring c
 - **Physics**: Avian3d physics engine with networked replication
 - **Multiple Transports**: Support for UDP, WebSocket, and WebTransport
 - **Cross-Platform**: Native desktop and WASM web builds
+- **JSON Configuration**: All game settings driven by JSON config files in `assets/config/`
+- **Camera Modes**: First-person, third-person, and free-view camera system
 
 ## Technology Stack
 
@@ -29,16 +31,17 @@ A multiplayer 3D character controller game template built with Bevy, featuring c
 
 ## Project Structure
 
-```
+```text
 multiplayer-bevy/
 ├── Cargo.toml              # Workspace root
 ├── README.md               # This file
-├── .gitignore
+├── .cargo/config.toml      # Cargo aliases (dev-native, dev-server, etc.)
 │
 ├── crates/                 # Library crates
-│   ├── game-core/          # Shared protocol and game logic
-│   ├── game-client/        # Client-specific code
-│   └── game-server/        # Server-specific code
+│   ├── game-core/          # Shared protocol, game logic, and config
+│   ├── game-client/        # Client-specific code (prediction, rendering, input)
+│   ├── game-server/        # Server-specific code (authority, spawning)
+│   └── game-camera/        # Camera system (first-person, third-person, free-view)
 │
 ├── apps/                   # Binary applications
 │   ├── server/             # Dedicated server [→ README](apps/server/README.md)
@@ -47,13 +50,17 @@ multiplayer-bevy/
 │   └── web/                # WASM web client [→ README](apps/web/README.md)
 │
 ├── assets/                 # Game assets
-│   ├── models/
+│   ├── models/             # World meshes (visual, collision, zones)
 │   ├── textures/
 │   ├── audio/
 │   ├── fonts/
-│   └── config/
+│   └── config/             # JSON configuration files
+│       ├── game_core_config.json
+│       ├── game_client_config.json
+│       ├── game_camera_config.json
+│       └── game_server_config.json
 │
-└── certificates/           # WebTransport certificates
+└── certificates/           # WebTransport TLS certificates
 ```
 
 ## Quick Start
@@ -77,19 +84,21 @@ cargo build --all --release
 
 ```bash
 cargo run -p server -- server
+
+# Or with dynamic linking for faster dev builds
+cargo dev-server
 ```
 
-The server listens on port 5000 with WebTransport by default.
+The server listens on port **5888** with UDP by default. Transport and port are configured in `assets/config/game_server_config.json` and `assets/config/game_core_config.json`.
 
 ### Run a Native Client
 
 ```bash
-cargo run -p native -- client --client-id 1
-```
+cargo run -p native -- client -c 1
 
-**Controls:**
-- WASD: Move
-- Space: Jump
+# Or with dynamic linking for faster dev builds
+cargo dev-native
+```
 
 ### Run a Web Client
 
@@ -98,7 +107,26 @@ cd apps/web
 trunk serve
 ```
 
-Open http://localhost:8080 in your browser.
+Open <http://localhost:8080> in your browser.
+
+### Controls
+
+- **W/A/S/D**: Move
+- **Space**: Jump
+- **Left Shift**: Sprint
+- **C**: Crouch
+- **Q**: Shoot
+- **Left Click**: Grab cursor
+- **Escape**: Release cursor
+
+## Configuration
+
+All game settings are driven by JSON config files in `assets/config/`:
+
+- **`game_core_config.json`** — Networking (host, port, tick rate), movement, physics, world assets, zones
+- **`game_client_config.json`** — Window settings, input bindings, rendering, transport
+- **`game_camera_config.json`** — Camera modes (first-person, third-person, free-view), sensitivity
+- **`game_server_config.json`** — Projectile settings, spawning, transport type, certificate SANs
 
 ## Docker Deployment
 
@@ -109,6 +137,7 @@ docker-compose up -d
 ```
 
 This starts:
+
 - Server on port 5888
 - Web client on port 8080
 
@@ -154,6 +183,16 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment guide.
 
 ## Development Workflow
 
+### Cargo Aliases
+
+Fast development builds with dynamic linking are available via `.cargo/config.toml`:
+
+```bash
+cargo dev-native   # Run native client with dynamic linking (client -c 1)
+cargo dev-server   # Run server with dynamic linking
+cargo dev-viewer   # Run world viewer with dynamic linking
+```
+
 ### Building Specific Targets
 
 ```bash
@@ -161,6 +200,7 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment guide.
 cargo build -p game-core
 cargo build -p game-client
 cargo build -p game-server
+cargo build -p game-camera
 
 # Build binaries
 cargo build -p server
@@ -194,9 +234,10 @@ your-crate.workspace = true
 
 ### Crate Separation
 
-- **game-core**: Contains the protocol definition, shared game logic, physics bundles, and common utilities. Used by both client and server.
-- **game-client**: Client-specific code including input handling, prediction, and rendering.
-- **game-server**: Server authority logic, player spawning, and game state management.
+- **game-core**: Contains the protocol definition, shared game logic, physics bundles, world/zone loading, configuration types, and common utilities. Used by both client and server.
+- **game-client**: Client-specific code including input handling, prediction, rendering, and transport setup.
+- **game-server**: Server authority logic, player spawning, projectile management, and server transport setup.
+- **game-camera**: Flexible camera system supporting first-person, third-person, and free-view modes with configurable sensitivity and smoothing.
 
 ### Networking Features
 
@@ -217,6 +258,7 @@ your-crate.workspace = true
 
 - Use release builds for better performance: `cargo build --release`
 - The first build will be slow; subsequent builds are much faster
+- Use `cargo dev-*` aliases for faster incremental dev builds with dynamic linking
 - Web builds benefit significantly from `trunk serve --release`
 
 ## Troubleshooting
@@ -224,12 +266,14 @@ your-crate.workspace = true
 ### Certificate Errors
 
 If you see WebTransport certificate errors:
+
 - Ensure `certificates/` directory exists at the repository root
 - Generate certificates if missing (see server README)
 
 ### WASM Build Errors
 
 If `trunk build` fails:
+
 - Ensure you're in the `apps/web` directory
 - Check that Trunk.toml has correct configuration
 - Verify getrandom backend is set for WASM
@@ -237,5 +281,3 @@ If `trunk build` fails:
 ## License
 
 MIT OR Apache-2.0
-
-
