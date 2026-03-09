@@ -1,5 +1,4 @@
 use avian3d::prelude::*;
-use bevy::color::palettes::css;
 use bevy::prelude::*;
 use core::time::Duration;
 use leafwing_input_manager::prelude::*;
@@ -13,6 +12,8 @@ use game_core::networking::shared::CharacterPhysicsBundle;
 use game_core::movement::{apply_character_movement, update_crouch_collider};
 use game_core::zones::SpawnPoints;
 use game_core::GameCoreConfig;
+
+use crate::server_config::{GameServerConfig, parse_css_color};
 
 #[derive(Clone)]
 pub struct ServerPlugin;
@@ -76,6 +77,7 @@ fn player_shoot(
     _timeline: Res<LocalTimeline>,
     query: Query<(&ActionState<CharacterAction>, &Position, &ControlledBy), Without<Predicted>>,
     time: Res<Time<Fixed>>,
+    server_config: Res<GameServerConfig>,
 ) {
     for (action_state, position, controlled_by) in &query {
         let mut position_override = ComponentReplicationOverrides::<Position>::default();
@@ -112,12 +114,12 @@ fn player_shoot(
                 ProjectileMarker,
                 DespawnAfter {
                     spawned_at: time.elapsed_secs(),
-                    lifetime: Duration::from_millis(5000),
+                    lifetime: Duration::from_millis(server_config.projectile.lifetime_ms),
                 },
                 RigidBody::Dynamic,
                 *position, // Use current position
                 Rotation::default(),
-                LinearVelocity(Vec3::Z * 10.),
+                LinearVelocity(Vec3::Z * server_config.projectile.velocity),
                 Replicate::to_clients(NetworkTarget::All),
                 PredictionTarget::to_clients(NetworkTarget::All),
                 ControlledBy {
@@ -155,6 +157,8 @@ pub(crate) fn handle_connected(
     mut commands: Commands,
     character_query: Query<Entity, With<CharacterMarker>>,
     mut spawn_points: Option<ResMut<SpawnPoints>>,
+    server_config: Res<GameServerConfig>,
+    core_config: Res<GameCoreConfig>,
 ) {
     let Ok(client_id) = query.get(trigger.entity) else {
         return;
@@ -165,31 +169,25 @@ pub(crate) fn handle_connected(
     // Track the number of characters to pick colors and starting positions.
     let num_characters = character_query.iter().count();
 
-    // Pick color and position for player.
-    let available_colors = [
-        css::LIMEGREEN,
-        css::PINK,
-        css::YELLOW,
-        css::AQUA,
-        css::CRIMSON,
-        css::GOLD,
-        css::ORANGE_RED,
-        css::SILVER,
-        css::SALMON,
-        css::YELLOW_GREEN,
-        css::WHITE,
-        css::RED,
-    ];
-    let color = available_colors[num_characters % available_colors.len()];
+    // Pick color from config.
+    let available_colors: Vec<Color> = server_config.spawning.player_colors
+        .iter()
+        .map(|name| parse_css_color(name))
+        .collect();
+    let color = if available_colors.is_empty() {
+        Color::WHITE
+    } else {
+        available_colors[num_characters % available_colors.len()]
+    };
 
-    // Use SpawnPoints if available, fallback to circular pattern
+    // Use SpawnPoints if available, fallback to circular pattern from config
     let spawn_pos = if let Some(ref mut sp) = spawn_points {
         sp.next()
     } else {
-        let angle: f32 = num_characters as f32 * 5.0;
-        let x = 2.0 * angle.cos();
-        let z = 2.0 * angle.sin();
-        Vec3::new(x, 3.0, z)
+        let angle: f32 = num_characters as f32 * server_config.spawning.fallback_angle_multiplier;
+        let x = server_config.spawning.fallback_radius * angle.cos();
+        let z = server_config.spawning.fallback_radius * angle.sin();
+        Vec3::new(x, server_config.spawning.fallback_height, z)
     };
 
     // Spawn the character with ActionState. The client will add their own InputMap.
@@ -204,8 +202,8 @@ pub(crate) fn handle_connected(
                 owner: trigger.entity,
                 lifetime: Default::default(),
             },
-            CharacterPhysicsBundle::default(),
-            ColorComponent(color.into()),
+            CharacterPhysicsBundle::new(&core_config.character),
+            ColorComponent(color),
             CharacterMarker,
             CameraOrientation { yaw: 0.0, pitch: 0.0 },
             CrouchState::default(),

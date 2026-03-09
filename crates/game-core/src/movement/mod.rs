@@ -8,10 +8,6 @@ use leafwing_input_manager::prelude::ActionState;
 use crate::core_config::{GameCoreConfig, MovementConfig, CharacterConfig};
 use crate::networking::protocol::{CharacterAction, CrouchState};
 
-// DEPRECATED: kept for backward compatibility (game-client renderer imports it).
-// Will be removed in Task 11.
-pub const CROUCH_CAPSULE_HEIGHT: f32 = 0.25;
-
 /// Apply camera-relative character movement.
 /// Used by both client (predicted) and server (authoritative).
 pub fn apply_character_movement(
