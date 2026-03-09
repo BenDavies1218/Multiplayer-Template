@@ -4,6 +4,8 @@
 
 [![CI](https://github.com/BenDavies1218/Multiplayer-Template/workflows/CI/badge.svg)](https://github.com/BenDavies1218/Multiplayer-Template/actions)
 [![Docker Server](https://github.com/BenDavies1218/Multiplayer-Template/workflows/Docker%20Server/badge.svg)](https://github.com/BenDavies1218/Multiplayer-Template/actions)
+[![Docker Native](https://github.com/BenDavies1218/Multiplayer-Template/workflows/Docker%20Native/badge.svg)](https://github.com/BenDavies1218/Multiplayer-Template/actions)
+[![Docker World Viewer](https://github.com/BenDavies1218/Multiplayer-Template/workflows/Docker%20World%20Viewer/badge.svg)](https://github.com/BenDavies1218/Multiplayer-Template/actions)
 [![Deploy Web](https://github.com/BenDavies1218/Multiplayer-Template/workflows/Deploy%20Web/badge.svg)](https://github.com/BenDavies1218/Multiplayer-Template/actions)
 
 A multiplayer 3D character controller game template built with Bevy, featuring client-side prediction, server reconciliation, and smooth interpolation using the Lightyear networking library. Perfect for starting your multiplayer game project with a solid foundation.
@@ -41,6 +43,7 @@ multiplayer-bevy/
 ├── apps/                   # Binary applications
 │   ├── server/             # Dedicated server [→ README](apps/server/README.md)
 │   ├── native/             # Native desktop client [→ README](apps/native/README.md)
+│   ├── world-viewer/       # Standalone world viewer [→ README](apps/world-viewer/README.md)
 │   └── web/                # WASM web client [→ README](apps/web/README.md)
 │
 ├── assets/                 # Game assets
@@ -109,6 +112,22 @@ This starts:
 - Server on port 5888
 - Web client on port 8080
 
+### Building Individual Images
+
+```bash
+# Build server
+docker build -f Dockerfile.server -t multiplayer-server .
+
+# Build web client
+docker build -f Dockerfile.web -t multiplayer-web .
+
+# Build native client
+docker build -f Dockerfile.native -t multiplayer-native .
+
+# Build world viewer
+docker build -f Dockerfile.world-viewer -t multiplayer-world-viewer .
+```
+
 ### Using Pre-built Images
 
 ```bash
@@ -119,6 +138,16 @@ docker run -p 5888:5888 -v ./certificates:/certificates ghcr.io/BenDavies1218/mu
 # Pull and run web client
 docker pull ghcr.io/BenDavies1218/multiplayer-template-web:latest
 docker run -p 8080:80 ghcr.io/BenDavies1218/multiplayer-template-web:latest
+
+# Pull and run native client (requires X11 forwarding for GUI)
+docker pull ghcr.io/BenDavies1218/multiplayer-template-native:latest
+docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+  ghcr.io/BenDavies1218/multiplayer-template-native:latest -c 1
+
+# Pull and run world viewer (requires X11 forwarding for GUI)
+docker pull ghcr.io/BenDavies1218/multiplayer-template-world-viewer:latest
+docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+  ghcr.io/BenDavies1218/multiplayer-template-world-viewer:latest
 ```
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment guide.
@@ -181,6 +210,7 @@ your-crate.workspace = true
 
 - [Server Documentation](apps/server/README.md)
 - [Native Client Documentation](apps/native/README.md)
+- [World Viewer Documentation](apps/world-viewer/README.md)
 - [Web Client Documentation](apps/web/README.md)
 
 ## Performance Tips

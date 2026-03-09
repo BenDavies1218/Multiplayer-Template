@@ -103,7 +103,7 @@ impl ExampleClient {
                     let certificate_digest = {
                         #[cfg(target_family = "wasm")]
                         {
-                            include_str!("../../../../certificates/digest.txt").to_string()
+                            include_str!("../../../certificates/digest.txt").to_string()
                         }
                         #[cfg(not(target_family = "wasm"))]
                         {

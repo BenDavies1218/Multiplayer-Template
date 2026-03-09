@@ -30,7 +30,3 @@ Thumbs.db
 
 # Logs
 *.log
-
-# Old standalone directory (can be removed after migration verified)
-standalone_avian_3d_character/target/
-standalone_avian_3d_character/dist/

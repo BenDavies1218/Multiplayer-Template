@@ -5,4 +5,4 @@ rustflags = ["--cfg", "getrandom_backend=\"wasm_js\""]
 
 [watch]
 # Watch for changes in src and assets
-ignore = ["dist/", "target/"]
+ignore = ["dist/"]

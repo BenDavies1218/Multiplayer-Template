@@ -6,7 +6,7 @@ use core::net::{Ipv4Addr, SocketAddr};
 use bevy::prelude::*;
 use core::time::Duration;
 
-use game_core::common::shared::SharedSettings;
+use game_core::networking::settings::SharedSettings;
 #[cfg(not(target_family = "wasm"))]
 use async_compat::Compat;
 use bevy::ecs::lifecycle::HookContext;
@@ -19,6 +19,8 @@ use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 use tracing::warn;
 
+use crate::server_config::{GameServerConfig, ServerTransportJsonConfig};
+
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum ServerTransports {
@@ -27,6 +29,10 @@ pub enum ServerTransports {
         certificate: WebTransportCertificateSettings,
     },
     WebSocket {
+        local_port: u16,
+    },
+    #[cfg(not(target_family = "wasm"))]
+    Udp {
         local_port: u16,
     },
 }
@@ -45,6 +51,9 @@ impl ExampleServer {
     fn on_add(mut world: DeferredWorld, context: HookContext) {
         let entity = context.entity;
         world.commands().queue(move |world: &mut World| -> Result {
+            let server_config = world.get_resource::<GameServerConfig>()
+                .cloned()
+                .unwrap_or_default();
             let mut entity_mut = world.entity_mut(entity);
             let settings = entity_mut.take::<ExampleServer>().unwrap();
             entity_mut.insert((Name::from("Server"),));
@@ -80,17 +89,19 @@ impl ExampleServer {
                 ServerTransports::WebSocket { local_port } => {
                     add_netcode(&mut entity_mut);
                     let server_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), local_port);
-                    let sans = vec![
-                        "localhost".to_string(),
-                        "127.0.0.1".to_string(),
-                        "::1".to_string(),
-                    ];
+                    let sans = server_config.transport.certificate_sans.clone();
                     let config = ServerConfig::builder()
                         .with_bind_address(server_addr)
                         .with_identity(
                             lightyear::websocket::server::Identity::self_signed(sans).unwrap(),
                         );
                     entity_mut.insert((LocalAddr(server_addr), WebSocketServerIo { config }));
+                }
+                #[cfg(not(target_family = "wasm"))]
+                ServerTransports::Udp { local_port } => {
+                    add_netcode(&mut entity_mut);
+                    let server_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), local_port);
+                    entity_mut.insert((LocalAddr(server_addr), ServerUdpIo::default()));
                 }
             };
             Ok(())
@@ -129,6 +140,12 @@ impl Default for WebTransportCertificateSettings {
     }
 }
 
+impl WebTransportCertificateSettings {
+    pub fn from_config(config: &ServerTransportJsonConfig) -> Self {
+        WebTransportCertificateSettings::AutoSelfSigned(config.certificate_sans.clone())
+    }
+}
+
 impl From<&WebTransportCertificateSettings> for Identity {
     fn from(wt: &WebTransportCertificateSettings) -> Identity {
         match wt {
@@ -153,6 +170,7 @@ impl From<&WebTransportCertificateSettings> for Identity {
                 let identity = Identity::self_signed(sans).unwrap();
                 let digest = identity.certificate_chain().as_slice()[0].hash();
                 println!("🔐 Certificate digest: {digest}");
+                write_digest_file(&digest);
                 identity
             }
             WebTransportCertificateSettings::FromFile {
@@ -176,9 +194,20 @@ impl From<&WebTransportCertificateSettings> for Identity {
                     .unwrap();
                 let digest = identity.certificate_chain().as_slice()[0].hash();
                 println!("🔐 Certificate digest: {digest}");
+                write_digest_file(&digest);
                 identity
             }
         }
+    }
+}
+
+/// Write the certificate digest to certificates/digest.txt so the web client can use it.
+fn write_digest_file(digest: &impl std::fmt::Display) {
+    let path = "../../certificates/digest.txt";
+    if let Err(e) = std::fs::write(path, digest.to_string()) {
+        warn!("Could not write digest to {path}: {e}. Web clients may fail to connect.");
+    } else {
+        println!("🔐 Wrote certificate digest to {path}");
     }
 }
 

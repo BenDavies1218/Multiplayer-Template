@@ -33,6 +33,9 @@ bevy = { workspace = true, features = [
     "bevy_pbr",
     "bevy_image",
     "bevy_render",
+    "png",
+    "jpeg",
+    "ktx2",
 ] }
 lightyear = { workspace = true, features = [
     "client",

@@ -45,6 +45,39 @@ services:
       timeout: 10s
       retries: 3
 
+  native:
+    build:
+      context: .
+      dockerfile: Dockerfile.native
+    container_name: multiplayer-native
+    environment:
+      - DISPLAY=${DISPLAY}
+      - RUST_LOG=${RUST_LOG:-info}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - game-network
+    profiles:
+      - gui
+
+  world-viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile.world-viewer
+    container_name: multiplayer-world-viewer
+    environment:
+      - DISPLAY=${DISPLAY}
+      - RUST_LOG=${RUST_LOG:-info}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro
+    networks:
+      - game-network
+    profiles:
+      - gui
+
 networks:
   game-network:
     driver: bridge

@@ -3280,6 +3280,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "serde",
+ "serde_json",
  "tracing",
 ]
 
@@ -3298,6 +3299,7 @@ dependencies = [
  "lightyear_frame_interpolation",
  "rand",
  "serde",
+ "serde_json",
  "tracing",
 ]
 
@@ -3316,6 +3318,7 @@ dependencies = [
  "lightyear_frame_interpolation",
  "rand",
  "serde",
+ "serde_json",
  "tracing",
 ]
 
@@ -3330,6 +3333,7 @@ dependencies = [
  "leafwing-input-manager",
  "lightyear",
  "serde",
+ "serde_json",
  "tracing",
 ]
 
@@ -5159,6 +5163,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "clap",
+ "game-camera",
  "game-client",
  "game-core",
  "lightyear",
@@ -7910,6 +7915,7 @@ dependencies = [
  "bevy",
  "clap",
  "console_error_panic_hook",
+ "game-camera",
  "game-client",
  "game-core",
  "getrandom 0.2.17",

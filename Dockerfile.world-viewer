@@ -1,0 +1,63 @@
+# Multi-stage build for world-viewer (standalone world rendering tool)
+
+# Build stage
+FROM rust:1.93-bookworm as builder
+
+# Install build dependencies required for Bevy (3D rendering, X11, input)
+RUN apt-get update && \
+    apt-get install -y \
+    pkg-config \
+    libudev-dev \
+    libasound2-dev \
+    libx11-dev \
+    libxkbcommon-dev \
+    libwayland-dev \
+    libxcb-render0-dev \
+    libxcb-shape0-dev \
+    libxcb-xfixes0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy workspace files
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY apps ./apps
+
+# Build release binary
+RUN cargo build --release -p world-viewer
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+# Install runtime dependencies for Bevy 3D rendering
+RUN apt-get update && \
+    apt-get install -y \
+    ca-certificates \
+    libudev1 \
+    libasound2 \
+    libx11-6 \
+    libxkbcommon0 \
+    libwayland-client0 \
+    libxcb-render0 \
+    libxcb-shape0 \
+    libxcb-xfixes0 \
+    libvulkan1 \
+    mesa-vulkan-drivers \
+    libgl1-mesa-dri \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy binary from builder
+COPY --from=builder /app/target/release/world-viewer /usr/local/bin/world-viewer
+
+# Copy assets (world models, configs)
+COPY assets /app/assets
+
+# Set working directory so relative asset paths resolve correctly
+WORKDIR /app
+
+# Set BEVY_ASSET_ROOT so the app can find assets/
+ENV BEVY_ASSET_ROOT=/app
+
+# Run world-viewer
+CMD ["world-viewer"]

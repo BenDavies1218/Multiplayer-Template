@@ -1,0 +1,27 @@
+{
+    "window": {
+        "title": "Lightyear Example",
+        "width": 1024,
+        "height": 768
+    },
+    "input": {
+        "jump_key": "Space",
+        "jump_gamepad": "South",
+        "sprint_key": "ShiftLeft",
+        "sprint_gamepad": "LeftThumb",
+        "crouch_key": "KeyC",
+        "crouch_gamepad": "East",
+        "shoot_key": "KeyQ",
+        "cursor_grab_button": "Left",
+        "cursor_release_key": "Escape"
+    },
+    "rendering": {
+        "camera_start_position": [0.0, 2.0, 0.0],
+        "eye_height_offset": 0.5,
+        "projectile_radius": 1.0,
+        "interpolation_send_ratio": 2.0
+    },
+    "transport": {
+        "token_expiration": -1
+    }
+}

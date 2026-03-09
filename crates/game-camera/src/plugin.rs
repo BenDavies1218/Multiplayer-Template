@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::input::mouse::AccumulatedMouseMotion;
-use crate::config::CameraConfig;
+use crate::config::{CameraConfig, GameCameraFileConfig};
 
 /// Main camera plugin for first-person controls
 pub struct CameraPlugin {
@@ -18,6 +18,7 @@ impl Default for CameraPlugin {
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(self.config.clone());
+        app.init_resource::<GameCameraFileConfig>();
         app.add_systems(Update, update_camera_rotation);
     }
 }
@@ -57,6 +58,7 @@ fn update_camera_rotation(
     mouse_motion: Res<AccumulatedMouseMotion>,
     mut camera_query: Query<(&mut GameCamera, &mut Transform)>,
     config: Res<CameraConfig>,
+    file_config: Res<GameCameraFileConfig>,
 ) {
     let Ok((mut game_camera, mut transform)) = camera_query.single_mut() else {
         return;
@@ -68,7 +70,7 @@ fn update_camera_rotation(
         game_camera.pitch -= delta.y * config.sensitivity;
 
         // Clamp pitch to prevent camera flipping
-        game_camera.pitch = game_camera.pitch.clamp(-1.54, 1.54); // ~88 degrees
+        game_camera.pitch = game_camera.pitch.clamp(-file_config.pitch_clamp_radians, file_config.pitch_clamp_radians);
 
         // Apply rotation
         transform.rotation = Quat::from_euler(

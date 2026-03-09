@@ -1,13 +1,14 @@
 use game_core::{
-    movement::CROUCH_CAPSULE_HEIGHT,
-    protocol::{CharacterMarker, ColorComponent, CrouchState, FloorMarker, ProjectileMarker},
-    shared::{CHARACTER_CAPSULE_HEIGHT, CHARACTER_CAPSULE_RADIUS},
+    networking::protocol::{CharacterMarker, ColorComponent, CrouchState, FloorMarker, ProjectileMarker},
+    core_config::parse_key_code,
+    GameCoreConfig,
 };
 use game_camera::{CameraConfig, CameraPlugin, GameCamera};
 use avian3d::prelude::*;
 use bevy::{color::palettes::css::MAGENTA, prelude::*, window::{CursorGrabMode, CursorOptions}};
 use lightyear::prelude::*;
 use lightyear_frame_interpolation::{FrameInterpolate, FrameInterpolationPlugin};
+use crate::client_config::{GameClientConfig, parse_mouse_button};
 
 pub struct FirstPersonPlugin {
     pub camera_config: CameraConfig,
@@ -40,19 +41,12 @@ impl Plugin for FirstPersonPlugin {
     }
 }
 
-fn init(mut commands: Commands) {
+fn init(mut commands: Commands, config: Res<GameClientConfig>) {
+    let pos = config.rendering.camera_start_position;
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.0, 2.0, 0.0),
+        Transform::from_xyz(pos[0], pos[1], pos[2]),
         GameCamera::default(),
-    ));
-
-    commands.spawn((
-        PointLight {
-            shadows_enabled: true,
-            ..default()
-        },
-        Transform::from_xyz(4.0, 8.0, 4.0),
     ));
 }
 
@@ -60,12 +54,15 @@ fn setup_cursor_grab(
     mut cursor_options: Single<&mut CursorOptions>,
     mouse_button: Res<ButtonInput<MouseButton>>,
     key: Res<ButtonInput<KeyCode>>,
+    config: Res<GameClientConfig>,
 ) {
-    if key.just_pressed(KeyCode::Escape) {
+    let release_key = parse_key_code(&config.input.cursor_release_key).unwrap_or(KeyCode::Escape);
+    let grab_button = parse_mouse_button(&config.input.cursor_grab_button).unwrap_or(MouseButton::Left);
+    if key.just_pressed(release_key) {
         cursor_options.visible = true;
         cursor_options.grab_mode = CursorGrabMode::None;
     }
-    if mouse_button.just_pressed(MouseButton::Left) {
+    if mouse_button.just_pressed(grab_button) {
         cursor_options.visible = false;
         cursor_options.grab_mode = CursorGrabMode::Locked;
     }
@@ -74,14 +71,16 @@ fn setup_cursor_grab(
 fn fps_camera_follow(
     mut camera_query: Query<&mut Transform, (With<GameCamera>, Without<CharacterMarker>)>,
     player_query: Query<(&Transform, &CrouchState), (With<CharacterMarker>, With<Predicted>, Without<GameCamera>)>,
+    core_config: Res<GameCoreConfig>,
+    client_config: Res<GameClientConfig>,
 ) {
     let Ok(mut camera_transform) = camera_query.single_mut() else {
         return;
     };
 
     if let Some((player_transform, crouch_state)) = player_query.iter().next() {
-        let capsule_height = if crouch_state.0 { CROUCH_CAPSULE_HEIGHT } else { CHARACTER_CAPSULE_HEIGHT };
-        let eye_height = capsule_height / 2.0 + CHARACTER_CAPSULE_RADIUS + 0.5;
+        let capsule_height = if crouch_state.0 { core_config.movement.crouch_capsule_height } else { core_config.character.capsule_height };
+        let eye_height = capsule_height / 2.0 + core_config.character.capsule_radius + client_config.rendering.eye_height_offset;
         camera_transform.translation = player_transform.translation + Vec3::new(0.0, eye_height, 0.0);
     }
 }
@@ -117,12 +116,13 @@ fn add_character_cosmetics(
     >,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    core_config: Res<GameCoreConfig>,
 ) {
     for (entity, color) in &character_query {
         commands.entity(entity).insert((
             Mesh3d(meshes.add(Capsule3d::new(
-                CHARACTER_CAPSULE_RADIUS,
-                CHARACTER_CAPSULE_HEIGHT,
+                core_config.character.capsule_radius,
+                core_config.character.capsule_height,
             ))),
             MeshMaterial3d(materials.add(color.0)),
         ));
@@ -140,10 +140,11 @@ fn add_projectile_cosmetics(
     >,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    config: Res<GameClientConfig>,
 ) {
     for entity in &projectile_query {
         commands.entity(entity).insert((
-            Mesh3d(meshes.add(Sphere::new(1.))),
+            Mesh3d(meshes.add(Sphere::new(config.rendering.projectile_radius))),
             MeshMaterial3d(materials.add(Color::from(MAGENTA))),
             RigidBody::Dynamic,
         ));

@@ -44,8 +44,14 @@ pub fn new_gui_app_from_config(add_inspector: bool, config: &GameClientConfig, c
         DefaultPlugins
             .build()
             .set(AssetPlugin {
-                // Point to root assets folder from apps/native or apps/web
-                file_path: "../../assets".to_string(),
+                // Native: relative path from apps/native or apps/web to workspace root
+                // WASM: Trunk copies assets/ into dist/, so just "assets"
+                file_path: {
+                    #[cfg(not(target_family = "wasm"))]
+                    { "../../assets".to_string() }
+                    #[cfg(target_family = "wasm")]
+                    { "assets".to_string() }
+                },
                 // https://github.com/bevyengine/bevy/issues/10157
                 meta_check: bevy::asset::AssetMetaCheck::Never,
                 ..default()
@@ -95,7 +101,12 @@ pub fn spawn_client_connection_from_config(app: &mut App, client_id: u64, core_c
             client_port: core_config.networking.client_port,
             server_addr: game_core::networking::config::Config::from_core_config(core_config).server_addr(),
             conditioner: Some(RecvLinkConditioner::new(conditioner)),
-            transport: ClientTransports::Udp,
+            transport: {
+                #[cfg(not(target_family = "wasm"))]
+                { ClientTransports::Udp }
+                #[cfg(target_family = "wasm")]
+                { ClientTransports::WebTransport }
+            },
             shared: shared_settings_from_config(core_config),
         });
     app.add_systems(Startup, connect);

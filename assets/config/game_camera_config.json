@@ -1,0 +1,27 @@
+{
+    "first_person": {
+        "sensitivity": 0.002,
+        "free_camera_speed": 0.0,
+        "third_person_distance": 0.0,
+        "third_person_height": 0.0,
+        "smooth_camera": false,
+        "smooth_factor": 0.1
+    },
+    "third_person": {
+        "sensitivity": 0.002,
+        "free_camera_speed": 0.0,
+        "third_person_distance": 5.0,
+        "third_person_height": 2.0,
+        "smooth_camera": true,
+        "smooth_factor": 0.1
+    },
+    "free_view": {
+        "sensitivity": 0.002,
+        "free_camera_speed": 10.0,
+        "third_person_distance": 0.0,
+        "third_person_height": 0.0,
+        "smooth_camera": false,
+        "smooth_factor": 0.1
+    },
+    "pitch_clamp_radians": 1.54
+}

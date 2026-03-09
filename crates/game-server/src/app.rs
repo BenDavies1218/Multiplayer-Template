@@ -10,7 +10,8 @@ use game_core::utils::cli::log_plugin_from_config;
 use game_core::networking::settings::shared_settings_from_config;
 use game_core::GameCoreConfig;
 
-use crate::transport::{ExampleServer, ServerTransports, start};
+use crate::server_config::GameServerConfig;
+use crate::transport::{ExampleServer, ServerTransports, WebTransportCertificateSettings, start};
 
 pub fn new_headless_app() -> App {
     new_headless_app_from_config(&GameCoreConfig::default())
@@ -62,15 +63,34 @@ pub fn spawn_server_connection(app: &mut App) {
     spawn_server_connection_from_config(app, &core_config);
 }
 
-/// Spawn the server connection entity using config values
+/// Spawn the server connection entity using config values.
+/// Transport type is determined by game_server_config.json (defaults to UDP).
 pub fn spawn_server_connection_from_config(app: &mut App, core_config: &GameCoreConfig) {
+    let server_config = app.world()
+        .get_resource::<GameServerConfig>()
+        .cloned()
+        .unwrap_or_default();
+    let shared = shared_settings_from_config(core_config);
+    let port = core_config.networking.server_port;
+
+    let transport = match server_config.transport.transport_type.as_str() {
+        "webtransport" => ServerTransports::WebTransport {
+            local_port: port,
+            certificate: WebTransportCertificateSettings::from_config(&server_config.transport),
+        },
+        "websocket" => ServerTransports::WebSocket {
+            local_port: port,
+        },
+        _ => ServerTransports::Udp {
+            local_port: port,
+        },
+    };
+
     app.world_mut()
         .spawn(ExampleServer {
             conditioner: None,
-            transport: ServerTransports::Udp {
-                local_port: core_config.networking.server_port,
-            },
-            shared: shared_settings_from_config(core_config),
+            transport,
+            shared,
         });
     app.add_systems(Startup, start);
 }

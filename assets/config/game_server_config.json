@@ -1,0 +1,29 @@
+{
+  "projectile": {
+    "lifetime_ms": 5000,
+    "velocity": 10.0
+  },
+  "spawning": {
+    "fallback_angle_multiplier": 5.0,
+    "fallback_radius": 2.0,
+    "fallback_height": 3.0,
+    "player_colors": [
+      "limegreen",
+      "pink",
+      "yellow",
+      "aqua",
+      "crimson",
+      "gold",
+      "orange_red",
+      "silver",
+      "salmon",
+      "yellow_green",
+      "white",
+      "red"
+    ]
+  },
+  "transport": {
+    "transport_type": "webtransport",
+    "certificate_sans": ["localhost", "127.0.0.1", "::1"]
+  }
+}

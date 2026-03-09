@@ -11,5 +11,5 @@
 pub mod config;
 pub mod plugin;
 
-pub use config::{CameraConfig, CameraViewMode};
+pub use config::{CameraConfig, CameraPresetConfig, CameraViewMode, GameCameraFileConfig};
 pub use plugin::{CameraPlugin, GameCamera};

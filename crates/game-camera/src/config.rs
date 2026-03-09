@@ -99,4 +99,113 @@ impl CameraConfig {
             smooth_factor: 0.1,
         }
     }
+
+    /// First-person view from file config
+    pub fn first_person_from_config(file_config: &GameCameraFileConfig) -> Self {
+        let p = &file_config.first_person;
+        Self {
+            view_mode: CameraViewMode::FirstPerson,
+            sensitivity: p.sensitivity,
+            free_camera_speed: p.free_camera_speed,
+            third_person_distance: p.third_person_distance,
+            third_person_height: p.third_person_height,
+            smooth_camera: p.smooth_camera,
+            smooth_factor: p.smooth_factor,
+        }
+    }
+
+    /// Third-person view from file config
+    pub fn third_person_from_config(file_config: &GameCameraFileConfig) -> Self {
+        let p = &file_config.third_person;
+        Self {
+            view_mode: CameraViewMode::ThirdPerson,
+            sensitivity: p.sensitivity,
+            free_camera_speed: p.free_camera_speed,
+            third_person_distance: p.third_person_distance,
+            third_person_height: p.third_person_height,
+            smooth_camera: p.smooth_camera,
+            smooth_factor: p.smooth_factor,
+        }
+    }
+
+    /// Free view from file config
+    pub fn free_view_from_config(file_config: &GameCameraFileConfig) -> Self {
+        let p = &file_config.free_view;
+        Self {
+            view_mode: CameraViewMode::FreeView,
+            sensitivity: p.sensitivity,
+            free_camera_speed: p.free_camera_speed,
+            third_person_distance: p.third_person_distance,
+            third_person_height: p.third_person_height,
+            smooth_camera: p.smooth_camera,
+            smooth_factor: p.smooth_factor,
+        }
+    }
+}
+
+/// Configuration for a single camera preset, loaded from file
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct CameraPresetConfig {
+    pub sensitivity: f32,
+    pub free_camera_speed: f32,
+    pub third_person_distance: f32,
+    pub third_person_height: f32,
+    pub smooth_camera: bool,
+    pub smooth_factor: f32,
+}
+
+impl Default for CameraPresetConfig {
+    fn default() -> Self {
+        Self {
+            sensitivity: 0.002,
+            free_camera_speed: 0.0,
+            third_person_distance: 0.0,
+            third_person_height: 0.0,
+            smooth_camera: false,
+            smooth_factor: 0.1,
+        }
+    }
+}
+
+/// File-level camera configuration loaded from game_camera_config.json
+#[derive(Resource, Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct GameCameraFileConfig {
+    pub first_person: CameraPresetConfig,
+    pub third_person: CameraPresetConfig,
+    pub free_view: CameraPresetConfig,
+    pub pitch_clamp_radians: f32,
+}
+
+impl Default for GameCameraFileConfig {
+    fn default() -> Self {
+        Self {
+            first_person: CameraPresetConfig {
+                sensitivity: 0.002,
+                free_camera_speed: 0.0,
+                third_person_distance: 0.0,
+                third_person_height: 0.0,
+                smooth_camera: false,
+                smooth_factor: 0.1,
+            },
+            third_person: CameraPresetConfig {
+                sensitivity: 0.002,
+                free_camera_speed: 0.0,
+                third_person_distance: 5.0,
+                third_person_height: 2.0,
+                smooth_camera: true,
+                smooth_factor: 0.1,
+            },
+            free_view: CameraPresetConfig {
+                sensitivity: 0.002,
+                free_camera_speed: 10.0,
+                third_person_distance: 0.0,
+                third_person_height: 0.0,
+                smooth_camera: false,
+                smooth_factor: 0.1,
+            },
+            pitch_clamp_radians: 1.54,
+        }
+    }
 }
