@@ -3,9 +3,10 @@ use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 use lightyear::prelude::Controlled;
 use lightyear::prelude::*;
-use game_core::protocol::*;
-use game_core::shared::*;
+use game_core::networking::protocol::*;
+use game_core::networking::shared::*;
 use game_core::movement::{apply_character_movement, update_crouch_collider};
+use game_core::GameCoreConfig;
 use game_camera::GameCamera;
 
 pub struct ClientPlugin;
@@ -26,6 +27,7 @@ fn handle_character_actions(
         (Entity, &ComputedMass, &ActionState<CharacterAction>, Forces, &mut CrouchState),
         With<Predicted>,
     >,
+    config: Res<GameCoreConfig>,
 ) {
     for (entity, computed_mass, action_state, forces, mut crouch_state) in &mut query {
         // Get camera yaw from the Look action
@@ -40,6 +42,8 @@ fn handle_character_actions(
             forces,
             camera_yaw,
             &mut crouch_state,
+            &config.movement,
+            &config.character,
         );
     }
 }

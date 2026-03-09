@@ -5,14 +5,11 @@ use avian3d::prelude::forces::ForcesItem;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::protocol::{CharacterAction, CrouchState};
-use crate::shared::{CHARACTER_CAPSULE_HEIGHT, CHARACTER_CAPSULE_RADIUS};
+use crate::core_config::{GameCoreConfig, MovementConfig, CharacterConfig};
+use crate::networking::protocol::{CharacterAction, CrouchState};
 
-const MAX_SPEED: f32 = 5.0;
-const MAX_ACCELERATION: f32 = 20.0;
-const JUMP_IMPULSE: f32 = 5.0;
-const SPRINT_MULTIPLIER: f32 = 1.8;
-const CROUCH_MULTIPLIER: f32 = 0.4;
+// DEPRECATED: kept for backward compatibility (game-client renderer imports it).
+// Will be removed in Task 11.
 pub const CROUCH_CAPSULE_HEIGHT: f32 = 0.25;
 
 /// Apply camera-relative character movement.
@@ -26,52 +23,44 @@ pub fn apply_character_movement(
     mut forces: ForcesItem,
     camera_yaw: f32,
     crouch_state: &mut CrouchState,
+    movement: &MovementConfig,
+    character: &CharacterConfig,
 ) {
-    // How much velocity can change in a single tick
-    let max_velocity_delta_per_tick = MAX_ACCELERATION * time.delta_secs();
+    let input = action_state.axis_pair(&CharacterAction::Move).clamp_length_max(1.0);
+    let wants_jump = action_state.just_pressed(&CharacterAction::Jump);
+    let wants_sprint = action_state.pressed(&CharacterAction::Sprint);
+    let wants_crouch = action_state.pressed(&CharacterAction::Crouch);
+
+    // === GROUND CHECK ===
+    let pos = forces.position().0;
+    let current_capsule_height = if crouch_state.0 { movement.crouch_capsule_height } else { character.capsule_height };
+    let capsule_half_extent = current_capsule_height / 2.0 + character.capsule_radius;
+    let ground_tolerance = movement.ground_tolerance;
+    let on_ground = spatial_query
+        .cast_ray(
+            pos,
+            Dir3::NEG_Y,
+            capsule_half_extent + ground_tolerance,
+            true,
+            &SpatialQueryFilter::from_excluded_entities([entity]),
+        )
+        .is_some();
 
     // === CROUCH / SPRINT STATE ===
-    let is_sprinting = action_state.pressed(&CharacterAction::Sprint);
-    let wants_crouch = action_state.pressed(&CharacterAction::Crouch);
-    // Sprint overrides crouch
+    // Sprint requires ground and overrides crouch
+    let is_sprinting = wants_sprint && on_ground;
     let is_crouching = wants_crouch && !is_sprinting;
 
     // Update crouch state (collider is updated separately to avoid SpatialQuery conflict)
     crouch_state.0 = is_crouching;
 
-    let current_capsule_height = if is_crouching { CROUCH_CAPSULE_HEIGHT } else { CHARACTER_CAPSULE_HEIGHT };
-
     // === JUMPING (blocked while crouching) ===
-    if !is_crouching && action_state.just_pressed(&CharacterAction::Jump) {
-        let pos = forces.position().0;
-        let ray_cast_origin = pos
-            + Vec3::new(
-                0.0,
-                -current_capsule_height / 2.0 - CHARACTER_CAPSULE_RADIUS,
-                0.0,
-            );
-
-        // Only jump if on the ground
-        let hit = spatial_query
-            .cast_ray(
-                ray_cast_origin,
-                Dir3::NEG_Y,
-                0.15,
-                true,
-                &SpatialQueryFilter::from_excluded_entities([entity]),
-            );
-
-        info!(
-            "JUMP DEBUG: pos={pos:?}, ray_origin={ray_cast_origin:?}, capsule_h={current_capsule_height}, radius={CHARACTER_CAPSULE_RADIUS}, hit={hit:?}"
-        );
-
-        if hit.is_some() {
-            forces.apply_linear_impulse(Vec3::new(0.0, JUMP_IMPULSE, 0.0));
-        }
+    if !is_crouching && wants_jump && on_ground {
+        forces.apply_linear_impulse(Vec3::new(0.0, movement.jump_impulse, 0.0));
     }
 
     // === MOVEMENT (Camera-Relative) ===
-    let input = action_state.axis_pair(&CharacterAction::Move).clamp_length_max(1.0);
+    let max_velocity_delta_per_tick = movement.max_acceleration * time.delta_secs();
 
     // Rotate movement direction by camera yaw
     let yaw_rotation = Quat::from_rotation_y(camera_yaw);
@@ -87,11 +76,11 @@ pub fn apply_character_movement(
 
     // Speed modifier based on state
     let speed = if is_sprinting {
-        MAX_SPEED * SPRINT_MULTIPLIER
+        movement.max_speed * movement.sprint_multiplier
     } else if is_crouching {
-        MAX_SPEED * CROUCH_MULTIPLIER
+        movement.max_speed * movement.crouch_multiplier
     } else {
-        MAX_SPEED
+        movement.max_speed
     };
 
     // Calculate desired velocity
@@ -111,12 +100,13 @@ pub fn apply_character_movement(
 /// Run as a separate system to avoid conflicts with SpatialQuery.
 pub fn update_crouch_collider(
     mut query: Query<(&CrouchState, &mut Collider), Changed<CrouchState>>,
+    config: Res<GameCoreConfig>,
 ) {
     for (crouch_state, mut collider) in &mut query {
         if crouch_state.0 {
-            *collider = Collider::capsule(CHARACTER_CAPSULE_RADIUS, CROUCH_CAPSULE_HEIGHT);
+            *collider = Collider::capsule(config.character.capsule_radius, config.movement.crouch_capsule_height);
         } else {
-            *collider = Collider::capsule(CHARACTER_CAPSULE_RADIUS, CHARACTER_CAPSULE_HEIGHT);
+            *collider = Collider::capsule(config.character.capsule_radius, config.character.capsule_height);
         }
     }
 }

@@ -6,7 +6,8 @@
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use avian3d::prelude::*;
-use game_core::shared::{WORLD_VISUAL_PATH, CHARACTER_CAPSULE_HEIGHT, CHARACTER_CAPSULE_RADIUS};
+use game_core::GameCoreConfig;
+use game_core::utils::config_loader::load_config;
 
 fn main() {
     // Set asset root to workspace root (not package directory)
@@ -17,7 +18,13 @@ fn main() {
         std::env::set_var("BEVY_ASSET_ROOT", workspace_root);
     }
 
+    let core_config: GameCoreConfig = load_config(
+        &format!("{}/assets", workspace_root.display()),
+        "game_core_config.json",
+    );
+
     App::new()
+        .insert_resource(core_config)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "World Viewer - Test Your World Assets".to_string(),
@@ -29,6 +36,9 @@ fn main() {
         .add_plugins(PhysicsPlugins::default())
         .add_plugins(game_core::world::WorldPlugin {
             config: game_core::world::WorldPluginConfig::viewer(),
+        })
+        .add_plugins(game_core::zones::ZonePlugin {
+            config: game_core::zones::ZonePluginConfig::viewer(),
         })
         .add_systems(Startup, setup)
         .add_systems(Update, camera_controller)
@@ -57,6 +67,7 @@ impl Default for FlyCamera {
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    config: Res<GameCoreConfig>,
 ) {
     info!("=== World Viewer Started ===");
     info!("Controls:");
@@ -68,7 +79,7 @@ fn setup(
     info!("  Escape - Release cursor");
     info!("  C - Toggle collision mesh visualization");
     info!("");
-    info!("Loading world from: {}", WORLD_VISUAL_PATH);
+    info!("Loading world from: {}", config.world_assets.visual_path);
 
     commands.spawn((
         Camera3d::default(),
@@ -78,7 +89,7 @@ fn setup(
 
     // Spawn a test character capsule with physics to test collision
     // This capsule will fall due to gravity and collide with the world
-    let capsule_mesh = Capsule3d::new(CHARACTER_CAPSULE_RADIUS, CHARACTER_CAPSULE_HEIGHT);
+    let capsule_mesh = Capsule3d::new(config.character.capsule_radius, config.character.capsule_height);
     commands.spawn((
         Name::new("Test Character (Physics Enabled)"),
         Mesh3d(asset_server.add(Mesh::from(capsule_mesh))),
@@ -89,7 +100,7 @@ fn setup(
         Transform::from_xyz(0.0, 5.0, 0.0), // Spawn higher to see it fall
         // Physics components
         RigidBody::Dynamic,
-        Collider::capsule(CHARACTER_CAPSULE_RADIUS, CHARACTER_CAPSULE_HEIGHT),
+        Collider::capsule(config.character.capsule_radius, config.character.capsule_height),
         // Lock rotation so it stays upright
         LockedAxes::default()
             .lock_rotation_x()
@@ -166,4 +177,3 @@ fn camera_controller(
         transform.translation += direction * speed * time.delta_secs();
     }
 }
-

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::gltf::Gltf;
 use bevy::scene::{SceneRoot};
 
+use crate::core_config::GameCoreConfig;
 use super::{WorldVisual, WorldCollisionLoader, WorldAssets, WorldPluginConfig};
 
 /// Load world assets at startup
@@ -13,14 +14,15 @@ use super::{WorldVisual, WorldCollisionLoader, WorldAssets, WorldPluginConfig};
 pub fn load_world_assets(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    config: Res<WorldPluginConfig>,
+    plugin_config: Res<WorldPluginConfig>,
+    config: Res<GameCoreConfig>,
 ) {
     let mut visual_handle = None;
     let mut collision_handle = None;
 
     // Load visual scene if enabled
-    if config.load_visual {
-        let handle = asset_server.load(format!("{}#Scene0", crate::shared::WORLD_VISUAL_PATH));
+    if plugin_config.load_visual {
+        let handle = asset_server.load(format!("{}#Scene0", config.world_assets.visual_path));
 
         // Spawn the visual scene WITHOUT ColliderConstructor to prevent auto-collider generation
         commands.spawn((
@@ -31,18 +33,18 @@ pub fn load_world_assets(
         ));
 
         visual_handle = Some(handle);
-        info!("Loading world visual from {}", crate::shared::WORLD_VISUAL_PATH);
+        info!("Loading world visual from {}", config.world_assets.visual_path);
     }
 
     // Load collision mesh if enabled
-    if config.load_collision {
-        let handle: Handle<Gltf> = asset_server.load(crate::shared::WORLD_COLLISION_PATH);
+    if plugin_config.load_collision {
+        let handle: Handle<Gltf> = asset_server.load(config.world_assets.collision_path.clone());
         commands.spawn(WorldCollisionLoader {
             handle: handle.clone(),
         });
 
         collision_handle = Some(handle);
-        info!("Loading world collision from {}", crate::shared::WORLD_COLLISION_PATH);
+        info!("Loading world collision from {}", config.world_assets.collision_path);
     }
 
     // Store handles in resource for later access

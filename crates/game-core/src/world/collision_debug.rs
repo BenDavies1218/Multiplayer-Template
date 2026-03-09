@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use crate::core_config::{GameCoreConfig, parse_key_code};
 
 /// Resource to control collision mesh visualization
 #[derive(Resource, Debug)]
@@ -26,9 +27,10 @@ pub struct CollisionDebugMesh;
 pub fn toggle_collision_debug(
     keys: Res<ButtonInput<KeyCode>>,
     mut settings: ResMut<CollisionDebugSettings>,
+    config: Res<GameCoreConfig>,
 ) {
-    // Toggle with 'C' key
-    if keys.just_pressed(KeyCode::KeyC) {
+    let key = parse_key_code(&config.debug_toggle_keys.collision).unwrap_or(KeyCode::KeyC);
+    if keys.just_pressed(key) {
         settings.visible = !settings.visible;
         info!(
             "Collision debug visualization: {}",
@@ -53,4 +55,12 @@ pub fn update_collision_debug_visibility(
             *mesh_visibility = visibility;
         }
     }
+}
+
+/// Startup system to apply collision debug colors from `GameCoreConfig`.
+pub fn apply_debug_config(
+    config: Res<GameCoreConfig>,
+    mut settings: ResMut<CollisionDebugSettings>,
+) {
+    settings.color = crate::core_config::color_from_array(config.debug_colors.collision);
 }

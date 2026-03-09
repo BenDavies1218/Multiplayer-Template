@@ -2,10 +2,10 @@ use bevy::prelude::*;
 use core::time::Duration;
 use lightyear::prelude::*;
 
-use game_core::common::cli::Cli;
-use game_core::common::shared;
-use game_core::config;
-use game_core::SharedPlugin;
+use game_core::utils::cli::Cli;
+use game_core::utils::config_loader::load_config;
+use game_core::networking::config;
+use game_core::{GameCoreConfig, SharedPlugin};
 use game_core::world::{WorldPlugin, WorldPluginConfig};
 use game_client::app::{build_client_app, spawn_client_connection};
 use game_client::{ClientPlugin, FirstPersonPlugin};
@@ -14,12 +14,14 @@ fn main() {
     // Load environment variables from .env file
     config::init();
 
+    let core_config: GameCoreConfig = load_config("../../assets", "game_core_config.json");
+
     let cli = Cli::default();
-    let tick = Duration::from_secs_f64(1.0 / shared::fixed_timestep_hz());
+    let tick = Duration::from_secs_f64(1.0 / core_config.networking.fixed_timestep_hz);
 
     let mut app = build_client_app(tick, true);
 
-    app.add_plugins(SharedPlugin);
+    app.add_plugins(SharedPlugin { config: core_config });
     app.add_plugins(WorldPlugin { config: WorldPluginConfig::client() });
     app.add_plugins(ClientPlugin);
     app.add_plugins(FirstPersonPlugin::default());

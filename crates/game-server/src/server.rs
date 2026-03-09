@@ -6,11 +6,13 @@ use leafwing_input_manager::prelude::*;
 use lightyear::connection::client::Connected;
 use lightyear::prelude::server::*;
 use lightyear::prelude::*;
-use game_core::common::shared::send_interval;
+use game_core::networking::settings::send_interval;
 
-use game_core::protocol::*;
-use game_core::shared::CharacterPhysicsBundle;
+use game_core::networking::protocol::*;
+use game_core::networking::shared::CharacterPhysicsBundle;
 use game_core::movement::{apply_character_movement, update_crouch_collider};
+use game_core::zones::SpawnPoints;
+use game_core::GameCoreConfig;
 
 #[derive(Clone)]
 pub struct ServerPlugin;
@@ -30,6 +32,7 @@ fn handle_character_actions(
     time: Res<Time>,
     spatial_query: SpatialQuery,
     mut query: Query<(Entity, &ComputedMass, &ActionState<CharacterAction>, &mut CameraOrientation, Forces, &mut CrouchState)>,
+    config: Res<GameCoreConfig>,
 ) {
     for (entity, mass, action_state, mut camera_orientation, forces, mut crouch_state) in &mut query {
         let look = action_state.axis_pair(&CharacterAction::Look);
@@ -44,6 +47,8 @@ fn handle_character_actions(
             forces,
             camera_orientation.yaw,
             &mut crouch_state,
+            &config.movement,
+            &config.character,
         );
     }
 }
@@ -149,6 +154,7 @@ pub(crate) fn handle_connected(
     query: Query<&RemoteId, With<ClientOf>>,
     mut commands: Commands,
     character_query: Query<Entity, With<CharacterMarker>>,
+    mut spawn_points: Option<ResMut<SpawnPoints>>,
 ) {
     let Ok(client_id) = query.get(trigger.entity) else {
         return;
@@ -175,16 +181,23 @@ pub(crate) fn handle_connected(
         css::RED,
     ];
     let color = available_colors[num_characters % available_colors.len()];
-    let angle: f32 = num_characters as f32 * 5.0;
-    let x = 2.0 * angle.cos();
-    let z = 2.0 * angle.sin();
+
+    // Use SpawnPoints if available, fallback to circular pattern
+    let spawn_pos = if let Some(ref mut sp) = spawn_points {
+        sp.next()
+    } else {
+        let angle: f32 = num_characters as f32 * 5.0;
+        let x = 2.0 * angle.cos();
+        let z = 2.0 * angle.sin();
+        Vec3::new(x, 3.0, z)
+    };
 
     // Spawn the character with ActionState. The client will add their own InputMap.
     let character = commands
         .spawn((
             Name::new("Character"),
             ActionState::<CharacterAction>::default(),
-            Position(Vec3::new(x, 3.0, z)),
+            Position(spawn_pos),
             Replicate::to_clients(NetworkTarget::All),
             PredictionTarget::to_clients(NetworkTarget::All),
             ControlledBy {

@@ -15,7 +15,7 @@ mod tests;
 pub use loader::{load_world_assets};
 pub use processor::{process_collision_meshes, create_convex_hull_collider, create_compound_collider};
 pub use utils::{extract_mesh_vertices, extract_mesh_indices};
-pub use collision_debug::{CollisionDebugSettings, CollisionDebugMesh};
+pub use collision_debug::{CollisionDebugSettings, CollisionDebugMesh, apply_debug_config};
 
 /// Configuration for WorldPlugin
 ///
@@ -101,6 +101,7 @@ impl Plugin for WorldPlugin {
 
         // Only add debug systems if debug is enabled
         if self.config.enable_debug {
+            app.add_systems(Startup, apply_debug_config);
             app.add_systems(Update, (
                 collision_debug::toggle_collision_debug,
                 collision_debug::update_collision_debug_visibility,

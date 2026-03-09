@@ -46,7 +46,7 @@ pub struct NetworkingConfig {
     pub server_port: u16,
     pub fixed_timestep_hz: f64,
     pub send_interval_hz: f64,
-    pub client_timeout_secs: u64,
+    pub client_timeout_secs: i32,
     pub interpolation_buffer_ms: u64,
     pub client_port: u16,
     pub protocol_id: u64,
@@ -324,5 +324,5 @@ pub fn parse_key_code(s: &str) -> Option<KeyCode> {
 
 /// Build a Bevy [`Color`] from an `[r, g, b, a]` array of floats (0.0 – 1.0).
 pub fn color_from_array(rgba: [f32; 4]) -> Color {
-    Color::LinearRgba(LinearRgba::new(rgba[0], rgba[1], rgba[2], rgba[3]))
+    Color::srgba(rgba[0], rgba[1], rgba[2], rgba[3])
 }
