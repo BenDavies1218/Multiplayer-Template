@@ -14,7 +14,7 @@ mod tests;
 // Re-export public items from submodules
 pub use loader::{load_world_assets};
 pub use processor::{process_collision_meshes, create_convex_hull_collider, create_compound_collider};
-pub use utils::{extract_mesh_vertices, extract_mesh_indices};
+pub use utils::{extract_mesh_vertices, extract_mesh_indices, parse_extras};
 pub use collision_debug::{CollisionDebugSettings, CollisionDebugMesh, apply_debug_config};
 
 /// Configuration for WorldPlugin

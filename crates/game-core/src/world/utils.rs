@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+use bevy::gltf::GltfExtras;
 use bevy::mesh::{Mesh, VertexAttributeValues, Indices};
+use std::collections::HashMap;
 
 /// Extract vertices from a Bevy mesh
 pub fn extract_mesh_vertices(mesh: &Mesh) -> Option<Vec<Vec3>> {
@@ -29,4 +31,12 @@ pub fn extract_mesh_indices(mesh: &Mesh) -> Option<Vec<[u32; 3]>> {
                 .collect())
         }
     }
+}
+
+/// Parse glTF extras JSON into a HashMap
+pub fn parse_extras(extras: &Option<GltfExtras>) -> HashMap<String, serde_json::Value> {
+    extras
+        .as_ref()
+        .and_then(|e| serde_json::from_str(&e.value).ok())
+        .unwrap_or_default()
 }

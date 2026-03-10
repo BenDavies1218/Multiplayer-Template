@@ -2,9 +2,7 @@ use avian3d::prelude::*;
 use bevy::prelude::*;
 use bevy::gltf::{Gltf, GltfMesh, GltfNode};
 use bevy::mesh::Mesh;
-use std::collections::HashMap;
-
-use crate::world::{extract_mesh_vertices, extract_mesh_indices};
+use crate::world::{extract_mesh_vertices, extract_mesh_indices, parse_extras};
 use crate::core_config::GameCoreConfig;
 use super::{ZoneLoader, ZonePluginConfig};
 use super::zones::*;
@@ -223,10 +221,3 @@ fn parse_index_from_name(name: &str, prefix: &str) -> u32 {
         .unwrap_or(0)
 }
 
-/// Parse glTF extras JSON into a HashMap
-fn parse_extras(extras: &Option<bevy::gltf::GltfExtras>) -> HashMap<String, serde_json::Value> {
-    extras
-        .as_ref()
-        .and_then(|e| serde_json::from_str(&e.value).ok())
-        .unwrap_or_default()
-}

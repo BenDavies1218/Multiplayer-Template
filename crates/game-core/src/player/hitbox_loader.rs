@@ -1,10 +1,8 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
-use bevy::gltf::{Gltf, GltfExtras, GltfMesh, GltfNode};
+use bevy::gltf::{Gltf, GltfMesh, GltfNode};
 use bevy::mesh::Mesh;
-use std::collections::HashMap;
-
-use crate::world::{extract_mesh_vertices, extract_mesh_indices};
+use crate::world::{extract_mesh_vertices, extract_mesh_indices, parse_extras};
 use super::components::{PlayerHitboxMarker, HitboxRegion};
 
 /// Temporary component placed on a loader entity.
@@ -106,14 +104,6 @@ pub fn process_player_hitbox(
         commands.insert_resource(PlayerHitboxData { regions });
         commands.entity(entity).despawn();
     }
-}
-
-/// Parse glTF extras JSON into a HashMap.
-fn parse_extras(extras: &Option<GltfExtras>) -> HashMap<String, serde_json::Value> {
-    extras
-        .as_ref()
-        .and_then(|e| serde_json::from_str(&e.value).ok())
-        .unwrap_or_default()
 }
 
 /// Attach hitbox collider children to a player entity.
