@@ -23,5 +23,11 @@
     },
     "transport": {
         "token_expiration": -1
+    },
+    "player": {
+        "model_catalog": {
+            "default": "models/example_player_model.glb"
+        },
+        "selected_model": "default"
     }
 }

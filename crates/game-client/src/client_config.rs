@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -9,6 +11,7 @@ pub struct GameClientConfig {
     pub input: InputConfig,
     pub rendering: RenderingConfig,
     pub transport: ClientTransportConfig,
+    pub player: PlayerConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -55,6 +58,25 @@ impl Default for GameClientConfig {
             input: InputConfig::default(),
             rendering: RenderingConfig::default(),
             transport: ClientTransportConfig::default(),
+            player: PlayerConfig::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct PlayerConfig {
+    pub model_catalog: HashMap<String, String>,
+    pub selected_model: String,
+}
+
+impl Default for PlayerConfig {
+    fn default() -> Self {
+        let mut catalog = HashMap::new();
+        catalog.insert("default".to_string(), "models/example_player_model.glb".to_string());
+        Self {
+            model_catalog: catalog,
+            selected_model: "default".to_string(),
         }
     }
 }
