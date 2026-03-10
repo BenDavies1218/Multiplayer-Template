@@ -32,6 +32,9 @@ RUN apt-get update && \
 # Copy binary from builder
 COPY --from=builder /app/target/release/server /usr/local/bin/server
 
+# Asset path - mount via volume at runtime
+ENV ASSET_PATH=/data/assets
+
 # Copy certificates (required for WebTransport)
 COPY certificates /certificates
 

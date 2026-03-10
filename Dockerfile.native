@@ -50,15 +50,13 @@ RUN apt-get update && \
 # Copy binary from builder
 COPY --from=builder /app/target/release/native /usr/local/bin/native
 
-# Copy assets (configs, world models)
-COPY assets /app/assets
-
 # Copy certificates (required for secure networking)
 COPY certificates /app/certificates
 
-# Set working directory so relative config paths resolve correctly
-# native loads configs from ../../assets relative to apps/native/
-WORKDIR /app/apps/native
+# Asset path - mount via volume at runtime
+ENV ASSET_PATH=/data/assets
+
+WORKDIR /app
 
 # Run native client (requires -c <client_id> argument)
 ENTRYPOINT ["native"]

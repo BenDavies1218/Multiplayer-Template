@@ -50,14 +50,11 @@ RUN apt-get update && \
 # Copy binary from builder
 COPY --from=builder /app/target/release/world-viewer /usr/local/bin/world-viewer
 
-# Copy assets (world models, configs)
-COPY assets /app/assets
-
 # Set working directory so relative asset paths resolve correctly
 WORKDIR /app
 
-# Set BEVY_ASSET_ROOT so the app can find assets/
-ENV BEVY_ASSET_ROOT=/app
+# Asset path - mount via volume at runtime
+ENV ASSET_PATH=/data/assets
 
 # Run world-viewer
 CMD ["world-viewer"]
