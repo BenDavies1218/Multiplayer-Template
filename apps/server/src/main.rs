@@ -22,6 +22,7 @@ fn main() {
     app.add_plugins(SharedPlugin { config: core_config.clone() });
     app.add_plugins(WorldPlugin { config: WorldPluginConfig::server() });
     app.add_plugins(ZonePlugin { config: ZonePluginConfig::server() });
+    app.add_plugins(game_core::player::PlayerPlugin);
     app.add_plugins(ServerPlugin);
 
     spawn_server_connection_from_config(&mut app, &core_config);

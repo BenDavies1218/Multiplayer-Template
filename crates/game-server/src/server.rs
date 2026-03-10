@@ -11,6 +11,7 @@ use game_core::networking::protocol::*;
 use game_core::networking::shared::CharacterPhysicsBundle;
 use game_core::movement::{apply_character_movement, update_crouch_collider};
 use game_core::zones::SpawnPoints;
+use game_core::player::{PlayerModelId, PlayerHitboxData, attach_hitbox_to_player};
 use game_core::GameCoreConfig;
 
 use crate::server_config::{GameServerConfig, parse_css_color};
@@ -158,6 +159,7 @@ pub(crate) fn handle_connected(
     mut commands: Commands,
     character_query: Query<Entity, With<CharacterMarker>>,
     mut spawn_points: Option<ResMut<SpawnPoints>>,
+    hitbox_data: Option<Res<PlayerHitboxData>>,
     server_config: Res<GameServerConfig>,
     core_config: Res<GameCoreConfig>,
 ) {
@@ -210,6 +212,17 @@ pub(crate) fn handle_connected(
             CrouchState::default(),
         ))
         .id();
+
+    // Add player model ID
+    commands.entity(character).insert(PlayerModelId::default());
+
+    // Attach hitbox colliders as children if data is loaded
+    if let Some(ref hitbox) = hitbox_data {
+        attach_hitbox_to_player(&mut commands, character, hitbox);
+        info!("Attached {} hitbox regions to player {character:?}", hitbox.regions.len());
+    } else {
+        warn!("PlayerHitboxData not yet loaded — player spawned without hitbox");
+    }
 
     info!("Created entity {character:?} for client {client_id:?}");
 }
