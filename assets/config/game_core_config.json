@@ -28,7 +28,8 @@
     "visual_path": "models/example_world_visual.glb",
     "collision_path": "models/example_world_collision.glb",
     "zones_path": "models/example_world_zones.glb",
-    "skybox_path": "sunset_sky_hdr_cubemap.exr"
+    "skybox_path": "sunset_sky_hdr_cubemap.exr",
+    "player_hitbox_path": "models/player_hitbox.glb"
   },
   "rollback_thresholds": {
     "position": 0.01,
