@@ -9,6 +9,7 @@ use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::core_config::RollbackConfig;
+use crate::player::PlayerModelId;
 
 static ROLLBACK_CONFIG: OnceLock<RollbackConfig> = OnceLock::new();
 
@@ -104,6 +105,8 @@ impl Plugin for ProtocolPlugin {
         // Camera orientation - NOT predicted, client authority
         // Client updates this and server reads it directly
         app.register_component::<CameraOrientation>();
+
+        app.register_component::<PlayerModelId>();
 
         app.register_component::<CrouchState>()
             .add_prediction();
