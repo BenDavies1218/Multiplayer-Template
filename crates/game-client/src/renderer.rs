@@ -5,7 +5,7 @@ use game_core::{
 };
 use game_camera::{CameraConfig, CameraPlugin, GameCamera};
 use avian3d::prelude::*;
-use bevy::{color::palettes::css::MAGENTA, prelude::*, window::{CursorGrabMode, CursorOptions}};
+use bevy::{color::palettes::css::MAGENTA, core_pipeline::Skybox, prelude::*, window::{CursorGrabMode, CursorOptions}};
 use lightyear::prelude::*;
 use lightyear_frame_interpolation::{FrameInterpolate, FrameInterpolationPlugin};
 use crate::client_config::{GameClientConfig, parse_mouse_button};
@@ -41,12 +41,20 @@ impl Plugin for FirstPersonPlugin {
     }
 }
 
-fn init(mut commands: Commands, config: Res<GameClientConfig>) {
+fn init(mut commands: Commands, config: Res<GameClientConfig>, core_config: Res<GameCoreConfig>, asset_server: Res<AssetServer>) {
     let pos = config.rendering.camera_start_position;
+
+    let skybox_image = asset_server.load(&core_config.world_assets.skybox_path);
+
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(pos[0], pos[1], pos[2]),
         GameCamera::default(),
+        Skybox {
+            image: skybox_image,
+            brightness: 1000.0,
+            rotation: Quat::IDENTITY,
+        },
     ));
 }
 
