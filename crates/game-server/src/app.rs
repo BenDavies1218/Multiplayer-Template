@@ -22,7 +22,7 @@ pub fn new_headless_app_from_config(core_config: &GameCoreConfig) -> App {
     app.add_plugins((
         MinimalPlugins,
         AssetPlugin {
-            file_path: "../../assets".to_string(),
+            file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
             meta_check: bevy::asset::AssetMetaCheck::Never,
             ..default()
         },

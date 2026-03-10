@@ -12,13 +12,15 @@ use game_core::utils::config_loader::load_config;
 fn main() {
     let core_config: GameCoreConfig = load_config("game_core_config.json");
 
-    unsafe {
-        std::env::set_var("BEVY_ASSET_ROOT", &core_config.asset_path);
-    }
-
     App::new()
-        .insert_resource(core_config)
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
+        .insert_resource(core_config.clone())
+        .add_plugins(DefaultPlugins
+            .set(AssetPlugin {
+                file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
+                meta_check: bevy::asset::AssetMetaCheck::Never,
+                ..default()
+            })
+            .set(WindowPlugin {
             primary_window: Some(Window {
                 title: "World Viewer - Test Your World Assets".to_string(),
                 resolution: WindowResolution::new(1920, 1080),

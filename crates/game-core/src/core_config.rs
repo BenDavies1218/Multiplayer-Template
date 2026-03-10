@@ -23,7 +23,7 @@ pub struct GameCoreConfig {
 impl Default for GameCoreConfig {
     fn default() -> Self {
         Self {
-            asset_path: "../../assets".to_string(),
+            asset_path: "assets".to_string(),
             networking: NetworkingConfig::default(),
             movement: MovementConfig::default(),
             character: CharacterConfig::default(),

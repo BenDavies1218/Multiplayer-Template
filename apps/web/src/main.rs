@@ -19,8 +19,6 @@ fn main() {
     let client_config: GameClientConfig = load_config("game_client_config.json");
     let camera_config: GameCameraFileConfig = load_config("game_camera_config.json");
 
-    unsafe { std::env::set_var("BEVY_ASSET_ROOT", &core_config.asset_path); }
-
     let cli = Cli::default();
     let tick = Duration::from_secs_f64(1.0 / core_config.networking.fixed_timestep_hz);
 

@@ -44,14 +44,7 @@ pub fn new_gui_app_from_config(add_inspector: bool, config: &GameClientConfig, c
         DefaultPlugins
             .build()
             .set(AssetPlugin {
-                // Native: relative path from apps/native or apps/web to workspace root
-                // WASM: Trunk copies assets/ into dist/, so just "assets"
-                file_path: {
-                    #[cfg(not(target_family = "wasm"))]
-                    { "../../assets".to_string() }
-                    #[cfg(target_family = "wasm")]
-                    { "assets".to_string() }
-                },
+                file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
                 // https://github.com/bevyengine/bevy/issues/10157
                 meta_check: bevy::asset::AssetMetaCheck::Never,
                 ..default()
