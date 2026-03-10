@@ -1,6 +1,8 @@
+use std::collections::HashMap;
 use game_core::{
     networking::protocol::{CharacterMarker, ColorComponent, CrouchState, FloorMarker, ProjectileMarker},
     core_config::parse_key_code,
+    player::PlayerModelId,
     world::WorldAssets,
     GameCoreConfig,
 };
@@ -36,6 +38,12 @@ struct PendingClientAssets {
     ready: bool,
 }
 
+/// Holds preloaded player model scene handles, keyed by model ID.
+#[derive(Resource)]
+struct PlayerModelAssets {
+    models: HashMap<String, Handle<Scene>>,
+}
+
 impl Plugin for FirstPersonPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(CameraPlugin {
@@ -64,10 +72,20 @@ impl Plugin for FirstPersonPlugin {
 fn start_loading_assets(
     mut commands: Commands,
     core_config: Res<GameCoreConfig>,
+    client_config: Res<GameClientConfig>,
     asset_server: Res<AssetServer>,
 ) {
     let skybox = asset_server.load(&core_config.world_assets.skybox_path);
     commands.insert_resource(PendingClientAssets { skybox, ready: false });
+
+    // Preload all player models from catalog
+    let mut models = HashMap::new();
+    for (id, path) in &client_config.player.model_catalog {
+        let handle = asset_server.load(format!("{}#Scene0", path));
+        info!("Preloading player model '{}' from {}", id, path);
+        models.insert(id.clone(), handle);
+    }
+    commands.insert_resource(PlayerModelAssets { models });
 }
 
 /// Wait for ALL client assets (world visual, collision, skybox) to finish loading,
@@ -294,7 +312,7 @@ fn add_visual_interpolation_components(
 fn add_character_cosmetics(
     mut commands: Commands,
     character_query: Query<
-        (Entity, &ColorComponent),
+        (Entity, &ColorComponent, Option<&PlayerModelId>),
         (
             Or<(Added<Predicted>, Added<Replicate>, Added<Interpolated>)>,
             With<CharacterMarker>,
@@ -303,15 +321,30 @@ fn add_character_cosmetics(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     core_config: Res<GameCoreConfig>,
+    player_models: Option<Res<PlayerModelAssets>>,
 ) {
-    for (entity, color) in &character_query {
-        commands.entity(entity).insert((
-            Mesh3d(meshes.add(Capsule3d::new(
-                core_config.character.capsule_radius,
-                core_config.character.capsule_height,
-            ))),
-            MeshMaterial3d(materials.add(color.0)),
-        ));
+    for (entity, color, model_id) in &character_query {
+        // Try to attach a player model from the catalog
+        let model_key = model_id.map(|m| m.0.as_str()).unwrap_or("default");
+        let attached_model = player_models
+            .as_ref()
+            .and_then(|pm| pm.models.get(model_key))
+            .cloned();
+
+        if let Some(scene_handle) = attached_model {
+            commands.entity(entity).insert(SceneRoot(scene_handle));
+            info!("Attached player model '{}' to entity {:?}", model_key, entity);
+        } else {
+            // Fallback to capsule if model not found
+            commands.entity(entity).insert((
+                Mesh3d(meshes.add(Capsule3d::new(
+                    core_config.character.capsule_radius,
+                    core_config.character.capsule_height,
+                ))),
+                MeshMaterial3d(materials.add(color.0)),
+            ));
+            warn!("Player model '{}' not found in catalog, using capsule fallback", model_key);
+        }
     }
 }
 
