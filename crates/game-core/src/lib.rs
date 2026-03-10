@@ -11,9 +11,11 @@ pub mod utils;
 pub mod world;
 pub mod movement;
 pub mod zones;
+pub mod player;
 
 // Re-export commonly used items
 pub use networking::protocol::*;
 pub use networking::shared::*;
 pub use networking::config::Config;
 pub use core_config::GameCoreConfig;
+pub use player::{PlayerModelId, PlayerHitboxMarker, HitboxRegion, PlayerHitboxData, attach_hitbox_to_player};

@@ -120,6 +120,7 @@ pub struct WorldAssetsConfig {
     pub collision_path: String,
     pub zones_path: String,
     pub skybox_path: String,
+    pub player_hitbox_path: String,
 }
 
 impl Default for WorldAssetsConfig {
@@ -129,6 +130,7 @@ impl Default for WorldAssetsConfig {
             collision_path: "models/example_world_collision.glb".to_string(),
             zones_path: "models/example_world_zones.glb".to_string(),
             skybox_path: "sunset_sky_hdr.exr".to_string(),
+            player_hitbox_path: "models/player_hitbox.glb".to_string(),
         }
     }
 }
