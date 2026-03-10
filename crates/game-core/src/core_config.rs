@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Resource, Serialize, Deserialize, Clone, Debug)]
 #[serde(default)]
 pub struct GameCoreConfig {
+    pub asset_path: String,
     pub networking: NetworkingConfig,
     pub movement: MovementConfig,
     pub character: CharacterConfig,
@@ -22,6 +23,7 @@ pub struct GameCoreConfig {
 impl Default for GameCoreConfig {
     fn default() -> Self {
         Self {
+            asset_path: "../../assets".to_string(),
             networking: NetworkingConfig::default(),
             movement: MovementConfig::default(),
             character: CharacterConfig::default(),
