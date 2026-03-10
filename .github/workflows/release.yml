@@ -85,14 +85,14 @@ jobs:
 
       - name: Upload artifacts (Unix)
         if: matrix.os != 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: binaries-${{ matrix.target }}
           path: multiplayer-template-${{ matrix.target }}.tar.gz
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: binaries-${{ matrix.target }}
           path: multiplayer-template-${{ matrix.target }}.zip
@@ -123,7 +123,7 @@ jobs:
           tar -czf ../../multiplayer-template-web.tar.gz dist/
 
       - name: Upload web artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: web-client
           path: multiplayer-template-web.tar.gz
