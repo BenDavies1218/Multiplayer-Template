@@ -11,8 +11,10 @@ use game_server::{GameServerConfig, ServerPlugin};
 fn main() {
     config::init();
 
-    let core_config: GameCoreConfig = load_config("../../assets", "game_core_config.json");
-    let server_config: GameServerConfig = load_config("../../assets", "game_server_config.json");
+    let core_config: GameCoreConfig = load_config("game_core_config.json");
+    let server_config: GameServerConfig = load_config("game_server_config.json");
+
+    unsafe { std::env::set_var("BEVY_ASSET_ROOT", &core_config.asset_path); }
 
     let tick = Duration::from_secs_f64(1.0 / core_config.networking.fixed_timestep_hz);
 

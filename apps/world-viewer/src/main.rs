@@ -10,18 +10,11 @@ use game_core::GameCoreConfig;
 use game_core::utils::config_loader::load_config;
 
 fn main() {
-    // Set asset root to workspace root (not package directory)
-    // This allows world-viewer to find assets/ folder in the workspace root
-    let manifest_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let workspace_root = manifest_dir.parent().unwrap().parent().unwrap();
-    unsafe {
-        std::env::set_var("BEVY_ASSET_ROOT", workspace_root);
-    }
+    let core_config: GameCoreConfig = load_config("game_core_config.json");
 
-    let core_config: GameCoreConfig = load_config(
-        &format!("{}/assets", workspace_root.display()),
-        "game_core_config.json",
-    );
+    unsafe {
+        std::env::set_var("BEVY_ASSET_ROOT", &core_config.asset_path);
+    }
 
     App::new()
         .insert_resource(core_config)
