@@ -119,6 +119,7 @@ pub struct WorldAssetsConfig {
     pub visual_path: String,
     pub collision_path: String,
     pub zones_path: String,
+    pub skybox_path: String,
 }
 
 impl Default for WorldAssetsConfig {
@@ -127,6 +128,7 @@ impl Default for WorldAssetsConfig {
             visual_path: "models/example_world_visual.glb".to_string(),
             collision_path: "models/example_world_collision.glb".to_string(),
             zones_path: "models/example_world_zones.glb".to_string(),
+            skybox_path: "sunset_sky_hdr.exr".to_string(),
         }
     }
 }
