@@ -123,23 +123,41 @@ Open <http://localhost:8080> in your browser.
 
 All game settings are driven by JSON config files in `assets/config/`:
 
-- **`game_core_config.json`** — Networking (host, port, tick rate), movement, physics, world assets, zones
+- **`game_core_config.json`** — Asset path, networking (host, port, tick rate), movement, physics, world assets, zones
 - **`game_client_config.json`** — Window settings, input bindings, rendering, transport
 - **`game_camera_config.json`** — Camera modes (first-person, third-person, free-view), sensitivity
 - **`game_server_config.json`** — Projectile settings, spawning, transport type, certificate SANs
+
+### Asset Path
+
+The asset directory path is configurable, allowing the same binary to load different game content:
+
+| Context | How assets are found |
+|---------|---------------------|
+| Local dev | Default `../../assets` relative path — zero config needed |
+| Docker | `ASSET_PATH` env var + volume mount |
+| Production | `asset_path` field in `game_core_config.json` |
+
+Resolution order:
+1. `ASSET_PATH` environment variable (if set)
+2. Falls back to `../../assets` (default for local development)
+
+After config is loaded, `asset_path` from `game_core_config.json` is used for all asset loading (Bevy `AssetServer`).
 
 ## Docker Deployment
 
 ### Using Docker Compose (Recommended)
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 This starts:
 
 - Server on port 5888
 - Web client on port 8080
+
+Assets are mounted from `./assets` into containers via volume mounts. To use custom assets, place them in the `assets/` directory or set `ASSET_PATH` in the compose environment.
 
 ### Building Individual Images
 
@@ -162,7 +180,11 @@ docker build -f Dockerfile.world-viewer -t multiplayer-world-viewer .
 ```bash
 # Pull and run server
 docker pull ghcr.io/BenDavies1218/multiplayer-template-server:latest
-docker run -p 5888:5888 -v ./certificates:/certificates ghcr.io/BenDavies1218/multiplayer-template-server:latest
+docker run -p 5888:5888 \
+  -v ./certificates:/certificates \
+  -v ./assets:/data/assets \
+  -e ASSET_PATH=/data/assets \
+  ghcr.io/BenDavies1218/multiplayer-template-server:latest
 
 # Pull and run web client
 docker pull ghcr.io/BenDavies1218/multiplayer-template-web:latest
@@ -171,15 +193,50 @@ docker run -p 8080:80 ghcr.io/BenDavies1218/multiplayer-template-web:latest
 # Pull and run native client (requires X11 forwarding for GUI)
 docker pull ghcr.io/BenDavies1218/multiplayer-template-native:latest
 docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v ./assets:/data/assets -e ASSET_PATH=/data/assets \
   ghcr.io/BenDavies1218/multiplayer-template-native:latest -c 1
 
 # Pull and run world viewer (requires X11 forwarding for GUI)
 docker pull ghcr.io/BenDavies1218/multiplayer-template-world-viewer:latest
 docker run -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v ./assets:/data/assets -e ASSET_PATH=/data/assets \
   ghcr.io/BenDavies1218/multiplayer-template-world-viewer:latest
 ```
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for production deployment guide.
+
+## Release Binaries
+
+Pre-built binaries are available on the [Releases](../../releases) page, triggered by version tags (`v*`).
+
+### Platforms
+
+| Platform | Target |
+|----------|--------|
+| Linux x86_64 | `x86_64-unknown-linux-gnu` |
+| Linux ARM64 | `aarch64-unknown-linux-gnu` |
+| macOS Intel | `x86_64-apple-darwin` |
+| macOS Apple Silicon | `aarch64-apple-darwin` |
+| Windows | `x86_64-pc-windows-msvc` |
+| Web (WASM) | Separate `web.tar.gz` artifact |
+
+### Each archive contains
+
+- `server` — Dedicated game server
+- `native-client` — Native desktop client
+- `world-viewer` — Standalone world viewer tool
+
+### Usage
+
+Download the archive for your platform, extract, and run with your assets:
+
+```bash
+# Set the asset path and run
+ASSET_PATH=./my-game-assets ./server server
+ASSET_PATH=./my-game-assets ./native-client -c 1
+```
+
+Or configure `asset_path` in your `game_core_config.json`.
 
 ## Development Workflow
 
