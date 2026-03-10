@@ -10,12 +10,14 @@ services:
       - "${SERVER_PORT:-5888}:5888"
     volumes:
       - ./certificates:/certificates:ro
+      - ./assets:/data/assets:ro
     env_file:
       - .env  # Load environment variables from .env file
     environment:
       - RUST_LOG=${RUST_LOG:-info}
       - SERVER_HOST=0.0.0.0  # Listen on all interfaces in Docker
       - SERVER_PORT=${SERVER_PORT:-5888}
+      - ASSET_PATH=/data/assets
     restart: unless-stopped
     networks:
       - game-network
@@ -53,8 +55,10 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
       - RUST_LOG=${RUST_LOG:-info}
+      - ASSET_PATH=/data/assets
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - ./assets:/data/assets:ro
     depends_on:
       server:
         condition: service_healthy
@@ -71,8 +75,10 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
       - RUST_LOG=${RUST_LOG:-info}
+      - ASSET_PATH=/data/assets
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
+      - ./assets:/data/assets:ro
     networks:
       - game-network
     profiles:
