@@ -1,18 +1,18 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use core::time::Duration;
+use game_core::networking::settings::send_interval_from_config;
 use leafwing_input_manager::prelude::*;
 use lightyear::connection::client::Connected;
 use lightyear::prelude::server::*;
 use lightyear::prelude::*;
-use game_core::networking::settings::send_interval_from_config;
 
+use game_core::GameCoreConfig;
+use game_core::character::{CharacterHitboxData, CharacterModelId, attach_hitbox_to_character};
+use game_core::movement::{apply_character_movement, update_crouch_collider};
 use game_core::networking::protocol::*;
 use game_core::networking::shared::CharacterPhysicsBundle;
-use game_core::movement::{apply_character_movement, update_crouch_collider};
 use game_core::zones::SpawnPoints;
-use game_core::player::{PlayerModelId, PlayerHitboxData, attach_hitbox_to_player};
-use game_core::GameCoreConfig;
 
 use crate::server_config::{GameServerConfig, parse_css_color};
 
@@ -23,7 +23,13 @@ impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (handle_character_actions, update_crouch_collider, player_shoot, despawn_system).chain(),
+            (
+                handle_character_actions,
+                update_crouch_collider,
+                player_shoot,
+                despawn_system,
+            )
+                .chain(),
         );
         app.add_observer(handle_new_client);
         app.add_observer(handle_connected);
@@ -33,10 +39,18 @@ impl Plugin for ServerPlugin {
 fn handle_character_actions(
     time: Res<Time>,
     spatial_query: SpatialQuery,
-    mut query: Query<(Entity, &ComputedMass, &ActionState<CharacterAction>, &mut CameraOrientation, Forces, &mut CrouchState)>,
+    mut query: Query<(
+        Entity,
+        &ComputedMass,
+        &ActionState<CharacterAction>,
+        &mut CameraOrientation,
+        Forces,
+        &mut CrouchState,
+    )>,
     config: Res<GameCoreConfig>,
 ) {
-    for (entity, mass, action_state, mut camera_orientation, forces, mut crouch_state) in &mut query {
+    for (entity, mass, action_state, mut camera_orientation, forces, mut crouch_state) in &mut query
+    {
         let look = action_state.axis_pair(&CharacterAction::Look);
         camera_orientation.yaw = look.x;
         camera_orientation.pitch = look.y;
@@ -76,11 +90,14 @@ fn despawn_system(
 fn player_shoot(
     mut commands: Commands,
     _timeline: Res<LocalTimeline>,
-    query: Query<(&ActionState<CharacterAction>, &Position, &ControlledBy), Without<Predicted>>,
+    query: Query<
+        (&ActionState<CharacterAction>, &Position, &CameraOrientation, &ControlledBy),
+        Without<Predicted>,
+    >,
     time: Res<Time<Fixed>>,
     server_config: Res<GameServerConfig>,
 ) {
-    for (action_state, position, controlled_by) in &query {
+    for (action_state, position, orientation, controlled_by) in &query {
         let mut position_override = ComponentReplicationOverrides::<Position>::default();
         position_override.global_override(ComponentReplicationOverride {
             replicate_once: true,
@@ -120,7 +137,11 @@ fn player_shoot(
                 RigidBody::Dynamic,
                 *position, // Use current position
                 Rotation::default(),
-                LinearVelocity(Vec3::Z * server_config.projectile.velocity),
+                LinearVelocity(
+                    Quat::from_euler(EulerRot::YXZ, orientation.yaw, orientation.pitch, 0.0)
+                        * Vec3::NEG_Z
+                        * server_config.projectile.velocity,
+                ),
                 Replicate::to_clients(NetworkTarget::All),
                 PredictionTarget::to_clients(NetworkTarget::All),
                 ControlledBy {
@@ -141,7 +162,11 @@ fn player_shoot(
 }
 
 /// Add the ReplicationSender component to new clients
-pub(crate) fn handle_new_client(trigger: On<Add, LinkOf>, mut commands: Commands, config: Res<GameCoreConfig>) {
+pub(crate) fn handle_new_client(
+    trigger: On<Add, LinkOf>,
+    mut commands: Commands,
+    config: Res<GameCoreConfig>,
+) {
     let interval = send_interval_from_config(&config);
     commands
         .entity(trigger.entity)
@@ -159,7 +184,7 @@ pub(crate) fn handle_connected(
     mut commands: Commands,
     character_query: Query<Entity, With<CharacterMarker>>,
     mut spawn_points: Option<ResMut<SpawnPoints>>,
-    hitbox_data: Option<Res<PlayerHitboxData>>,
+    hitbox_data: Option<Res<CharacterHitboxData>>,
     server_config: Res<GameServerConfig>,
     core_config: Res<GameCoreConfig>,
 ) {
@@ -173,7 +198,9 @@ pub(crate) fn handle_connected(
     let num_characters = character_query.iter().count();
 
     // Pick color from config.
-    let available_colors: Vec<Color> = server_config.spawning.player_colors
+    let available_colors: Vec<Color> = server_config
+        .spawning
+        .player_colors
         .iter()
         .map(|name| parse_css_color(name))
         .collect();
@@ -208,20 +235,28 @@ pub(crate) fn handle_connected(
             CharacterPhysicsBundle::new(&core_config.character),
             ColorComponent(color),
             CharacterMarker,
-            CameraOrientation { yaw: 0.0, pitch: 0.0 },
+            CameraOrientation {
+                yaw: 0.0,
+                pitch: 0.0,
+            },
             CrouchState::default(),
         ))
         .id();
 
-    // Add player model ID
-    commands.entity(character).insert(PlayerModelId::default());
+    // Add character model ID
+    commands
+        .entity(character)
+        .insert(CharacterModelId::default());
 
     // Attach hitbox colliders as children if data is loaded
     if let Some(ref hitbox) = hitbox_data {
-        attach_hitbox_to_player(&mut commands, character, hitbox);
-        info!("Attached {} hitbox regions to player {character:?}", hitbox.regions.len());
+        attach_hitbox_to_character(&mut commands, character, hitbox);
+        info!(
+            "Attached {} hitbox regions to character {character:?}",
+            hitbox.regions.len()
+        );
     } else {
-        warn!("PlayerHitboxData not yet loaded — player spawned without hitbox");
+        warn!("CharacterHitboxData not yet loaded — character spawned without hitbox");
     }
 
     info!("Created entity {character:?} for client {client_id:?}");
