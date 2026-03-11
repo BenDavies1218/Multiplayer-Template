@@ -7,6 +7,7 @@
 //! - Client-side prediction and interpolation
 
 pub mod app;
+pub mod character_rendering;
 pub mod client;
 pub mod client_config;
 pub mod renderer;
@@ -16,4 +17,4 @@ pub mod transport;
 pub use client::ClientPlugin;
 pub use client_config::GameClientConfig;
 pub use renderer::FirstPersonPlugin;
-pub use transport::{ExampleClient, ClientTransports, connect};
+pub use transport::{ClientTransports, ExampleClient, connect};

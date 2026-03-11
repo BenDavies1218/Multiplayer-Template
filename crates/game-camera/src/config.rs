@@ -176,6 +176,7 @@ pub struct GameCameraFileConfig {
     pub third_person: CameraPresetConfig,
     pub free_view: CameraPresetConfig,
     pub pitch_clamp_radians: f32,
+    pub start_position: [f32; 3],
 }
 
 impl Default for GameCameraFileConfig {
@@ -206,6 +207,7 @@ impl Default for GameCameraFileConfig {
                 smooth_factor: 0.1,
             },
             pitch_clamp_radians: 1.54,
+            start_position: [0.0, 20.0, 0.0],
         }
     }
 }

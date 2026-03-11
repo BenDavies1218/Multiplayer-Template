@@ -3,9 +3,9 @@
 //! A simple app for testing world rendering without any networking.
 //! This loads your world visual and collision meshes for quick iteration.
 
+use avian3d::prelude::*;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
-use avian3d::prelude::*;
 use game_core::GameCoreConfig;
 use game_core::utils::config_loader::load_config;
 
@@ -14,20 +14,22 @@ fn main() {
 
     App::new()
         .insert_resource(core_config.clone())
-        .add_plugins(DefaultPlugins
-            .set(AssetPlugin {
-                file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
-                meta_check: bevy::asset::AssetMetaCheck::Never,
-                ..default()
-            })
-            .set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "World Viewer - Test Your World Assets".to_string(),
-                resolution: WindowResolution::new(1920, 1080),
-                ..default()
-            }),
-            ..default()
-        }))
+        .add_plugins(
+            DefaultPlugins
+                .set(AssetPlugin {
+                    file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
+                    meta_check: bevy::asset::AssetMetaCheck::Never,
+                    ..default()
+                })
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "World Viewer - Test Your World Assets".to_string(),
+                        resolution: WindowResolution::new(1920, 1080),
+                        ..default()
+                    }),
+                    ..default()
+                }),
+        )
         .add_plugins(PhysicsPlugins::default())
         .add_plugins(game_core::world::WorldPlugin {
             config: game_core::world::WorldPluginConfig::viewer(),
@@ -59,11 +61,7 @@ impl Default for FlyCamera {
     }
 }
 
-fn setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    config: Res<GameCoreConfig>,
-) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<GameCoreConfig>) {
     info!("=== World Viewer Started ===");
     info!("Controls:");
     info!("  WASD - Move camera");
@@ -84,7 +82,10 @@ fn setup(
 
     // Spawn a test character capsule with physics to test collision
     // This capsule will fall due to gravity and collide with the world
-    let capsule_mesh = Capsule3d::new(config.character.capsule_radius, config.character.capsule_height);
+    let capsule_mesh = Capsule3d::new(
+        config.character.capsule_radius,
+        config.character.capsule_height,
+    );
     commands.spawn((
         Name::new("Test Character (Physics Enabled)"),
         Mesh3d(asset_server.add(Mesh::from(capsule_mesh))),
@@ -95,7 +96,10 @@ fn setup(
         Transform::from_xyz(0.0, 5.0, 0.0), // Spawn higher to see it fall
         // Physics components
         RigidBody::Dynamic,
-        Collider::capsule(config.character.capsule_radius, config.character.capsule_height),
+        Collider::capsule(
+            config.character.capsule_radius,
+            config.character.capsule_height,
+        ),
         // Lock rotation so it stays upright
         LockedAxes::default()
             .lock_rotation_x()

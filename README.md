@@ -38,10 +38,10 @@ multiplayer-bevy/
 ├── .cargo/config.toml      # Cargo aliases (dev-native, dev-server, etc.)
 │
 ├── crates/                 # Library crates
-│   ├── game-core/          # Shared protocol, game logic, and config
-│   ├── game-client/        # Client-specific code (prediction, rendering, input)
-│   ├── game-server/        # Server-specific code (authority, spawning)
-│   └── game-camera/        # Camera system (first-person, third-person, free-view)
+│   ├── game-core/          # Shared protocol, game logic, and config [→ README](crates/game-core/README.md)
+│   ├── game-client/        # Client-specific code (prediction, rendering, input) [→ README](crates/game-client/README.md)
+│   ├── game-server/        # Server-specific code (authority, spawning) [→ README](crates/game-server/README.md)
+│   └── game-camera/        # Camera system (first-person, third-person, free-view) [→ README](crates/game-camera/README.md)
 │
 ├── apps/                   # Binary applications
 │   ├── server/             # Dedicated server [→ README](apps/server/README.md)
@@ -128,22 +128,6 @@ All game settings are driven by JSON config files in `assets/config/`:
 - **`game_camera_config.json`** — Camera modes (first-person, third-person, free-view), sensitivity
 - **`game_server_config.json`** — Projectile settings, spawning, transport type, certificate SANs
 
-### Asset Path
-
-The asset directory path is configurable, allowing the same binary to load different game content:
-
-| Context | How assets are found |
-|---------|---------------------|
-| Local dev | Default `../../assets` relative path — zero config needed |
-| Docker | `ASSET_PATH` env var + volume mount |
-| Production | `asset_path` field in `game_core_config.json` |
-
-Resolution order:
-1. `ASSET_PATH` environment variable (if set)
-2. Falls back to `../../assets` (default for local development)
-
-After config is loaded, `asset_path` from `game_core_config.json` is used for all asset loading (Bevy `AssetServer`).
-
 ## Docker Deployment
 
 ### Using Docker Compose (Recommended)
@@ -211,14 +195,14 @@ Pre-built binaries are available on the [Releases](../../releases) page, trigger
 
 ### Platforms
 
-| Platform | Target |
-|----------|--------|
-| Linux x86_64 | `x86_64-unknown-linux-gnu` |
-| Linux ARM64 | `aarch64-unknown-linux-gnu` |
-| macOS Intel | `x86_64-apple-darwin` |
-| macOS Apple Silicon | `aarch64-apple-darwin` |
-| Windows | `x86_64-pc-windows-msvc` |
-| Web (WASM) | Separate `web.tar.gz` artifact |
+| Platform            | Target                         |
+| ------------------- | ------------------------------ |
+| Linux x86_64        | `x86_64-unknown-linux-gnu`     |
+| Linux ARM64         | `aarch64-unknown-linux-gnu`    |
+| macOS Intel         | `x86_64-apple-darwin`          |
+| macOS Apple Silicon | `aarch64-apple-darwin`         |
+| Windows             | `x86_64-pc-windows-msvc`       |
+| Web (WASM)          | Separate `web.tar.gz` artifact |
 
 ### Each archive contains
 
@@ -291,10 +275,10 @@ your-crate.workspace = true
 
 ### Crate Separation
 
-- **game-core**: Contains the protocol definition, shared game logic, physics bundles, world/zone loading, configuration types, and common utilities. Used by both client and server.
-- **game-client**: Client-specific code including input handling, prediction, rendering, and transport setup.
-- **game-server**: Server authority logic, player spawning, projectile management, and server transport setup.
-- **game-camera**: Flexible camera system supporting first-person, third-person, and free-view modes with configurable sensitivity and smoothing.
+- **[game-core](crates/game-core/README.md)**: Contains the protocol definition, shared game logic, physics bundles, world/zone loading, configuration types, and common utilities. Used by both client and server.
+- **[game-client](crates/game-client/README.md)**: Client-specific code including input handling, prediction, rendering, and transport setup.
+- **[game-server](crates/game-server/README.md)**: Server authority logic, player spawning, projectile management, and server transport setup.
+- **[game-camera](crates/game-camera/README.md)**: Flexible camera system supporting first-person, third-person, and free-view modes with configurable sensitivity and smoothing.
 
 ### Networking Features
 

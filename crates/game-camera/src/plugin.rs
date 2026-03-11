@@ -1,6 +1,6 @@
-use bevy::prelude::*;
-use bevy::input::mouse::AccumulatedMouseMotion;
 use crate::config::{CameraConfig, GameCameraFileConfig};
+use bevy::input::mouse::AccumulatedMouseMotion;
+use bevy::prelude::*;
 
 /// Main camera plugin for first-person controls
 pub struct CameraPlugin {
@@ -70,14 +70,13 @@ fn update_camera_rotation(
         game_camera.pitch -= delta.y * config.sensitivity;
 
         // Clamp pitch to prevent camera flipping
-        game_camera.pitch = game_camera.pitch.clamp(-file_config.pitch_clamp_radians, file_config.pitch_clamp_radians);
+        game_camera.pitch = game_camera.pitch.clamp(
+            -file_config.pitch_clamp_radians,
+            file_config.pitch_clamp_radians,
+        );
 
         // Apply rotation
-        transform.rotation = Quat::from_euler(
-            EulerRot::YXZ,
-            game_camera.yaw,
-            game_camera.pitch,
-            0.0,
-        );
+        transform.rotation =
+            Quat::from_euler(EulerRot::YXZ, game_camera.yaw, game_camera.pitch, 0.0);
     }
 }

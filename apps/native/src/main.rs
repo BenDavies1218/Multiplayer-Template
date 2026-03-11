@@ -2,14 +2,14 @@ use bevy::prelude::*;
 use core::time::Duration;
 use lightyear::prelude::*;
 
-use game_core::utils::cli::Cli;
-use game_core::utils::config_loader::load_config;
-use game_core::networking::config;
-use game_core::{GameCoreConfig, SharedPlugin};
-use game_core::world::{WorldPlugin, WorldPluginConfig};
+use game_camera::GameCameraFileConfig;
 use game_client::app::{build_client_app_from_config, spawn_client_connection_from_config};
 use game_client::{ClientPlugin, FirstPersonPlugin, GameClientConfig};
-use game_camera::GameCameraFileConfig;
+use game_core::networking::config;
+use game_core::utils::cli::Cli;
+use game_core::utils::config_loader::load_config;
+use game_core::world::{WorldPlugin, WorldPluginConfig};
+use game_core::{GameCoreConfig, SharedPlugin};
 
 fn main() {
     config::init();
@@ -24,15 +24,21 @@ fn main() {
     let mut app = build_client_app_from_config(tick, true, &client_config, &core_config);
 
     app.insert_resource(camera_config.clone());
-    app.add_plugins(SharedPlugin { config: core_config.clone() });
-    app.add_plugins(WorldPlugin { config: WorldPluginConfig::client() });
+    app.add_plugins(SharedPlugin {
+        config: core_config.clone(),
+    });
+    app.add_plugins(WorldPlugin {
+        config: WorldPluginConfig::client(),
+    });
     app.add_plugins(ClientPlugin);
     app.add_plugins(FirstPersonPlugin {
         camera_config: game_camera::CameraConfig::first_person_from_config(&camera_config),
     });
 
-    let client_id = cli.client_id().expect("You need to specify a client_id via `-c ID`");
-    spawn_client_connection_from_config(&mut app, client_id, &core_config);
+    let client_id = cli
+        .client_id()
+        .expect("You need to specify a client_id via `-c ID`");
+    spawn_client_connection_from_config(&mut app, client_id, &core_config, &client_config);
 
     add_input_delay(&mut app);
 

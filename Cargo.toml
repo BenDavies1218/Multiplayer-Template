@@ -16,7 +16,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.93"
 authors = ["Ben Davies <bendavies600@gmail.com>"]
-license = "MIT OR Apache-2.0"
+license = "MIT"
 repository = "https://github.com/BenDavies1218/Multiplayer-Template"
 
 [workspace.dependencies]

@@ -1,12 +1,5 @@
-use std::collections::HashMap;
-use game_core::{
-    networking::protocol::{CharacterMarker, ColorComponent, CrouchState, FloorMarker, ProjectileMarker},
-    core_config::parse_key_code,
-    player::PlayerModelId,
-    world::WorldAssets,
-    GameCoreConfig,
-};
-use game_camera::{CameraConfig, CameraPlugin, GameCamera};
+use crate::character_rendering::CharacterRenderingPlugin;
+use crate::client_config::{GameClientConfig, parse_mouse_button};
 use avian3d::prelude::*;
 use bevy::{
     color::palettes::css::MAGENTA,
@@ -15,9 +8,15 @@ use bevy::{
     render::render_resource::{TextureViewDescriptor, TextureViewDimension},
     window::{CursorGrabMode, CursorOptions},
 };
+use game_camera::{CameraConfig, CameraPlugin, GameCamera, GameCameraFileConfig};
+use game_core::{
+    GameCoreConfig,
+    core_config::parse_key_code,
+    networking::protocol::{CharacterMarker, CrouchState, FloorMarker, ProjectileMarker},
+    world::WorldAssets,
+};
 use lightyear::prelude::*;
 use lightyear_frame_interpolation::{FrameInterpolate, FrameInterpolationPlugin};
-use crate::client_config::{GameClientConfig, parse_mouse_button};
 
 pub struct FirstPersonPlugin {
     pub camera_config: CameraConfig,
@@ -38,26 +37,23 @@ struct PendingClientAssets {
     ready: bool,
 }
 
-/// Holds preloaded player model scene handles, keyed by model ID.
-#[derive(Resource)]
-struct PlayerModelAssets {
-    models: HashMap<String, Handle<Scene>>,
-}
-
 impl Plugin for FirstPersonPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(CameraPlugin {
             config: self.camera_config.clone(),
         });
 
+        app.add_plugins(CharacterRenderingPlugin);
+
         app.add_systems(Startup, start_loading_assets);
-        app.add_systems(Update, (
-            check_assets_loaded,
-            add_character_cosmetics,
-            fps_camera_follow,
-            setup_cursor_grab,
-        ));
-        app.add_systems(PreUpdate, add_projectile_cosmetics.before(RollbackSystems::Check));
+        app.add_systems(
+            Update,
+            (check_assets_loaded, fps_camera_follow, setup_cursor_grab),
+        );
+        app.add_systems(
+            PreUpdate,
+            add_projectile_cosmetics.before(RollbackSystems::Check),
+        );
 
         // Frame interpolation for smooth rendering
         app.add_plugins(FrameInterpolationPlugin::<Position>::default());
@@ -72,20 +68,13 @@ impl Plugin for FirstPersonPlugin {
 fn start_loading_assets(
     mut commands: Commands,
     core_config: Res<GameCoreConfig>,
-    client_config: Res<GameClientConfig>,
     asset_server: Res<AssetServer>,
 ) {
     let skybox = asset_server.load(&core_config.world_assets.skybox_path);
-    commands.insert_resource(PendingClientAssets { skybox, ready: false });
-
-    // Preload all player models from catalog
-    let mut models = HashMap::new();
-    for (id, path) in &client_config.player.model_catalog {
-        let handle = asset_server.load(format!("{}#Scene0", path));
-        info!("Preloading player model '{}' from {}", id, path);
-        models.insert(id.clone(), handle);
-    }
-    commands.insert_resource(PlayerModelAssets { models });
+    commands.insert_resource(PendingClientAssets {
+        skybox,
+        ready: false,
+    });
 }
 
 /// Wait for ALL client assets (world visual, collision, skybox) to finish loading,
@@ -96,24 +85,34 @@ fn check_assets_loaded(
     asset_server: Res<AssetServer>,
     mut images: ResMut<Assets<Image>>,
     world_assets: Option<Res<WorldAssets>>,
-    config: Res<GameClientConfig>,
+    camera_file_config: Res<GameCameraFileConfig>,
     camera_query: Query<Entity, With<GameCamera>>,
 ) {
-    let Some(ref mut pending) = pending else { return };
-    if pending.ready { return; }
+    let Some(ref mut pending) = pending else {
+        return;
+    };
+    if pending.ready {
+        return;
+    }
 
     // Check world assets
     if let Some(ref world) = world_assets {
         if let Some(ref visual) = world.visual {
-            if !asset_server.is_loaded_with_dependencies(visual) { return; }
+            if !asset_server.is_loaded_with_dependencies(visual) {
+                return;
+            }
         }
         if let Some(ref collision) = world.collision {
-            if !asset_server.is_loaded_with_dependencies(collision) { return; }
+            if !asset_server.is_loaded_with_dependencies(collision) {
+                return;
+            }
         }
     }
 
     // Check skybox
-    if !asset_server.is_loaded_with_dependencies(&pending.skybox) { return; }
+    if !asset_server.is_loaded_with_dependencies(&pending.skybox) {
+        return;
+    }
 
     // --- All assets loaded ---
     info!("All client assets loaded, spawning camera");
@@ -127,7 +126,7 @@ fn check_assets_loaded(
 
     // Spawn camera if not already present
     if camera_query.is_empty() {
-        let pos = config.rendering.camera_start_position;
+        let pos = camera_file_config.start_position;
         commands.spawn((
             Camera3d::default(),
             Transform::from_xyz(pos[0], pos[1], pos[2]),
@@ -153,15 +152,22 @@ fn prepare_skybox_cubemap(image: &mut Image) {
     }
 
     if h == w * 6 {
-        image.reinterpret_stacked_2d_as_array(6).expect("Failed to reinterpret stacked cubemap");
+        image
+            .reinterpret_stacked_2d_as_array(6)
+            .expect("Failed to reinterpret stacked cubemap");
     } else if w == h * 2 {
         info!("Converting equirectangular skybox ({}x{}) to cubemap", w, h);
         equirect_to_cubemap(image);
     } else {
-        warn!("Skybox image has unexpected aspect ratio ({}x{}), attempting stacked reinterpret", w, h);
+        warn!(
+            "Skybox image has unexpected aspect ratio ({}x{}), attempting stacked reinterpret",
+            w, h
+        );
         let layers = h / w;
         if layers > 0 && h == w * layers {
-            image.reinterpret_stacked_2d_as_array(layers).expect("Failed to reinterpret");
+            image
+                .reinterpret_stacked_2d_as_array(layers)
+                .expect("Failed to reinterpret");
         }
     }
 
@@ -178,7 +184,11 @@ fn prepare_skybox_cubemap(image: &mut Image) {
 fn equirect_to_cubemap(image: &mut Image) {
     let src_w = image.width() as usize;
     let src_h = image.height() as usize;
-    let bpp = image.texture_descriptor.format.block_copy_size(None).unwrap_or(16) as usize;
+    let bpp = image
+        .texture_descriptor
+        .format
+        .block_copy_size(None)
+        .unwrap_or(16) as usize;
     let src_data = image.data.clone().expect("Skybox image has no data");
     let floats_per_pixel = bpp / 4; // Rgba32Float = 4 floats
 
@@ -236,22 +246,29 @@ fn equirect_to_cubemap(image: &mut Image) {
     image.data = Some(out_data);
     image.texture_descriptor.size.width = face_size as u32;
     image.texture_descriptor.size.height = out_h as u32;
-    image.reinterpret_stacked_2d_as_array(6).expect("Failed to reinterpret converted cubemap");
+    image
+        .reinterpret_stacked_2d_as_array(6)
+        .expect("Failed to reinterpret converted cubemap");
 }
 
 fn read_f32(data: &[u8], offset: usize) -> f32 {
-    f32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+    f32::from_le_bytes([
+        data[offset],
+        data[offset + 1],
+        data[offset + 2],
+        data[offset + 3],
+    ])
 }
 
 /// Direction functions for each cube face: +X, -X, +Y, -Y, +Z, -Z.
 /// Each takes (u, v) in [-1, 1] and returns [x, y, z].
 const CUBE_FACE_DIRS: [fn(f32, f32) -> [f32; 3]; 6] = [
-    |u, v| [1.0, -v, -u],   // +X
-    |u, v| [-1.0, -v, u],   // -X
-    |u, v| [u, 1.0, v],     // +Y
-    |u, v| [u, -1.0, -v],   // -Y
-    |u, v| [u, -v, 1.0],    // +Z
-    |u, v| [-u, -v, -1.0],  // -Z
+    |u, v| [1.0, -v, -u],  // +X
+    |u, v| [-1.0, -v, u],  // -X
+    |u, v| [u, 1.0, v],    // +Y
+    |u, v| [u, -1.0, -v],  // -Y
+    |u, v| [u, -v, 1.0],   // +Z
+    |u, v| [-u, -v, -1.0], // -Z
 ];
 
 fn setup_cursor_grab(
@@ -261,7 +278,8 @@ fn setup_cursor_grab(
     config: Res<GameClientConfig>,
 ) {
     let release_key = parse_key_code(&config.input.cursor_release_key).unwrap_or(KeyCode::Escape);
-    let grab_button = parse_mouse_button(&config.input.cursor_grab_button).unwrap_or(MouseButton::Left);
+    let grab_button =
+        parse_mouse_button(&config.input.cursor_grab_button).unwrap_or(MouseButton::Left);
     if key.just_pressed(release_key) {
         cursor_options.visible = true;
         cursor_options.grab_mode = CursorGrabMode::None;
@@ -274,7 +292,10 @@ fn setup_cursor_grab(
 
 fn fps_camera_follow(
     mut camera_query: Query<&mut Transform, (With<GameCamera>, Without<CharacterMarker>)>,
-    player_query: Query<(&Transform, &CrouchState), (With<CharacterMarker>, With<Predicted>, Without<GameCamera>)>,
+    player_query: Query<
+        (&Transform, &CrouchState),
+        (With<CharacterMarker>, With<Predicted>, Without<GameCamera>),
+    >,
     core_config: Res<GameCoreConfig>,
     client_config: Res<GameClientConfig>,
 ) {
@@ -283,9 +304,16 @@ fn fps_camera_follow(
     };
 
     if let Some((player_transform, crouch_state)) = player_query.iter().next() {
-        let capsule_height = if crouch_state.0 { core_config.movement.crouch_capsule_height } else { core_config.character.capsule_height };
-        let eye_height = capsule_height / 2.0 + core_config.character.capsule_radius + client_config.rendering.eye_height_offset;
-        camera_transform.translation = player_transform.translation + Vec3::new(0.0, eye_height, 0.0);
+        let capsule_height = if crouch_state.0 {
+            core_config.movement.crouch_capsule_height
+        } else {
+            core_config.character.capsule_height
+        };
+        let eye_height = capsule_height / 2.0
+            + core_config.character.capsule_radius
+            + client_config.rendering.eye_height_offset;
+        camera_transform.translation =
+            player_transform.translation + Vec3::new(0.0, eye_height, 0.0);
     }
 }
 
@@ -307,45 +335,6 @@ fn add_visual_interpolation_components(
             ..default()
         },
     ));
-}
-
-fn add_character_cosmetics(
-    mut commands: Commands,
-    character_query: Query<
-        (Entity, &ColorComponent, Option<&PlayerModelId>),
-        (
-            Or<(Added<Predicted>, Added<Replicate>, Added<Interpolated>)>,
-            With<CharacterMarker>,
-        ),
-    >,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    core_config: Res<GameCoreConfig>,
-    player_models: Option<Res<PlayerModelAssets>>,
-) {
-    for (entity, color, model_id) in &character_query {
-        // Try to attach a player model from the catalog
-        let model_key = model_id.map(|m| m.0.as_str()).unwrap_or("default");
-        let attached_model = player_models
-            .as_ref()
-            .and_then(|pm| pm.models.get(model_key))
-            .cloned();
-
-        if let Some(scene_handle) = attached_model {
-            commands.entity(entity).insert(SceneRoot(scene_handle));
-            info!("Attached player model '{}' to entity {:?}", model_key, entity);
-        } else {
-            // Fallback to capsule if model not found
-            commands.entity(entity).insert((
-                Mesh3d(meshes.add(Capsule3d::new(
-                    core_config.character.capsule_radius,
-                    core_config.character.capsule_height,
-                ))),
-                MeshMaterial3d(materials.add(color.0)),
-            ));
-            warn!("Player model '{}' not found in catalog, using capsule fallback", model_key);
-        }
-    }
 }
 
 fn add_projectile_cosmetics(

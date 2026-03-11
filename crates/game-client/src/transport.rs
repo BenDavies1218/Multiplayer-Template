@@ -5,19 +5,19 @@ use core::net::{Ipv4Addr, SocketAddr};
 
 use bevy::prelude::*;
 
-use game_core::networking::settings::SharedSettings;
-use game_core::networking::config::Config;
-use game_core::GameCoreConfig;
+use crate::client_config::GameClientConfig;
 use bevy::ecs::lifecycle::HookContext;
 use bevy::ecs::world::DeferredWorld;
 use core::time::Duration;
+use game_core::GameCoreConfig;
+use game_core::networking::config::Config;
+use game_core::networking::settings::SharedSettings;
 use lightyear::interpolation::timeline::InterpolationConfig;
 use lightyear::netcode::client_plugin::NetcodeConfig;
 use lightyear::prelude::client::*;
 use lightyear::prelude::*;
 use lightyear::{netcode::NetcodeClient, websocket::client::WebSocketTarget};
 use serde::{Deserialize, Serialize};
-use crate::client_config::GameClientConfig;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[non_exhaustive]
@@ -48,10 +48,12 @@ impl ExampleClient {
     fn on_add(mut world: DeferredWorld, context: HookContext) {
         let entity = context.entity;
         world.commands().queue(move |world: &mut World| -> Result {
-            let client_config = world.get_resource::<GameClientConfig>()
+            let client_config = world
+                .get_resource::<GameClientConfig>()
                 .cloned()
                 .unwrap_or_default();
-            let core_config = world.get_resource::<GameCoreConfig>()
+            let core_config = world
+                .get_resource::<GameCoreConfig>()
                 .cloned()
                 .unwrap_or_default();
             let mut entity_mut = world.entity_mut(entity);

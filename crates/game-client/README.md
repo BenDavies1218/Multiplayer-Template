@@ -9,7 +9,8 @@ Client-side game logic: input handling, prediction, rendering, and network trans
 | `app` | Builds the client Bevy app with window, rendering, and input plugins |
 | `client` | `ClientPlugin` — input processing, predicted movement, crouch state |
 | `client_config` | `GameClientConfig` loaded from `assets/config/game_client_config.json` |
-| `renderer` | `FirstPersonPlugin` — skybox, character/projectile cosmetics, frame interpolation |
+| `character_rendering` | `CharacterRenderingPlugin` — preloads character models, attaches POV (local) and third-person (remote) models |
+| `renderer` | `FirstPersonPlugin` — skybox, projectile cosmetics, camera follow, frame interpolation |
 | `transport` | Network transport setup: UDP, WebSocket, WebTransport (runtime-configurable) |
 
 ## Plugins
@@ -22,10 +23,15 @@ Client-side game logic: input handling, prediction, rendering, and network trans
 
 ### `FirstPersonPlugin`
 - Attaches camera to character at eye height
-- Loads player models from catalog, attaches GLB scenes to character entities (falls back to capsule if model missing)
+- Includes `CharacterRenderingPlugin` for model attachment
 - Renders projectiles with sphere meshes
 - Loads EXR skybox cubemap
 - Runs frame interpolation for smooth rendering between network ticks
+
+### `CharacterRenderingPlugin`
+- Preloads character models from config catalog (third-person + POV variants)
+- Local player: attaches POV model as child of camera
+- Remote players: attaches third-person model to entity (falls back to capsule if missing)
 
 ## Configuration
 
@@ -33,7 +39,7 @@ Client-side game logic: input handling, prediction, rendering, and network trans
 - **Window** — Title, width, height
 - **Input** — Key/gamepad bindings for all actions, cursor grab/release keys
 - **Rendering** — Camera start position, eye height, projectile radius, interpolation ratio
-- **Player** — Model catalog (map of ID to GLB path), selected model for this client
+- **Character** — Model catalog (map of ID to `CharacterModelSet` with player/pov_empty/pov_weapons paths), selected model
 - **Transport** — Token expiration settings
 
 ## Dependencies

@@ -4,14 +4,14 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Client configuration loaded from game_client_config.json
-#[derive(Resource, Debug, Clone, Serialize, Deserialize)]
+#[derive(Resource, Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct GameClientConfig {
     pub window: WindowConfig,
     pub input: InputConfig,
     pub rendering: RenderingConfig,
     pub transport: ClientTransportConfig,
-    pub player: PlayerConfig,
+    pub character: CharacterClientConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,31 +49,45 @@ pub struct RenderingConfig {
 #[serde(default)]
 pub struct ClientTransportConfig {
     pub token_expiration: i32,
+    /// Simulate network latency (~100ms jitter) using Lightyear's link conditioner.
+    /// Useful for testing latency compensation locally. Disable for accurate local play.
+    pub simulate_latency: bool,
 }
 
-impl Default for GameClientConfig {
+/// Describes the set of models for a single character type.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct CharacterModelSet {
+    /// Third-person model path (what other clients see)
+    pub player: String,
+    /// First-person POV model — empty hands
+    pub pov_empty: String,
+    /// First-person POV weapon models, keyed by weapon name
+    #[serde(default)]
+    pub pov_weapons: HashMap<String, String>,
+}
+
+impl Default for CharacterModelSet {
     fn default() -> Self {
         Self {
-            window: WindowConfig::default(),
-            input: InputConfig::default(),
-            rendering: RenderingConfig::default(),
-            transport: ClientTransportConfig::default(),
-            player: PlayerConfig::default(),
+            player: "models/characters/default/player.glb".to_string(),
+            pov_empty: "models/characters/default/pov_empty.glb".to_string(),
+            pov_weapons: HashMap::new(),
         }
     }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-pub struct PlayerConfig {
-    pub model_catalog: HashMap<String, String>,
+pub struct CharacterClientConfig {
+    pub model_catalog: HashMap<String, CharacterModelSet>,
     pub selected_model: String,
 }
 
-impl Default for PlayerConfig {
+impl Default for CharacterClientConfig {
     fn default() -> Self {
         let mut catalog = HashMap::new();
-        catalog.insert("default".to_string(), "models/example_player_model.glb".to_string());
+        catalog.insert("default".to_string(), CharacterModelSet::default());
         Self {
             model_catalog: catalog,
             selected_model: "default".to_string(),
@@ -122,6 +136,7 @@ impl Default for ClientTransportConfig {
     fn default() -> Self {
         Self {
             token_expiration: -1,
+            simulate_latency: false,
         }
     }
 }
