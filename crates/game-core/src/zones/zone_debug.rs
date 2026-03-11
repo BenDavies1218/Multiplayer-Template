@@ -1,5 +1,5 @@
+use crate::core_config::{GameCoreConfig, color_from_array, parse_key_code};
 use bevy::prelude::*;
-use crate::core_config::{GameCoreConfig, parse_key_code, color_from_array};
 
 /// Resource to control zone debug visualization
 #[derive(Resource, Debug)]

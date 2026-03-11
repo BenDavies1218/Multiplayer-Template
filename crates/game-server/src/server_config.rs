@@ -5,16 +5,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Resource, Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GameServerConfig {
-    pub projectile: ProjectileConfig,
     pub spawning: SpawningConfig,
     pub transport: ServerTransportJsonConfig,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(default)]
-pub struct ProjectileConfig {
-    pub lifetime_ms: u64,
-    pub velocity: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -37,18 +29,8 @@ pub struct ServerTransportJsonConfig {
 impl Default for GameServerConfig {
     fn default() -> Self {
         Self {
-            projectile: ProjectileConfig::default(),
             spawning: SpawningConfig::default(),
             transport: ServerTransportJsonConfig::default(),
-        }
-    }
-}
-
-impl Default for ProjectileConfig {
-    fn default() -> Self {
-        Self {
-            lifetime_ms: 5000,
-            velocity: 10.0,
         }
     }
 }

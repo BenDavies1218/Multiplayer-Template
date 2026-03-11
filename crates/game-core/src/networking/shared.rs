@@ -2,9 +2,16 @@ use bevy::prelude::*;
 
 use super::protocol::ProtocolPlugin;
 use avian3d::prelude::*;
+use bevy::math::EulerRot;
+use core::time::Duration;
+use leafwing_input_manager::prelude::ActionState;
 use lightyear::avian3d::plugin::AvianReplicationMode;
+use lightyear::prelude::*;
 
 use crate::core_config::GameCoreConfig;
+use crate::networking::protocol::{
+    CameraOrientation, CharacterAction, CharacterMarker, ProjectileMarker,
+};
 
 #[derive(Bundle)]
 pub struct CharacterPhysicsBundle {
@@ -25,6 +32,108 @@ impl CharacterPhysicsBundle {
                 .lock_rotation_y()
                 .lock_rotation_z(),
             friction: Friction::new(0.0).with_combine_rule(CoefficientCombine::Min),
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct DespawnAfter {
+    pub spawned_at: f32,
+    pub lifetime: Duration,
+}
+
+pub fn despawn_system(
+    mut commands: Commands,
+    query: Query<(Entity, &DespawnAfter)>,
+    time: Res<Time<Fixed>>,
+) {
+    for (entity, despawn) in &query {
+        if time.elapsed_secs() - despawn.spawned_at >= despawn.lifetime.as_secs_f32() {
+            commands.entity(entity).despawn();
+        }
+    }
+}
+
+fn shoot_bullet(
+    mut commands: Commands,
+    query: Query<
+        (
+            &ActionState<CharacterAction>,
+            &Position,
+            &CameraOrientation,
+            Option<&ControlledBy>,
+        ),
+        (
+            Or<(With<Predicted>, With<Replicate>)>,
+            With<CharacterMarker>,
+        ),
+    >,
+    config: Res<GameCoreConfig>,
+    time: Res<Time<Fixed>>,
+) {
+    for (action_state, position, orientation, controlled_by) in &query {
+        if !action_state.just_pressed(&CharacterAction::Shoot) {
+            continue;
+        }
+
+        let direction =
+            Quat::from_euler(EulerRot::YXZ, orientation.yaw, orientation.pitch, 0.0)
+                * Vec3::NEG_Z;
+        let velocity = direction * config.projectile.velocity;
+
+        let bullet_bundle = (
+            Name::new("Projectile"),
+            ProjectileMarker,
+            RigidBody::Dynamic,
+            *position,
+            Rotation::default(),
+            LinearVelocity(velocity),
+        );
+
+        if let Some(controlled_by) = controlled_by {
+            // Server side — replicate to clients with replicate-once physics overrides
+            let mut position_override = ComponentReplicationOverrides::<Position>::default();
+            position_override.global_override(ComponentReplicationOverride {
+                replicate_once: true,
+                ..default()
+            });
+            let mut rotation_override = ComponentReplicationOverrides::<Rotation>::default();
+            rotation_override.global_override(ComponentReplicationOverride {
+                replicate_once: true,
+                ..default()
+            });
+            let mut lv_override = ComponentReplicationOverrides::<LinearVelocity>::default();
+            lv_override.global_override(ComponentReplicationOverride {
+                replicate_once: true,
+                ..default()
+            });
+            let mut av_override = ComponentReplicationOverrides::<AngularVelocity>::default();
+            av_override.global_override(ComponentReplicationOverride {
+                replicate_once: true,
+                ..default()
+            });
+
+            commands.spawn((
+                bullet_bundle,
+                PreSpawned::default(),
+                Replicate::to_clients(NetworkTarget::All),
+                PredictionTarget::to_clients(NetworkTarget::All),
+                ControlledBy {
+                    owner: controlled_by.owner,
+                    lifetime: Default::default(),
+                },
+                DespawnAfter {
+                    spawned_at: time.elapsed_secs(),
+                    lifetime: Duration::from_millis(config.projectile.lifetime_ms),
+                },
+                position_override,
+                rotation_override,
+                lv_override,
+                av_override,
+            ));
+        } else {
+            // Client side — pre-spawned local bullet for immediate visual feedback
+            commands.spawn((bullet_bundle, PreSpawned::default()));
         }
     }
 }
@@ -62,6 +171,8 @@ impl Plugin for SharedPlugin {
                 .disable::<IslandPlugin>()
                 .disable::<IslandSleepingPlugin>(),
         );
+
+        app.add_systems(FixedUpdate, (shoot_bullet, despawn_system));
 
         // WorldPlugin is added separately by each app with the appropriate config
     }

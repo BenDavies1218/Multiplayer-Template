@@ -6,13 +6,13 @@ use core::net::{Ipv4Addr, SocketAddr};
 use bevy::prelude::*;
 use core::time::Duration;
 
-use game_core::networking::settings::SharedSettings;
 #[cfg(not(target_family = "wasm"))]
 use async_compat::Compat;
 use bevy::ecs::lifecycle::HookContext;
 use bevy::ecs::world::DeferredWorld;
 #[cfg(not(target_family = "wasm"))]
 use bevy::tasks::IoTaskPool;
+use game_core::networking::settings::SharedSettings;
 use lightyear::netcode::{NetcodeServer, PRIVATE_KEY_BYTES};
 use lightyear::prelude::server::*;
 use lightyear::prelude::*;
@@ -51,7 +51,8 @@ impl ExampleServer {
     fn on_add(mut world: DeferredWorld, context: HookContext) {
         let entity = context.entity;
         world.commands().queue(move |world: &mut World| -> Result {
-            let server_config = world.get_resource::<GameServerConfig>()
+            let server_config = world
+                .get_resource::<GameServerConfig>()
                 .cloned()
                 .unwrap_or_default();
             let mut entity_mut = world.entity_mut(entity);

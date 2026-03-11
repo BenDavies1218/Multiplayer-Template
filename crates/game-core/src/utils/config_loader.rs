@@ -33,9 +33,13 @@ pub fn resolve_asset_path_for_bevy() -> String {
         return path;
     }
     #[cfg(target_family = "wasm")]
-    { "assets".to_string() }
+    {
+        "assets".to_string()
+    }
     #[cfg(not(target_family = "wasm"))]
-    { DEFAULT_BEVY_ASSET_PATH.to_string() }
+    {
+        DEFAULT_BEVY_ASSET_PATH.to_string()
+    }
 }
 
 /// Load a JSON config file from `{asset_path}/config/{filename}`.
@@ -62,12 +66,18 @@ pub fn load_config_from<T: DeserializeOwned + Default>(assets_base: &str, filena
                 config
             }
             Err(e) => {
-                eprintln!("[CONFIG ERROR] Failed to parse {}: {}. Using defaults.", path, e);
+                eprintln!(
+                    "[CONFIG ERROR] Failed to parse {}: {}. Using defaults.",
+                    path, e
+                );
                 T::default()
             }
         },
         Err(e) => {
-            eprintln!("[CONFIG WARNING] Could not read {}: {}. Using defaults.", path, e);
+            eprintln!(
+                "[CONFIG WARNING] Could not read {}: {}. Using defaults.",
+                path, e
+            );
             T::default()
         }
     }

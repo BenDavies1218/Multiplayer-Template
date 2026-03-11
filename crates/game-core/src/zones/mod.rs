@@ -1,18 +1,18 @@
-use bevy::prelude::*;
 use bevy::gltf::Gltf;
+use bevy::prelude::*;
 
+pub mod events;
 mod loader;
 mod processor;
-pub mod zones;
-pub mod events;
 pub mod spawn_points;
 mod systems;
 pub mod zone_debug;
+pub mod zones;
 
-pub use zones::*;
 pub use events::*;
 pub use spawn_points::SpawnPoints;
-pub use zone_debug::{ZoneDebugSettings, ZoneDebugMesh};
+pub use zone_debug::{ZoneDebugMesh, ZoneDebugSettings};
+pub use zones::*;
 
 /// Configuration for ZonePlugin
 #[derive(Resource, Debug, Clone)]
@@ -69,20 +69,23 @@ impl Plugin for ZonePlugin {
 
         // Server-only: collision detection
         if self.config.enable_detection {
-            app.add_systems(FixedPostUpdate, (
-                systems::detect_zone_collisions,
-                systems::detect_zone_exits,
-            ));
+            app.add_systems(
+                FixedPostUpdate,
+                (systems::detect_zone_collisions, systems::detect_zone_exits),
+            );
         }
 
         // Debug visualization (viewer-only)
         if self.config.enable_debug {
             app.init_resource::<ZoneDebugSettings>();
             app.add_systems(Startup, zone_debug::apply_zone_debug_config);
-            app.add_systems(Update, (
-                zone_debug::toggle_zone_debug,
-                zone_debug::update_zone_debug_visibility,
-            ));
+            app.add_systems(
+                Update,
+                (
+                    zone_debug::toggle_zone_debug,
+                    zone_debug::update_zone_debug_visibility,
+                ),
+            );
         }
     }
 }

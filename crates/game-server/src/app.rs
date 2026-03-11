@@ -2,13 +2,13 @@
 
 use core::time::Duration;
 
-use bevy::prelude::*;
 use bevy::diagnostic::DiagnosticsPlugin;
+use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
 
-use game_core::utils::cli::log_plugin_from_config;
-use game_core::networking::settings::shared_settings_from_config;
 use game_core::GameCoreConfig;
+use game_core::networking::settings::shared_settings_from_config;
+use game_core::utils::cli::log_plugin_from_config;
 
 use crate::server_config::GameServerConfig;
 use crate::transport::{ExampleServer, ServerTransports, WebTransportCertificateSettings, start};
@@ -66,7 +66,8 @@ pub fn spawn_server_connection(app: &mut App) {
 /// Spawn the server connection entity using config values.
 /// Transport type is determined by game_server_config.json (defaults to UDP).
 pub fn spawn_server_connection_from_config(app: &mut App, core_config: &GameCoreConfig) {
-    let server_config = app.world()
+    let server_config = app
+        .world()
         .get_resource::<GameServerConfig>()
         .cloned()
         .unwrap_or_default();
@@ -78,19 +79,14 @@ pub fn spawn_server_connection_from_config(app: &mut App, core_config: &GameCore
             local_port: port,
             certificate: WebTransportCertificateSettings::from_config(&server_config.transport),
         },
-        "websocket" => ServerTransports::WebSocket {
-            local_port: port,
-        },
-        _ => ServerTransports::Udp {
-            local_port: port,
-        },
+        "websocket" => ServerTransports::WebSocket { local_port: port },
+        _ => ServerTransports::Udp { local_port: port },
     };
 
-    app.world_mut()
-        .spawn(ExampleServer {
-            conditioner: None,
-            transport,
-            shared,
-        });
+    app.world_mut().spawn(ExampleServer {
+        conditioner: None,
+        transport,
+        shared,
+    });
     app.add_systems(Startup, start);
 }

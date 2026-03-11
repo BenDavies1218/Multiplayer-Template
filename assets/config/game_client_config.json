@@ -22,11 +22,16 @@
         "interpolation_send_ratio": 2.0
     },
     "transport": {
-        "token_expiration": -1
+        "token_expiration": -1,
+        "simulate_latency": false
     },
-    "player": {
+    "character": {
         "model_catalog": {
-            "default": "models/example_player_model.glb"
+            "default": {
+                "player": "models/characters/default/player.glb",
+                "pov_empty": "models/characters/default/pov_empty.glb",
+                "pov_weapons": {}
+            }
         },
         "selected_model": "default"
     }

@@ -1,5 +1,5 @@
-use core::time::Duration;
 use super::config::Config;
+use core::time::Duration;
 
 /// Get send interval from config
 pub fn send_interval() -> Duration {

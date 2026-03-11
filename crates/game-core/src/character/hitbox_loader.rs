@@ -1,18 +1,18 @@
+use super::components::{CharacterHitboxMarker, HitboxRegion};
+use crate::world::{extract_mesh_indices, extract_mesh_vertices, parse_extras};
 use avian3d::prelude::*;
-use bevy::prelude::*;
 use bevy::gltf::{Gltf, GltfMesh, GltfNode};
 use bevy::mesh::Mesh;
-use crate::world::{extract_mesh_vertices, extract_mesh_indices, parse_extras};
-use super::components::{PlayerHitboxMarker, HitboxRegion};
+use bevy::prelude::*;
 
 /// Temporary component placed on a loader entity.
-/// Removed after the GLB is processed into `PlayerHitboxData`.
+/// Removed after the GLB is processed into `CharacterHitboxData`.
 #[derive(Component, Debug)]
-pub struct PlayerHitboxLoader {
+pub struct CharacterHitboxLoader {
     pub handle: Handle<Gltf>,
 }
 
-/// A single parsed hitbox region ready to be attached to player entities.
+/// A single parsed hitbox region ready to be attached to character entities.
 #[derive(Clone, Debug)]
 pub struct HitboxRegionData {
     pub name: String,
@@ -23,18 +23,18 @@ pub struct HitboxRegionData {
 
 /// Resource holding the parsed hitbox regions.
 /// Inserted once the hitbox GLB has been processed.
-/// Used by the server when spawning players to attach hitbox children.
+/// Used by the server when spawning characters to attach hitbox children.
 #[derive(Resource, Debug, Clone)]
-pub struct PlayerHitboxData {
+pub struct CharacterHitboxData {
     pub regions: Vec<HitboxRegionData>,
 }
 
 /// System that processes the hitbox GLB once it's loaded.
 /// Runs every frame until the loader entity is found and the asset is ready.
-/// After processing, inserts `PlayerHitboxData` resource and despawns the loader.
-pub fn process_player_hitbox(
+/// After processing, inserts `CharacterHitboxData` resource and despawns the loader.
+pub fn process_character_hitbox(
     mut commands: Commands,
-    loader_query: Query<(Entity, &PlayerHitboxLoader)>,
+    loader_query: Query<(Entity, &CharacterHitboxLoader)>,
     gltf_assets: Res<Assets<Gltf>>,
     gltf_meshes: Res<Assets<GltfMesh>>,
     gltf_nodes: Res<Assets<GltfNode>>,
@@ -76,7 +76,10 @@ pub fn process_player_hitbox(
                 };
 
                 let Some(vertices) = extract_mesh_vertices(mesh) else {
-                    warn!("Could not extract vertices from hitbox node '{}'", node_name);
+                    warn!(
+                        "Could not extract vertices from hitbox node '{}'",
+                        node_name
+                    );
                     continue;
                 };
                 let Some(indices) = extract_mesh_indices(mesh) else {
@@ -100,23 +103,27 @@ pub fn process_player_hitbox(
             }
         }
 
-        info!("Player hitbox loaded with {} regions", regions.len());
-        commands.insert_resource(PlayerHitboxData { regions });
+        info!("Character hitbox loaded with {} regions", regions.len());
+        commands.insert_resource(CharacterHitboxData { regions });
         commands.entity(entity).despawn();
     }
 }
 
-/// Attach hitbox collider children to a player entity.
-/// Call this from the server's `handle_connected` when spawning a new player.
-pub fn attach_hitbox_to_player(commands: &mut Commands, player_entity: Entity, hitbox_data: &PlayerHitboxData) {
-    commands.entity(player_entity).with_children(|parent| {
+/// Attach hitbox collider children to a character entity.
+/// Call this from the server's `handle_connected` when spawning a new character.
+pub fn attach_hitbox_to_character(
+    commands: &mut Commands,
+    character_entity: Entity,
+    hitbox_data: &CharacterHitboxData,
+) {
+    commands.entity(character_entity).with_children(|parent| {
         for region in &hitbox_data.regions {
             parent.spawn((
                 region.collider.clone(),
                 Sensor,
                 region.transform,
                 GlobalTransform::default(),
-                PlayerHitboxMarker,
+                CharacterHitboxMarker,
                 HitboxRegion {
                     name: region.name.clone(),
                     base_damage: region.base_damage,

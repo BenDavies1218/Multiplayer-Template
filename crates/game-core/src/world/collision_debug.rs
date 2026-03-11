@@ -1,5 +1,5 @@
-use bevy::prelude::*;
 use crate::core_config::{GameCoreConfig, parse_key_code};
+use bevy::prelude::*;
 
 /// Resource to control collision mesh visualization
 #[derive(Resource, Debug)]

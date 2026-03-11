@@ -1,13 +1,13 @@
+use super::spawn_points::SpawnPoints;
+use super::zone_debug::{ZoneDebugMesh, ZoneDebugSettings};
+use super::zones::*;
+use super::{ZoneLoader, ZonePluginConfig};
+use crate::core_config::GameCoreConfig;
+use crate::world::{extract_mesh_indices, extract_mesh_vertices, parse_extras};
 use avian3d::prelude::*;
-use bevy::prelude::*;
 use bevy::gltf::{Gltf, GltfMesh, GltfNode};
 use bevy::mesh::Mesh;
-use crate::world::{extract_mesh_vertices, extract_mesh_indices, parse_extras};
-use crate::core_config::GameCoreConfig;
-use super::{ZoneLoader, ZonePluginConfig};
-use super::zones::*;
-use super::spawn_points::SpawnPoints;
-use super::zone_debug::{ZoneDebugSettings, ZoneDebugMesh};
+use bevy::prelude::*;
 
 /// Process zone meshes from loaded zones GLB file.
 ///
@@ -93,8 +93,10 @@ pub fn process_zone_meshes(
                     }
                 }
 
-                info!("Created spawn point '{}' at {:?}", node_name, node_transform.translation);
-
+                info!(
+                    "Created spawn point '{}' at {:?}",
+                    node_name, node_transform.translation
+                );
             } else if name_lower.starts_with("deathzone_")
                 || name_lower.starts_with("damage_")
                 || name_lower.starts_with("trigger_")
@@ -148,17 +150,25 @@ pub fn process_zone_meshes(
                         debug_color = debug_settings.as_ref().map(|s| s.death_zone_color);
                         info!("Created death zone '{}'", node_name);
                     } else if name_lower.starts_with("damage_") {
-                        let damage = properties.get("damage")
+                        let damage = properties
+                            .get("damage")
                             .and_then(|v| v.as_f64())
-                            .unwrap_or(config.zones.default_damage as f64) as f32;
-                        let interval = properties.get("interval")
+                            .unwrap_or(config.zones.default_damage as f64)
+                            as f32;
+                        let interval = properties
+                            .get("interval")
                             .and_then(|v| v.as_f64())
-                            .unwrap_or(config.zones.default_damage_interval as f64) as f32;
+                            .unwrap_or(config.zones.default_damage_interval as f64)
+                            as f32;
                         entity_commands.insert(DamageZone { damage, interval });
                         debug_color = debug_settings.as_ref().map(|s| s.damage_zone_color);
-                        info!("Created damage zone '{}' (damage={}, interval={})", node_name, damage, interval);
+                        info!(
+                            "Created damage zone '{}' (damage={}, interval={})",
+                            node_name, damage, interval
+                        );
                     } else {
-                        let event_name = properties.get("event")
+                        let event_name = properties
+                            .get("event")
                             .and_then(|v| v.as_str())
                             .unwrap_or(node_name)
                             .to_string();
@@ -220,4 +230,3 @@ fn parse_index_from_name(name: &str, prefix: &str) -> u32 {
         .and_then(|s| s.parse::<u32>().ok())
         .unwrap_or(0)
 }
-

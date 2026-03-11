@@ -1,8 +1,8 @@
-use bevy::prelude::*;
 use bevy::gltf::Gltf;
+use bevy::prelude::*;
 
-use crate::core_config::GameCoreConfig;
 use super::ZoneLoader;
+use crate::core_config::GameCoreConfig;
 
 /// Load zone assets at startup.
 ///
@@ -17,5 +17,8 @@ pub fn load_zone_assets(
     commands.spawn(ZoneLoader {
         handle: handle.clone(),
     });
-    info!("Loading world zones from {}", config.world_assets.zones_path);
+    info!(
+        "Loading world zones from {}",
+        config.world_assets.zones_path
+    );
 }

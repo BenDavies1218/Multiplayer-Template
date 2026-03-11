@@ -35,8 +35,7 @@ impl Config {
     /// Load configuration from environment variables with defaults
     pub fn load() -> Self {
         Self {
-            server_host: std::env::var("SERVER_HOST")
-                .unwrap_or_else(|_| "127.0.0.1".to_string()),
+            server_host: std::env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
 
             server_port: std::env::var("SERVER_PORT")
                 .ok()
@@ -63,8 +62,7 @@ impl Config {
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(100),
 
-            rust_log: std::env::var("RUST_LOG")
-                .unwrap_or_else(|_| "info".to_string()),
+            rust_log: std::env::var("RUST_LOG").unwrap_or_else(|_| "info".to_string()),
 
             cert_path: std::env::var("CERT_PATH")
                 .unwrap_or_else(|_| "./certificates/cert.pem".to_string()),
@@ -79,7 +77,8 @@ impl Config {
 
     /// Get server address as SocketAddr
     pub fn server_addr(&self) -> SocketAddr {
-        let ip: IpAddr = self.server_host
+        let ip: IpAddr = self
+            .server_host
             .parse()
             .unwrap_or(IpAddr::V4(Ipv4Addr::LOCALHOST));
         SocketAddr::new(ip, self.server_port)

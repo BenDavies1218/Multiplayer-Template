@@ -1,9 +1,9 @@
-use bevy::prelude::*;
 use bevy::gltf::Gltf;
-use bevy::scene::{SceneRoot};
+use bevy::prelude::*;
+use bevy::scene::SceneRoot;
 
+use super::{WorldAssets, WorldCollisionLoader, WorldPluginConfig, WorldVisual};
 use crate::core_config::GameCoreConfig;
-use super::{WorldVisual, WorldCollisionLoader, WorldAssets, WorldPluginConfig};
 
 /// Load world assets at startup
 ///
@@ -33,7 +33,10 @@ pub fn load_world_assets(
         ));
 
         visual_handle = Some(handle);
-        info!("Loading world visual from {}", config.world_assets.visual_path);
+        info!(
+            "Loading world visual from {}",
+            config.world_assets.visual_path
+        );
     }
 
     // Load collision mesh if enabled
@@ -44,7 +47,10 @@ pub fn load_world_assets(
         });
 
         collision_handle = Some(handle);
-        info!("Loading world collision from {}", config.world_assets.collision_path);
+        info!(
+            "Loading world collision from {}",
+            config.world_assets.collision_path
+        );
     }
 
     // Store handles in resource for later access

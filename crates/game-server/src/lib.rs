@@ -7,9 +7,9 @@
 //! - Authoritative simulation
 
 pub mod app;
-pub mod transport;
 pub mod server;
 pub mod server_config;
+pub mod transport;
 
 // Re-export
 pub use server::ServerPlugin;

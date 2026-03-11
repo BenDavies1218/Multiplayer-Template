@@ -5,17 +5,20 @@
 //! - Shared game logic
 //! - Common utilities and settings
 
+pub mod character;
 pub mod core_config;
+pub mod movement;
 pub mod networking;
 pub mod utils;
 pub mod world;
-pub mod movement;
 pub mod zones;
-pub mod player;
 
 // Re-export commonly used items
+pub use character::{
+    CharacterHitboxData, CharacterHitboxMarker, CharacterModelId, HitboxRegion,
+    attach_hitbox_to_character,
+};
+pub use core_config::GameCoreConfig;
+pub use networking::config::Config;
 pub use networking::protocol::*;
 pub use networking::shared::*;
-pub use networking::config::Config;
-pub use core_config::GameCoreConfig;
-pub use player::{PlayerModelId, PlayerHitboxMarker, HitboxRegion, PlayerHitboxData, attach_hitbox_to_player};

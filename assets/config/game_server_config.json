@@ -1,8 +1,4 @@
 {
-  "projectile": {
-    "lifetime_ms": 5000,
-    "velocity": 10.0
-  },
   "spawning": {
     "fallback_angle_multiplier": 5.0,
     "fallback_radius": 2.0,

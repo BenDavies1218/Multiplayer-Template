@@ -1,6 +1,6 @@
-use bevy::prelude::*;
 use bevy::gltf::GltfExtras;
-use bevy::mesh::{Mesh, VertexAttributeValues, Indices};
+use bevy::mesh::{Indices, Mesh, VertexAttributeValues};
+use bevy::prelude::*;
 use std::collections::HashMap;
 
 /// Extract vertices from a Bevy mesh
@@ -20,16 +20,16 @@ pub fn extract_mesh_indices(mesh: &Mesh) -> Option<Vec<[u32; 3]>> {
     let indices = mesh.indices()?;
 
     match indices {
-        Indices::U32(idx) => {
-            Some(idx.chunks_exact(3)
+        Indices::U32(idx) => Some(
+            idx.chunks_exact(3)
                 .map(|chunk| [chunk[0], chunk[1], chunk[2]])
-                .collect())
-        }
-        Indices::U16(idx) => {
-            Some(idx.chunks_exact(3)
+                .collect(),
+        ),
+        Indices::U16(idx) => Some(
+            idx.chunks_exact(3)
                 .map(|chunk| [chunk[0] as u32, chunk[1] as u32, chunk[2] as u32])
-                .collect())
-        }
+                .collect(),
+        ),
     }
 }
 

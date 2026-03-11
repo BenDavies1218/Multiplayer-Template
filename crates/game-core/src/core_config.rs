@@ -20,6 +20,7 @@ pub struct GameCoreConfig {
     pub debug_colors: DebugColorsConfig,
     pub debug_toggle_keys: DebugToggleKeysConfig,
     pub logging: LoggingConfig,
+    pub projectile: ProjectileConfig,
 }
 
 impl Default for GameCoreConfig {
@@ -35,6 +36,7 @@ impl Default for GameCoreConfig {
             debug_colors: DebugColorsConfig::default(),
             debug_toggle_keys: DebugToggleKeysConfig::default(),
             logging: LoggingConfig::default(),
+            projectile: ProjectileConfig::default(),
         }
     }
 }
@@ -240,6 +242,22 @@ impl Default for LoggingConfig {
         Self {
             default_level: "info".to_string(),
             filter: "wgpu=error,bevy_render=info,bevy_ecs=warn,bevy_time=warn,naga=warn,bevy_enhanced_input::action::fns=error".to_string(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(default)]
+pub struct ProjectileConfig {
+    pub velocity: f32,
+    pub lifetime_ms: u64,
+}
+
+impl Default for ProjectileConfig {
+    fn default() -> Self {
+        Self {
+            velocity: 10.0,
+            lifetime_ms: 5000,
         }
     }
 }

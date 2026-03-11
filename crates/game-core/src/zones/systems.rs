@@ -1,10 +1,10 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 
-use crate::networking::protocol::CharacterMarker;
-use super::zones::*;
 use super::events::*;
 use super::spawn_points::SpawnPoints;
+use super::zones::*;
+use crate::networking::protocol::CharacterMarker;
 
 /// Detect when characters enter zones (server-only, runs in FixedUpdate)
 pub fn detect_zone_collisions(
@@ -52,9 +52,7 @@ pub fn detect_zone_collisions(
             continue;
         };
 
-        let player_position = positions.get(player)
-            .map(|p| p.0)
-            .unwrap_or_default();
+        let player_position = positions.get(player).map(|p| p.0).unwrap_or_default();
 
         // Death zone: teleport player to spawn point
         if let Ok((_z, name, transform, props)) = death_zone_query.get(zone) {
@@ -104,7 +102,10 @@ pub fn detect_zone_collisions(
 
         // Generic trigger zone: fire event
         if let Ok((_z, name, trigger_zone, transform, props)) = trigger_zone_query.get(zone) {
-            info!("Player {:?} entered trigger zone '{}' (event={})", player, name, trigger_zone.event_name);
+            info!(
+                "Player {:?} entered trigger zone '{}' (event={})",
+                player, name, trigger_zone.event_name
+            );
 
             zone_entered_events.write(ZoneEnteredEvent {
                 player,
@@ -123,7 +124,15 @@ pub fn detect_zone_collisions(
 pub fn detect_zone_exits(
     mut collision_events: MessageReader<CollisionEnd>,
     character_query: Query<Entity, With<CharacterMarker>>,
-    zone_query: Query<(Entity, &Name, &Transform, &ZoneProperties, Option<&DeathZone>, Option<&DamageZone>, Option<&TriggerZone>)>,
+    zone_query: Query<(
+        Entity,
+        &Name,
+        &Transform,
+        &ZoneProperties,
+        Option<&DeathZone>,
+        Option<&DamageZone>,
+        Option<&TriggerZone>,
+    )>,
     mut zone_exited_events: MessageWriter<ZoneExitedEvent>,
 ) {
     for event in collision_events.read() {

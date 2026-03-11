@@ -1,11 +1,11 @@
 use avian3d::prelude::*;
-use bevy::prelude::*;
 use bevy::gltf::{Gltf, GltfMesh, GltfNode};
-use bevy::mesh::{Mesh};
+use bevy::mesh::Mesh;
+use bevy::prelude::*;
 
-use super::{WorldCollisionLoader, WorldCollisionBundle, WorldPluginConfig};
+use super::collision_debug::{CollisionDebugMesh, CollisionDebugSettings};
 use super::utils::extract_mesh_vertices;
-use super::collision_debug::{CollisionDebugSettings, CollisionDebugMesh};
+use super::{WorldCollisionBundle, WorldCollisionLoader, WorldPluginConfig};
 
 /// Process collision meshes from loaded collision file
 ///
@@ -44,7 +44,7 @@ pub fn process_collision_meshes(
                 continue;
             };
 
-            // Get the node's transform 
+            // Get the node's transform
             let node_transform = gltf_node.transform;
 
             // Check if the node has a mesh reference (some nodes may be empty or just for grouping)
@@ -69,7 +69,10 @@ pub fn process_collision_meshes(
                 };
 
                 let Some(mesh) = mesh else {
-                    warn!("Mesh primitive not found for node {} or Mesh assets not available", node_name);
+                    warn!(
+                        "Mesh primitive not found for node {} or Mesh assets not available",
+                        node_name
+                    );
                     continue;
                 };
 
@@ -82,10 +85,8 @@ pub fn process_collision_meshes(
 
                 if let Some(bundle) = WorldCollisionBundle::from_mesh(mesh, collision_transform) {
                     // Spawn collision entity
-                    let mut entity_commands = commands.spawn((
-                        bundle,
-                        Name::new(format!("Collision: {}", node_name)),
-                    ));
+                    let mut entity_commands =
+                        commands.spawn((bundle, Name::new(format!("Collision: {}", node_name))));
 
                     // Only create debug visualization if enabled and resources are available
                     if config.enable_debug {
@@ -145,6 +146,9 @@ pub fn create_convex_hull_collider(mesh: &Mesh) -> Option<Collider> {
 ///
 /// Example:
 /// ```rust
+/// use avian3d::prelude::Collider;
+/// use bevy::prelude::{Quat, Vec3};
+/// use game_core::world::create_compound_collider;
 /// let collider = create_compound_collider(vec![
 ///     (Vec3::ZERO, Quat::IDENTITY, Collider::cuboid(10.0, 1.0, 10.0)), // floor
 ///     (Vec3::new(5.0, 2.0, 0.0), Quat::IDENTITY, Collider::cuboid(1.0, 2.0, 10.0)), // wall

@@ -1,6 +1,5 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
-use core::time::Duration;
 use game_core::networking::settings::send_interval_from_config;
 use leafwing_input_manager::prelude::*;
 use lightyear::connection::client::Connected;
@@ -23,13 +22,7 @@ impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (
-                handle_character_actions,
-                update_crouch_collider,
-                player_shoot,
-                despawn_system,
-            )
-                .chain(),
+            (handle_character_actions, update_crouch_collider).chain(),
         );
         app.add_observer(handle_new_client);
         app.add_observer(handle_connected);
@@ -69,97 +62,6 @@ fn handle_character_actions(
     }
 }
 
-#[derive(Component)]
-pub struct DespawnAfter {
-    spawned_at: f32,
-    lifetime: Duration,
-}
-
-fn despawn_system(
-    mut commands: Commands,
-    query: Query<(Entity, &DespawnAfter)>,
-    time: Res<Time<Fixed>>,
-) {
-    for (entity, despawn) in &query {
-        if time.elapsed_secs() - despawn.spawned_at >= despawn.lifetime.as_secs_f32() {
-            commands.entity(entity).despawn();
-        }
-    }
-}
-
-fn player_shoot(
-    mut commands: Commands,
-    _timeline: Res<LocalTimeline>,
-    query: Query<
-        (&ActionState<CharacterAction>, &Position, &CameraOrientation, &ControlledBy),
-        Without<Predicted>,
-    >,
-    time: Res<Time<Fixed>>,
-    server_config: Res<GameServerConfig>,
-) {
-    for (action_state, position, orientation, controlled_by) in &query {
-        let mut position_override = ComponentReplicationOverrides::<Position>::default();
-        position_override.global_override(ComponentReplicationOverride {
-            replicate_once: true,
-            ..default()
-        });
-        let mut rotation_override = ComponentReplicationOverrides::<Rotation>::default();
-        rotation_override.global_override(ComponentReplicationOverride {
-            replicate_once: true,
-            ..default()
-        });
-        let mut linear_velocity_override =
-            ComponentReplicationOverrides::<LinearVelocity>::default();
-        linear_velocity_override.global_override(ComponentReplicationOverride {
-            replicate_once: true,
-            ..default()
-        });
-        let mut angular_velocity_override =
-            ComponentReplicationOverrides::<AngularVelocity>::default();
-        angular_velocity_override.global_override(ComponentReplicationOverride {
-            replicate_once: true,
-            ..default()
-        });
-        let mut computed_mass_override = ComponentReplicationOverrides::<ComputedMass>::default();
-        computed_mass_override.global_override(ComponentReplicationOverride {
-            replicate_once: true,
-            ..default()
-        });
-
-        if action_state.just_pressed(&CharacterAction::Shoot) {
-            commands.spawn((
-                Name::new("Projectile"),
-                ProjectileMarker,
-                DespawnAfter {
-                    spawned_at: time.elapsed_secs(),
-                    lifetime: Duration::from_millis(server_config.projectile.lifetime_ms),
-                },
-                RigidBody::Dynamic,
-                *position, // Use current position
-                Rotation::default(),
-                LinearVelocity(
-                    Quat::from_euler(EulerRot::YXZ, orientation.yaw, orientation.pitch, 0.0)
-                        * Vec3::NEG_Z
-                        * server_config.projectile.velocity,
-                ),
-                Replicate::to_clients(NetworkTarget::All),
-                PredictionTarget::to_clients(NetworkTarget::All),
-                ControlledBy {
-                    owner: controlled_by.owner,
-                    lifetime: Default::default(),
-                },
-                // we don't want clients to receive any replication updates after the initial spawn
-                (
-                    position_override,
-                    rotation_override,
-                    linear_velocity_override,
-                    angular_velocity_override,
-                    computed_mass_override,
-                ),
-            ));
-        }
-    }
-}
 
 /// Add the ReplicationSender component to new clients
 pub(crate) fn handle_new_client(
