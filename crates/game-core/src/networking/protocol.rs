@@ -1,6 +1,3 @@
-use std::sync::OnceLock;
-use std::sync::atomic::{AtomicU32, Ordering};
-
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
@@ -10,33 +7,13 @@ use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::character::CharacterModelId;
-use crate::core_config::RollbackConfig;
+use super::rollback::{
+    position_should_rollback, rotation_should_rollback,
+    linear_velocity_should_rollback, angular_velocity_should_rollback,
+};
 
-static ROLLBACK_CONFIG: OnceLock<RollbackConfig> = OnceLock::new();
-
-/// Initialize the global rollback thresholds from a `RollbackConfig`.
-/// Should be called once during plugin setup.
-pub fn init_rollback_config(config: RollbackConfig) {
-    ROLLBACK_CONFIG.set(config).ok();
-}
-
-fn rollback_thresholds() -> &'static RollbackConfig {
-    ROLLBACK_CONFIG.get_or_init(RollbackConfig::default)
-}
-
-/// Current predicted entity horizontal speed, updated each FixedUpdate tick by the client.
-/// Used to scale the position rollback threshold dynamically — the legitimate prediction
-/// offset grows with speed, so the threshold must too.
-static CURRENT_SPEED: AtomicU32 = AtomicU32::new(0);
-
-/// Call this from client FixedUpdate with the controlled character's horizontal speed.
-pub fn set_prediction_speed(speed: f32) {
-    CURRENT_SPEED.store(speed.to_bits(), Ordering::Relaxed);
-}
-
-fn prediction_speed() -> f32 {
-    f32::from_bits(CURRENT_SPEED.load(Ordering::Relaxed))
-}
+// Re-export so callers that previously used `protocol::set_prediction_speed` still compile.
+pub use super::rollback::{init_rollback_config, set_prediction_speed};
 
 // Components
 
@@ -155,37 +132,3 @@ impl Plugin for ProtocolPlugin {
     }
 }
 
-fn position_should_rollback(this: &Position, that: &Position) -> bool {
-    // Compare only horizontal (XZ) distance — Y-position drift from unreplicated Avian
-    // ground contact caches would trigger constant false positives.
-    //
-    // The threshold is dynamic: `base + speed × lag_budget`.
-    // Rationale: the client predicts N ticks ahead of the server's last confirmed state.
-    // At full speed the legitimate prediction offset is `speed × N × dt`, which can be
-    // up to ~0.12m on a low-latency connection. A fixed small threshold triggers rollback
-    // on every server ack even when client and server are on identical trajectories.
-    let diff = this.0 - that.0;
-    let horiz_dist = Vec2::new(diff.x, diff.z).length();
-    let cfg = rollback_thresholds();
-    let threshold = cfg.position + prediction_speed() * cfg.position_speed_factor;
-    if horiz_dist >= threshold {
-        warn!(
-            "[position-rollback] horiz_dist={horiz_dist:.4}m >= threshold={threshold:.4}m \
-             predicted=({:.3},{:.3},{:.3}) server=({:.3},{:.3},{:.3})",
-            this.x, this.y, this.z, that.x, that.y, that.z
-        );
-    }
-    horiz_dist >= threshold
-}
-
-fn rotation_should_rollback(this: &Rotation, that: &Rotation) -> bool {
-    this.angle_between(*that) >= rollback_thresholds().rotation
-}
-
-fn linear_velocity_should_rollback(this: &LinearVelocity, that: &LinearVelocity) -> bool {
-    (this.0 - that.0).length() >= rollback_thresholds().linear_velocity
-}
-
-fn angular_velocity_should_rollback(this: &AngularVelocity, that: &AngularVelocity) -> bool {
-    (this.0 - that.0).length() >= rollback_thresholds().angular_velocity
-}

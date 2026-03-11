@@ -58,6 +58,10 @@ pub fn apply_character_movement(
 
     // === JUMPING (blocked while crouching) ===
     if !is_crouching && wants_jump && on_ground {
+        info!(
+            "[JUMP] {entity:?} impulse={:.2} on_ground={on_ground}",
+            movement.jump_impulse
+        );
         forces.apply_linear_impulse(Vec3::new(0.0, movement.jump_impulse, 0.0));
     }
 
@@ -102,10 +106,10 @@ pub fn apply_character_movement(
     let required_acceleration = (new_velocity - ground_velocity) / time.delta_secs();
     let force_vec = required_acceleration * mass.value();
 
-    // Log each tick where the movement system is actively braking
+    // Log while braking (debug level — can be noisy when sliding to a stop)
     if is_braking && ground_velocity.length() > 0.05 {
-        warn!(
-            "[braking] {entity:?}  speed {:.4}→{:.4}  force=({:.3},{:.3})  mass={:.2}",
+        debug!(
+            "[BRAKE] {entity:?}  speed {:.4}→{:.4}  force=({:.3},{:.3})  mass={:.2}",
             ground_velocity.length(),
             new_velocity.length(),
             force_vec.x,
@@ -121,16 +125,24 @@ pub fn apply_character_movement(
 /// Syncs the collider shape to match the current crouch state.
 /// Run as a separate system to avoid conflicts with SpatialQuery.
 pub fn update_crouch_collider(
-    mut query: Query<(&CrouchState, &mut Collider), Changed<CrouchState>>,
+    mut query: Query<(Entity, &CrouchState, &mut Collider), Changed<CrouchState>>,
     config: Res<GameCoreConfig>,
 ) {
-    for (crouch_state, mut collider) in &mut query {
+    for (entity, crouch_state, mut collider) in &mut query {
         if crouch_state.0 {
+            debug!(
+                "[CROUCH-COLLIDER] {entity:?} crouching=true → capsule h={:.3}",
+                config.movement.crouch_capsule_height
+            );
             *collider = Collider::capsule(
                 config.character.capsule_radius,
                 config.movement.crouch_capsule_height,
             );
         } else {
+            debug!(
+                "[CROUCH-COLLIDER] {entity:?} crouching=false → capsule h={:.3}",
+                config.character.capsule_height
+            );
             *collider = Collider::capsule(
                 config.character.capsule_radius,
                 config.character.capsule_height,

@@ -7,9 +7,13 @@
 //! - Client-side prediction and interpolation
 
 pub mod app;
+pub mod character;
 pub mod character_rendering;
 pub mod client;
 pub mod client_config;
+pub mod diagnostics;
+pub mod movement;
+pub mod prediction;
 pub mod renderer;
 pub mod transport;
 

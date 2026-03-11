@@ -7,8 +7,11 @@
 //! - Authoritative simulation
 
 pub mod app;
+pub mod diagnostics;
+pub mod movement;
 pub mod server;
 pub mod server_config;
+pub mod spawning;
 pub mod transport;
 
 // Re-export
