@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use leafwing_input_manager::prelude::GamepadStick;
 use serde::{Deserialize, Serialize};
 
 /// Client configuration loaded from game_client_config.json
@@ -22,18 +23,99 @@ pub struct WindowConfig {
     pub height: u32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum InputDevice {
+    #[default]
+    KeyboardMouse,
+    Gamepad,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct InputConfig {
-    pub jump_key: String,
-    pub jump_gamepad: String,
-    pub sprint_key: String,
-    pub sprint_gamepad: String,
-    pub crouch_key: String,
-    pub crouch_gamepad: String,
-    pub shoot_key: String,
+    pub active_device: InputDevice,
+    pub keyboard: KeyboardBindings,
+    pub gamepad: GamepadBindings,
     pub cursor_grab_button: String,
     pub cursor_release_key: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct KeyboardBindings {
+    // Movement
+    pub move_up: String,
+    pub move_down: String,
+    pub move_left: String,
+    pub move_right: String,
+    pub sprint: String,
+    pub crouch: String,
+    pub prone: String,
+    pub jump: String,
+    pub mount_ledge: String,
+    // Combat
+    pub fire: String,
+    pub aim_down_sights: String,
+    pub reload: String,
+    pub primary_weapon: String,
+    pub secondary_weapon: String,
+    pub interact: String,
+    pub lethal_equipment: String,
+    pub tactical_equipment: String,
+    pub melee: String,
+    pub weapon_inspect: String,
+    pub armor_plate: String,
+    pub alternate_fire: String,
+    // Killstreaks
+    pub killstreak1: String,
+    pub killstreak2: String,
+    pub killstreak3: String,
+    pub field_upgrade: String,
+    // Communication
+    pub text_chat: String,
+    pub team_chat: String,
+    pub ping: String,
+    pub push_to_talk: String,
+    pub gesture1: String,
+    pub gesture2: String,
+    pub gesture3: String,
+    pub gesture4: String,
+    // Misc
+    pub scoreboard: String,
+    pub map: String,
+    pub inventory: String,
+    pub pause: String,
+    pub night_vision: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct GamepadBindings {
+    // Movement
+    pub move_stick: String,
+    pub look_stick: String,
+    pub sprint: String,
+    pub crouch: String,
+    pub jump: String,
+    // Combat
+    pub fire: String,
+    pub aim_down_sights: String,
+    pub reload: String,
+    pub switch_weapon: String,
+    pub lethal_equipment: String,
+    pub tactical_equipment: String,
+    pub melee: String,
+    pub killstreak1: String,
+    pub killstreak2: String,
+    pub killstreak3: String,
+    pub field_upgrade: String,
+    // Other
+    pub ping: String,
+    pub armor_plate: String,
+    pub night_vision: String,
+    pub scoreboard: String,
+    pub pause: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -108,15 +190,84 @@ impl Default for WindowConfig {
 impl Default for InputConfig {
     fn default() -> Self {
         Self {
-            jump_key: "Space".to_string(),
-            jump_gamepad: "South".to_string(),
-            sprint_key: "ShiftLeft".to_string(),
-            sprint_gamepad: "LeftThumb".to_string(),
-            crouch_key: "KeyC".to_string(),
-            crouch_gamepad: "East".to_string(),
-            shoot_key: "KeyQ".to_string(),
+            active_device: InputDevice::KeyboardMouse,
+            keyboard: KeyboardBindings::default(),
+            gamepad: GamepadBindings::default(),
             cursor_grab_button: "Left".to_string(),
             cursor_release_key: "Escape".to_string(),
+        }
+    }
+}
+
+impl Default for KeyboardBindings {
+    fn default() -> Self {
+        Self {
+            move_up: "KeyW".to_string(),
+            move_down: "KeyS".to_string(),
+            move_left: "KeyA".to_string(),
+            move_right: "KeyD".to_string(),
+            sprint: "ShiftLeft".to_string(),
+            crouch: "ControlLeft".to_string(),
+            prone: "KeyC".to_string(),
+            jump: "Space".to_string(),
+            mount_ledge: "Space".to_string(),
+            fire: "".to_string(),
+            aim_down_sights: "".to_string(),
+            reload: "KeyR".to_string(),
+            primary_weapon: "Digit1".to_string(),
+            secondary_weapon: "Digit2".to_string(),
+            interact: "KeyE".to_string(),
+            lethal_equipment: "KeyQ".to_string(),
+            tactical_equipment: "".to_string(),
+            melee: "KeyV".to_string(),
+            weapon_inspect: "KeyG".to_string(),
+            armor_plate: "KeyF".to_string(),
+            alternate_fire: "KeyB".to_string(),
+            killstreak1: "Digit3".to_string(),
+            killstreak2: "Digit4".to_string(),
+            killstreak3: "Digit5".to_string(),
+            field_upgrade: "KeyX".to_string(),
+            text_chat: "KeyT".to_string(),
+            team_chat: "KeyY".to_string(),
+            ping: "KeyZ".to_string(),
+            push_to_talk: "CapsLock".to_string(),
+            gesture1: "F1".to_string(),
+            gesture2: "F2".to_string(),
+            gesture3: "F3".to_string(),
+            gesture4: "F4".to_string(),
+            scoreboard: "Tab".to_string(),
+            map: "KeyM".to_string(),
+            inventory: "KeyI".to_string(),
+            pause: "Escape".to_string(),
+            night_vision: "KeyN".to_string(),
+        }
+    }
+}
+
+impl Default for GamepadBindings {
+    fn default() -> Self {
+        Self {
+            move_stick: "LeftStick".to_string(),
+            look_stick: "RightStick".to_string(),
+            sprint: "LeftThumb".to_string(),
+            crouch: "RightThumb".to_string(),
+            jump: "South".to_string(),
+            fire: "RightTrigger".to_string(),
+            aim_down_sights: "LeftTrigger".to_string(),
+            reload: "West".to_string(),
+            switch_weapon: "North".to_string(),
+            lethal_equipment: "LeftTrigger2".to_string(),
+            tactical_equipment: "RightTrigger2".to_string(),
+            melee: "East".to_string(),
+            killstreak1: "DPadRight".to_string(),
+            killstreak2: "DPadRight".to_string(),
+            killstreak3: "DPadRight".to_string(),
+            field_upgrade: "DPadLeft".to_string(),
+            ping: "DPadLeft".to_string(),
+            armor_plate: "DPadUp".to_string(),
+            night_vision: "DPadDown".to_string(),
+            scoreboard: "Select".to_string(),
+            pause: "Start".to_string(),
         }
     }
 }
@@ -176,6 +327,21 @@ pub fn parse_gamepad_button(s: &str) -> Option<GamepadButton> {
         "RightThumb" => Some(GamepadButton::RightThumb),
         "Start" => Some(GamepadButton::Start),
         "Select" => Some(GamepadButton::Select),
+        "LeftTrigger2" => Some(GamepadButton::LeftTrigger2),
+        "RightTrigger2" => Some(GamepadButton::RightTrigger2),
+        "DPadUp" => Some(GamepadButton::DPadUp),
+        "DPadDown" => Some(GamepadButton::DPadDown),
+        "DPadLeft" => Some(GamepadButton::DPadLeft),
+        "DPadRight" => Some(GamepadButton::DPadRight),
+        _ => None,
+    }
+}
+
+/// Parse a gamepad stick string to a leafwing GamepadStick.
+pub fn parse_gamepad_stick(s: &str) -> Option<GamepadStick> {
+    match s {
+        "LeftStick" => Some(GamepadStick::LEFT),
+        "RightStick" => Some(GamepadStick::RIGHT),
         _ => None,
     }
 }
