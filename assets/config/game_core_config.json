@@ -62,7 +62,7 @@
     "filter": "wgpu=error,bevy_render=info,bevy_ecs=warn,bevy_time=warn,naga=warn,bevy_enhanced_input::action::fns=error"
   },
   "projectile": {
-    "velocity": 10.0,
+    "velocity": 50.0,
     "lifetime_ms": 5000
   }
 }

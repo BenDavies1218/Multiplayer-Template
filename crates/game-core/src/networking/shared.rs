@@ -64,6 +64,8 @@ fn shoot_bullet(
             Option<&ControlledBy>,
         ),
         (
+            // With<Predicted> matches client-side predicted entities.
+            // With<Replicate> matches server-side authoritative entities (Replicate is only present on server).
             Or<(With<Predicted>, With<Replicate>)>,
             With<CharacterMarker>,
         ),
@@ -132,8 +134,17 @@ fn shoot_bullet(
                 av_override,
             ));
         } else {
-            // Client side — pre-spawned local bullet for immediate visual feedback
-            commands.spawn((bullet_bundle, PreSpawned::default()));
+            // Client side — pre-spawned local bullet; DespawnAfter added locally
+            // since DespawnAfter is not replicated. Lightyear will match this entity
+            // with the server's replicated bullet and won't remove local-only components.
+            commands.spawn((
+                bullet_bundle,
+                PreSpawned::default(),
+                DespawnAfter {
+                    spawned_at: time.elapsed_secs(),
+                    lifetime: Duration::from_millis(config.projectile.lifetime_ms),
+                },
+            ));
         }
     }
 }
@@ -172,7 +183,7 @@ impl Plugin for SharedPlugin {
                 .disable::<IslandSleepingPlugin>(),
         );
 
-        app.add_systems(FixedUpdate, (shoot_bullet, despawn_system));
+        app.add_systems(FixedUpdate, (shoot_bullet, despawn_system).chain());
 
         // WorldPlugin is added separately by each app with the appropriate config
     }

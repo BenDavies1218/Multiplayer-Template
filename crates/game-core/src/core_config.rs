@@ -256,7 +256,7 @@ pub struct ProjectileConfig {
 impl Default for ProjectileConfig {
     fn default() -> Self {
         Self {
-            velocity: 10.0,
+            velocity: 50.0,
             lifetime_ms: 5000,
         }
     }
