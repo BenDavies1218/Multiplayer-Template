@@ -151,9 +151,9 @@ pub struct RollbackConfig {
     /// Base XZ position error (metres) below which rollback is suppressed.
     pub position: f32,
     /// Multiplied by current player speed to extend the threshold at higher speeds.
-    /// Represents the prediction lag budget in seconds — e.g. 0.1 allows up to ~7 ticks
+    /// Represents the prediction lag budget in seconds — e.g. 0.02 allows up to ~1 tick
     /// of prediction offset at full speed before triggering rollback.
-    /// At max_speed=5 m/s: threshold = 0.05 + 5×0.1 = 0.55 m
+    /// At max_speed=5 m/s: threshold = 0.02 + 5×0.02 = 0.12 m
     pub position_speed_factor: f32,
     pub rotation: f32,
     pub linear_velocity: f32,
