@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -76,6 +78,8 @@ impl Default for NetworkingConfig {
 pub struct MovementConfig {
     pub max_speed: f32,
     pub max_acceleration: f32,
+    /// Deceleration rate when no input is held (key released). Higher = snappier stops.
+    pub max_deceleration: f32,
     pub jump_impulse: f32,
     pub sprint_multiplier: f32,
     pub crouch_multiplier: f32,
@@ -88,6 +92,7 @@ impl Default for MovementConfig {
         Self {
             max_speed: 5.0,
             max_acceleration: 20.0,
+            max_deceleration: 40.0,
             jump_impulse: 5.0,
             sprint_multiplier: 1.8,
             crouch_multiplier: 0.4,
@@ -102,13 +107,20 @@ impl Default for MovementConfig {
 pub struct CharacterConfig {
     pub capsule_radius: f32,
     pub capsule_height: f32,
+    pub hitbox_catalog: HashMap<String, String>,
 }
 
 impl Default for CharacterConfig {
     fn default() -> Self {
+        let mut hitbox_catalog = HashMap::new();
+        hitbox_catalog.insert(
+            "default".to_string(),
+            "models/characters/default/hitbox.glb".to_string(),
+        );
         Self {
             capsule_radius: 0.5,
             capsule_height: 0.5,
+            hitbox_catalog,
         }
     }
 }
@@ -120,7 +132,6 @@ pub struct WorldAssetsConfig {
     pub collision_path: String,
     pub zones_path: String,
     pub skybox_path: String,
-    pub player_hitbox_path: String,
 }
 
 impl Default for WorldAssetsConfig {
@@ -130,7 +141,6 @@ impl Default for WorldAssetsConfig {
             collision_path: "models/example_world_collision.glb".to_string(),
             zones_path: "models/example_world_zones.glb".to_string(),
             skybox_path: "sunset_sky_hdr.exr".to_string(),
-            player_hitbox_path: "models/player_hitbox.glb".to_string(),
         }
     }
 }
@@ -138,7 +148,13 @@ impl Default for WorldAssetsConfig {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default)]
 pub struct RollbackConfig {
+    /// Base XZ position error (metres) below which rollback is suppressed.
     pub position: f32,
+    /// Multiplied by current player speed to extend the threshold at higher speeds.
+    /// Represents the prediction lag budget in seconds — e.g. 0.1 allows up to ~7 ticks
+    /// of prediction offset at full speed before triggering rollback.
+    /// At max_speed=5 m/s: threshold = 0.05 + 5×0.1 = 0.55 m
+    pub position_speed_factor: f32,
     pub rotation: f32,
     pub linear_velocity: f32,
     pub angular_velocity: f32,
@@ -147,10 +163,11 @@ pub struct RollbackConfig {
 impl Default for RollbackConfig {
     fn default() -> Self {
         Self {
-            position: 0.01,
-            rotation: 0.01,
-            linear_velocity: 0.01,
-            angular_velocity: 0.01,
+            position: 0.02,
+            position_speed_factor: 0.02,
+            rotation: 0.05,
+            linear_velocity: 0.5,
+            angular_velocity: 0.5,
         }
     }
 }

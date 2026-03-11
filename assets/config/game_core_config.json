@@ -14,6 +14,7 @@
   "movement": {
     "max_speed": 5.0,
     "max_acceleration": 20.0,
+    "max_deceleration": 40.0,
     "jump_impulse": 5.0,
     "sprint_multiplier": 1.8,
     "crouch_multiplier": 0.4,
@@ -22,20 +23,23 @@
   },
   "character": {
     "capsule_radius": 0.5,
-    "capsule_height": 0.5
+    "capsule_height": 0.5,
+    "hitbox_catalog": {
+      "default": "models/characters/default/hitbox.glb"
+    }
   },
   "world_assets": {
     "visual_path": "models/example_world_visual.glb",
     "collision_path": "models/example_world_collision.glb",
     "zones_path": "models/example_world_zones.glb",
-    "skybox_path": "sunset_sky_hdr_cubemap.exr",
-    "player_hitbox_path": "models/player_hitbox.glb"
+    "skybox_path": "sunset_sky_hdr_cubemap.exr"
   },
   "rollback_thresholds": {
-    "position": 0.01,
-    "rotation": 0.01,
-    "linear_velocity": 0.01,
-    "angular_velocity": 0.01
+    "position": 0.02,
+    "position_speed_factor": 0.02,
+    "rotation": 0.05,
+    "linear_velocity": 0.5,
+    "angular_velocity": 0.5
   },
   "zones": {
     "default_damage": 10.0,
