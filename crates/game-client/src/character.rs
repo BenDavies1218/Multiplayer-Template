@@ -54,8 +54,8 @@ pub fn handle_new_character(
                     .with(CharacterAction::Sprint, sprint_gamepad)
                     .with(CharacterAction::Crouch, crouch_key)
                     .with(CharacterAction::Crouch, crouch_gamepad)
-                    .with(CharacterAction::Shoot, shoot_key)
-                    .with(CharacterAction::Shoot, MouseButton::Left)
+                    .with(CharacterAction::Fire, shoot_key)
+                    .with(CharacterAction::Fire, MouseButton::Left)
                     .with_dual_axis(CharacterAction::Move, GamepadStick::LEFT)
                     .with_dual_axis(CharacterAction::Move, VirtualDPad::wasd()),
             );
