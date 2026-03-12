@@ -1,10 +1,8 @@
 //! Server transport and connection setup
-#![allow(unused_imports)]
-#![allow(unused_variables)]
+
 use core::net::{Ipv4Addr, SocketAddr};
 
 use bevy::prelude::*;
-use core::time::Duration;
 
 #[cfg(not(target_family = "wasm"))]
 use async_compat::Compat;
@@ -17,7 +15,6 @@ use lightyear::netcode::{NetcodeServer, PRIVATE_KEY_BYTES};
 use lightyear::prelude::server::*;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
-use tracing::warn;
 
 use crate::server_config::{GameServerConfig, ServerTransportJsonConfig};
 
@@ -157,20 +154,20 @@ impl From<&WebTransportCertificateSettings> for Identity {
                 let mut sans = sans.clone();
                 // Are we running on edgegap?
                 if let Ok(public_ip) = std::env::var("ARBITRIUM_PUBLIC_IP") {
-                    println!("🔐 SAN += ARBITRIUM_PUBLIC_IP: {public_ip}");
+                    info!("[cert] SAN += ARBITRIUM_PUBLIC_IP: {public_ip}");
                     sans.push(public_ip);
                     sans.push("*.pr.edgegap.net".to_string());
                 }
                 // generic env to add domains and ips to SAN list:
                 // SELF_SIGNED_SANS="example.org,example.com,127.1.1.1"
                 if let Ok(san) = std::env::var("SELF_SIGNED_SANS") {
-                    println!("🔐 SAN += SELF_SIGNED_SANS: {san}");
+                    info!("[cert] SAN += SELF_SIGNED_SANS: {san}");
                     sans.extend(san.split(',').map(|s| s.to_string()));
                 }
-                println!("🔐 Generating self-signed certificate with SANs: {sans:?}");
+                info!("[cert] Generating self-signed certificate with SANs: {sans:?}");
                 let identity = Identity::self_signed(sans).unwrap();
                 let digest = identity.certificate_chain().as_slice()[0].hash();
-                println!("🔐 Certificate digest: {digest}");
+                info!("[cert] Certificate digest: {digest}");
                 write_digest_file(&digest);
                 identity
             }
@@ -178,8 +175,8 @@ impl From<&WebTransportCertificateSettings> for Identity {
                 cert: cert_pem_path,
                 key: private_key_pem_path,
             } => {
-                println!(
-                    "Reading certificate PEM files:\n * cert: {cert_pem_path}\n * key: {private_key_pem_path}",
+                info!(
+                    "[cert] Reading certificate PEM files: cert={cert_pem_path} key={private_key_pem_path}",
                 );
                 // this is async because we need to load the certificate from io
                 // we need async_compat because wtransport expects a tokio reactor
@@ -194,7 +191,7 @@ impl From<&WebTransportCertificateSettings> for Identity {
                     .pop()
                     .unwrap();
                 let digest = identity.certificate_chain().as_slice()[0].hash();
-                println!("🔐 Certificate digest: {digest}");
+                info!("[cert] Certificate digest: {digest}");
                 write_digest_file(&digest);
                 identity
             }
@@ -208,7 +205,7 @@ fn write_digest_file(digest: &impl std::fmt::Display) {
     if let Err(e) = std::fs::write(path, digest.to_string()) {
         warn!("Could not write digest to {path}: {e}. Web clients may fail to connect.");
     } else {
-        println!("🔐 Wrote certificate digest to {path}");
+        info!("[cert] Wrote certificate digest to {path}");
     }
 }
 

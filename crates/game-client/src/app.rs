@@ -16,10 +16,6 @@ use game_core::utils::cli::log_plugin_from_config;
 use crate::client_config::GameClientConfig;
 use crate::transport::{ClientTransports, ExampleClient, connect};
 
-pub fn window_plugin() -> WindowPlugin {
-    window_plugin_from_config(&GameClientConfig::default())
-}
-
 pub fn window_plugin_from_config(config: &GameClientConfig) -> WindowPlugin {
     WindowPlugin {
         primary_window: Some(Window {
@@ -34,16 +30,7 @@ pub fn window_plugin_from_config(config: &GameClientConfig) -> WindowPlugin {
     }
 }
 
-pub fn new_gui_app(add_inspector: bool) -> App {
-    new_gui_app_from_config(
-        add_inspector,
-        &GameClientConfig::default(),
-        &GameCoreConfig::default(),
-    )
-}
-
 pub fn new_gui_app_from_config(
-    add_inspector: bool,
     config: &GameClientConfig,
     core_config: &GameCoreConfig,
 ) -> App {
@@ -65,38 +52,18 @@ pub fn new_gui_app_from_config(
     app.insert_resource(WinitSettings::continuous());
     app.insert_resource(config.clone());
 
-    if add_inspector {
-        // Note: bevy_inspector_egui would need to be added as a dependency
-        // app.add_plugins(bevy_inspector_egui::bevy_egui::EguiPlugin::default());
-        // app.add_plugins(bevy_inspector_egui::quick::WorldInspectorPlugin::new());
-    }
-    app
-}
-
-/// Build a client app with GUI and lightyear client plugins (uses defaults)
-pub fn build_client_app(tick_duration: Duration, add_inspector: bool) -> App {
-    let mut app = new_gui_app(add_inspector);
-    app.add_plugins(lightyear::prelude::client::ClientPlugins { tick_duration });
     app
 }
 
 /// Build a client app using config
 pub fn build_client_app_from_config(
     tick_duration: Duration,
-    add_inspector: bool,
     config: &GameClientConfig,
     core_config: &GameCoreConfig,
 ) -> App {
-    let mut app = new_gui_app_from_config(add_inspector, config, core_config);
+    let mut app = new_gui_app_from_config(config, core_config);
     app.add_plugins(lightyear::prelude::client::ClientPlugins { tick_duration });
     app
-}
-
-/// Spawn the client connection entity and add the connect system (uses defaults)
-pub fn spawn_client_connection(app: &mut App, client_id: u64) {
-    let core_config = GameCoreConfig::default();
-    let client_config = GameClientConfig::default();
-    spawn_client_connection_from_config(app, client_id, &core_config, &client_config);
 }
 
 /// Spawn the client connection entity using config values

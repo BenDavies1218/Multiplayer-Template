@@ -144,13 +144,9 @@ impl Plugin for ProtocolPlugin {
             .add_prediction()
             .add_should_rollback(angular_velocity_should_rollback);
 
-        // app.register_component::<ComputedMass>().add_prediction();
-
-        // Position and Rotation have a `correction_fn` set, which is used to smear rollback errors
-        // over a few frames, just for the rendering part in postudpate.
-        //
-        // They also set `interpolation_fn` which is used by the VisualInterpolationPlugin to smooth
-        // out rendering between fixedupdate ticks.
+        // Position and Rotation use `correction_fn` to smear rollback errors
+        // over a few frames visually, and `interpolation_fn` to smooth
+        // rendering between FixedUpdate ticks.
         app.register_component::<Position>()
             .add_prediction()
             .add_should_rollback(position_should_rollback)

@@ -13,10 +13,6 @@ use game_core::utils::cli::log_plugin_from_config;
 use crate::server_config::GameServerConfig;
 use crate::transport::{ExampleServer, ServerTransports, WebTransportCertificateSettings, start};
 
-pub fn new_headless_app() -> App {
-    new_headless_app_from_config(&GameCoreConfig::default())
-}
-
 pub fn new_headless_app_from_config(core_config: &GameCoreConfig) -> App {
     let mut app = App::new();
     app.add_plugins((
@@ -45,22 +41,11 @@ pub fn new_headless_app_from_config(core_config: &GameCoreConfig) -> App {
     app
 }
 
-/// Build a server app with headless mode and lightyear server plugins (uses defaults)
-pub fn build_server_app(tick_duration: Duration) -> App {
-    build_server_app_from_config(tick_duration, &GameCoreConfig::default())
-}
-
 /// Build a server app with headless mode and lightyear server plugins using config
 pub fn build_server_app_from_config(tick_duration: Duration, core_config: &GameCoreConfig) -> App {
     let mut app = new_headless_app_from_config(core_config);
     app.add_plugins(lightyear::prelude::server::ServerPlugins { tick_duration });
     app
-}
-
-/// Spawn the server connection entity and add the start system (uses defaults)
-pub fn spawn_server_connection(app: &mut App) {
-    let core_config = GameCoreConfig::default();
-    spawn_server_connection_from_config(app, &core_config);
 }
 
 /// Spawn the server connection entity using config values.

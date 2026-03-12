@@ -17,7 +17,7 @@ pub fn log_server_character_state(
     let tick = timeline.tick();
     for (entity, pos, vel) in &query {
         let horiz_speed = Vec2::new(vel.x, vel.z).length();
-        debug!(
+        info!(
             "[SRV-STATE] tick={tick:?} {entity:?} \
              pos=({:.3},{:.3},{:.3}) vel=({:.3},{:.3},{:.3}) speed={horiz_speed:.3}",
             pos.x, pos.y, pos.z,
