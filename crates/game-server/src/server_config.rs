@@ -96,7 +96,7 @@ pub fn parse_css_color(name: &str) -> Color {
         "magenta" => Color::from(css::MAGENTA),
         "cyan" => Color::from(css::AQUA), // CSS cyan = aqua
         _ => {
-            eprintln!("[CONFIG WARNING] Unknown color '{}', using white", name);
+            warn!("[config] Unknown color '{}', using white", name);
             Color::from(css::WHITE)
         }
     }

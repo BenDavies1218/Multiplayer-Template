@@ -74,7 +74,7 @@ fn shoot_bullet(
     time: Res<Time<Fixed>>,
 ) {
     for (action_state, position, orientation, controlled_by) in &query {
-        if !action_state.just_pressed(&CharacterAction::Shoot) {
+        if !action_state.just_pressed(&CharacterAction::Fire) {
             continue;
         }
 
@@ -183,8 +183,7 @@ impl Plugin for SharedPlugin {
                 .disable::<IslandSleepingPlugin>(),
         );
 
+        // Gameplay systems
         app.add_systems(FixedUpdate, (shoot_bullet, despawn_system).chain());
-
-        // WorldPlugin is added separately by each app with the appropriate config
     }
 }

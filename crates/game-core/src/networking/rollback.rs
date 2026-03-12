@@ -72,60 +72,49 @@ fn prediction_speed() -> f32 {
 ///
 /// Y-axis is intentionally excluded — Avian ground-contact caches can produce
 /// a small Y discrepancy every tick even when the simulation is healthy.
-pub fn position_should_rollback(this: &Position, that: &Position) -> bool {
-    let diff = this.0 - that.0;
-    let horiz_dist = Vec2::new(diff.x, diff.z).length();
+pub fn position_should_rollback(predicted: &Position, confirmed: &Position) -> bool {
+    let dx = predicted.x - confirmed.x;
+    let dz = predicted.z - confirmed.z;
+    let diff_xz = (dx * dx + dz * dz).sqrt();
+
     let cfg = rollback_thresholds();
     let speed = prediction_speed();
     let threshold = cfg.position + speed * cfg.position_speed_factor;
 
-    if horiz_dist >= threshold {
-        warn!(
-            "[rollback:position] horiz={horiz_dist:.4}m >= threshold={threshold:.4}m \
-             (base={:.3} + speed={speed:.2}×factor={:.3})  \
-             pred=({:.3},{:.3},{:.3})  server=({:.3},{:.3},{:.3})",
-            cfg.position,
-            cfg.position_speed_factor,
-            this.x, this.y, this.z,
-            that.x, that.y, that.z,
+    let should = diff_xz > threshold;
+    if should {
+        info!(
+            "[rollback] POSITION xz={diff_xz:.3} > threshold={threshold:.3} (base={:.2} speed={speed:.1} factor={:.2}) pred=({:.2},{:.2},{:.2}) conf=({:.2},{:.2},{:.2})",
+            cfg.position, cfg.position_speed_factor,
+            predicted.x, predicted.y, predicted.z,
+            confirmed.x, confirmed.y, confirmed.z,
         );
     }
-    horiz_dist >= threshold
+    should
 }
 
-/// Returns `true` when rotational divergence exceeds the threshold (radians).
-pub fn rotation_should_rollback(this: &Rotation, that: &Rotation) -> bool {
-    let angle = this.angle_between(*that);
-    let threshold = rollback_thresholds().rotation;
-    if angle >= threshold {
-        debug!("[rollback:rotation] angle={angle:.4}rad >= threshold={threshold:.4}rad");
-    }
-    angle >= threshold
+/// Rotation rollback — disabled. Character rotation is locked via `LockedAxes`,
+/// so rotation never diverges meaningfully.
+pub fn rotation_should_rollback(_this: &Rotation, _that: &Rotation) -> bool {
+    false
 }
 
-/// Returns `true` when linear velocity diverges by more than the threshold (m/s).
-pub fn linear_velocity_should_rollback(this: &LinearVelocity, that: &LinearVelocity) -> bool {
-    let diff = (this.0 - that.0).length();
-    let threshold = rollback_thresholds().linear_velocity;
-    if diff >= threshold {
-        warn!(
-            "[rollback:linear_velocity] diff={diff:.4}m/s >= threshold={threshold:.4}m/s  \
-             pred=({:.3},{:.3},{:.3})  server=({:.3},{:.3},{:.3})",
-            this.x, this.y, this.z,
-            that.x, that.y, that.z,
-        );
-    }
-    diff >= threshold
+/// Returns `true` when the horizontal (XZ) linear velocity diverges by more
+/// than the threshold.
+///
+/// Y-axis is excluded — vertical velocity is driven by Avian's gravity
+/// integration and ground-collision response, which naturally differ between
+/// client and server when positions have drifted.  Only XZ is set
+/// deterministically by `apply_character_movement`.
+pub fn linear_velocity_should_rollback(_predicted: &LinearVelocity, _confirmed: &LinearVelocity) -> bool {
+    // Disabled — velocity is instantaneous and naturally differs between predicted
+    // and confirmed ticks due to camera yaw changes during the prediction window.
+    // Position rollback alone is sufficient to correct accumulated drift.
+    false
 }
 
-/// Returns `true` when angular velocity diverges by more than the threshold (rad/s).
-pub fn angular_velocity_should_rollback(this: &AngularVelocity, that: &AngularVelocity) -> bool {
-    let diff = (this.0 - that.0).length();
-    let threshold = rollback_thresholds().angular_velocity;
-    if diff >= threshold {
-        debug!(
-            "[rollback:angular_velocity] diff={diff:.4}rad/s >= threshold={threshold:.4}rad/s"
-        );
-    }
-    diff >= threshold
+/// Angular velocity rollback — disabled. Character rotation is locked via `LockedAxes`,
+/// so angular velocity stays at zero.
+pub fn angular_velocity_should_rollback(_this: &AngularVelocity, _that: &AngularVelocity) -> bool {
+    false
 }

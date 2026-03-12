@@ -1,6 +1,5 @@
 //! Client transport and connection setup
-#![allow(unused_imports)]
-#![allow(unused_variables)]
+
 use core::net::{Ipv4Addr, SocketAddr};
 
 use bevy::prelude::*;
@@ -8,7 +7,6 @@ use bevy::prelude::*;
 use crate::client_config::GameClientConfig;
 use bevy::ecs::lifecycle::HookContext;
 use bevy::ecs::world::DeferredWorld;
-use core::time::Duration;
 use game_core::GameCoreConfig;
 use game_core::networking::config::Config;
 use game_core::networking::settings::SharedSettings;

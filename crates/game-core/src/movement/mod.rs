@@ -1,6 +1,5 @@
 //! Character movement system (shared between client and server)
 
-use avian3d::prelude::forces::ForcesItem;
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
@@ -8,19 +7,23 @@ use leafwing_input_manager::prelude::ActionState;
 use crate::core_config::{CharacterConfig, GameCoreConfig, MovementConfig};
 use crate::networking::protocol::{CharacterAction, CrouchState};
 
-/// Apply camera-relative character movement.
+/// Apply camera-relative character movement via direct velocity setting.
 /// Used by both client (predicted) and server (authoritative).
+///
+/// Sets LinearVelocity directly instead of applying forces — this makes
+/// the simulation deterministic between client and server since both sides
+/// compute `Quat::from_rotation_y(yaw) * input * speed` (pure math).
 pub fn apply_character_movement(
     entity: Entity,
-    mass: &ComputedMass,
-    time: &Time,
+    linear_velocity: &mut LinearVelocity,
     spatial_query: &SpatialQuery,
     action_state: &ActionState<CharacterAction>,
-    mut forces: ForcesItem,
+    position: &Position,
     camera_yaw: f32,
     crouch_state: &mut CrouchState,
     movement: &MovementConfig,
     character: &CharacterConfig,
+    fixed_timestep_hz: f32,
 ) {
     let input = action_state
         .axis_pair(&CharacterAction::Move)
@@ -30,62 +33,38 @@ pub fn apply_character_movement(
     let wants_crouch = action_state.pressed(&CharacterAction::Crouch);
 
     // === GROUND CHECK ===
-    let pos = forces.position().0;
     let current_capsule_height = if crouch_state.0 {
         movement.crouch_capsule_height
     } else {
         character.capsule_height
     };
     let capsule_half_extent = current_capsule_height / 2.0 + character.capsule_radius;
-    let ground_tolerance = movement.ground_tolerance;
     let on_ground = spatial_query
         .cast_ray(
-            pos,
+            position.0,
             Dir3::NEG_Y,
-            capsule_half_extent + ground_tolerance,
+            capsule_half_extent + movement.ground_tolerance,
             true,
             &SpatialQueryFilter::from_excluded_entities([entity]),
         )
         .is_some();
 
     // === CROUCH / SPRINT STATE ===
-    // Sprint requires ground and overrides crouch
-    let is_sprinting = wants_sprint && on_ground;
+    // Sprint requires forward input (W key) — no sprinting while only strafing.
+    let is_sprinting = wants_sprint && on_ground && input.y > 0.0;
     let is_crouching = wants_crouch && !is_sprinting;
-
-    // Update crouch state (collider is updated separately to avoid SpatialQuery conflict)
     crouch_state.0 = is_crouching;
 
-    // === JUMPING (blocked while crouching) ===
+    // === JUMP (blocked while crouching) ===
     if !is_crouching && wants_jump && on_ground {
-        info!(
-            "[JUMP] {entity:?} impulse={:.2} on_ground={on_ground}",
-            movement.jump_impulse
-        );
-        forces.apply_linear_impulse(Vec3::new(0.0, movement.jump_impulse, 0.0));
+        linear_velocity.y = movement.jump_impulse;
     }
 
     // === MOVEMENT (Camera-Relative) ===
-    // Use max_deceleration when no input is held so the character stops snappily.
-    let is_braking = input.length_squared() < 0.001;
-    let accel = if is_braking {
-        movement.max_deceleration
-    } else {
-        movement.max_acceleration
-    };
-    let max_velocity_delta_per_tick = accel * time.delta_secs();
-
-    // Rotate movement direction by camera yaw
     let yaw_rotation = Quat::from_rotation_y(camera_yaw);
     let forward = yaw_rotation * Vec3::NEG_Z;
     let right = yaw_rotation * Vec3::X;
-
-    // W/S moves in camera forward/back, A/D moves in camera left/right
     let move_dir = forward * input.y + right * input.x;
-
-    // Get current horizontal velocity
-    let linear_velocity = forces.linear_velocity();
-    let ground_velocity = Vec3::new(linear_velocity.x, 0.0, linear_velocity.z);
 
     // Speed modifier based on state
     let speed = if is_sprinting {
@@ -96,30 +75,23 @@ pub fn apply_character_movement(
         movement.max_speed
     };
 
-    // Calculate desired velocity
-    let desired_velocity = move_dir * speed;
-
-    // Smoothly move toward desired velocity
-    let new_velocity = ground_velocity.move_towards(desired_velocity, max_velocity_delta_per_tick);
-
-    // Calculate required acceleration to reach new velocity
-    let required_acceleration = (new_velocity - ground_velocity) / time.delta_secs();
-    let force_vec = required_acceleration * mass.value();
-
-    // Log while braking (debug level — can be noisy when sliding to a stop)
-    if is_braking && ground_velocity.length() > 0.05 {
-        debug!(
-            "[BRAKE] {entity:?}  speed {:.4}→{:.4}  force=({:.3},{:.3})  mass={:.2}",
-            ground_velocity.length(),
-            new_velocity.length(),
-            force_vec.x,
-            force_vec.z,
-            mass.value()
-        );
-    }
-
-    // Apply force to achieve the acceleration
-    forces.apply_force(force_vec);
+    // Smooth acceleration/deceleration via move_towards.
+    // Uses a hardcoded dt (1/fixed_timestep_hz) instead of time.delta_secs()
+    // to guarantee identical results on client and server — pure math,
+    // no dependency on frame timing variance.
+    let dt = 1.0 / fixed_timestep_hz;
+    let desired = move_dir * speed;
+    let current_xz = Vec3::new(linear_velocity.x, 0.0, linear_velocity.z);
+    let target_xz = Vec3::new(desired.x, 0.0, desired.z);
+    let is_braking = desired.length_squared() < current_xz.length_squared();
+    let accel = if is_braking {
+        movement.max_deceleration
+    } else {
+        movement.max_acceleration
+    };
+    let new_xz = current_xz.move_towards(target_xz, accel * dt);
+    linear_velocity.x = new_xz.x;
+    linear_velocity.z = new_xz.z;
 }
 
 /// Syncs the collider shape to match the current crouch state.

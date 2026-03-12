@@ -35,11 +35,11 @@
     "skybox_path": "sunset_sky_hdr_cubemap.exr"
   },
   "rollback_thresholds": {
-    "position": 0.05,
-    "position_speed_factor": 0.04,
-    "rotation": 0.05,
-    "linear_velocity": 2.0,
-    "angular_velocity": 0.5
+    "position": 5.0,
+    "position_speed_factor": 0.3,
+    "rotation": 0.1,
+    "linear_velocity": 0.5,
+    "angular_velocity": 1.0
   },
   "zones": {
     "default_damage": 10.0,

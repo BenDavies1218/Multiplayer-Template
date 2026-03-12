@@ -101,6 +101,11 @@ pub(crate) fn handle_connected(
             CharacterMarker,
             CameraOrientation { yaw: 0.0, pitch: 0.0 },
             CrouchState::default(),
+            // Prevent hitbox children from being replicated to clients.
+            // Without this, Lightyear replicates child entities with Predicted +
+            // Position but no movement system, creating "ghost" entities that
+            // diverge from the server and trigger constant rollbacks.
+            DisableReplicateHierarchy,
         ))
         .id();
 

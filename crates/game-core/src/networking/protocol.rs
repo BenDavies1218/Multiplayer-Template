@@ -42,23 +42,58 @@ pub struct CameraOrientation {
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Reflect, Serialize, Deserialize)]
 pub enum CharacterAction {
-    Move,
+    // Movement
+    Move,           // DualAxis
+    Look,           // DualAxis
     Jump,
     Sprint,
     Crouch,
-    Shoot,
-    Look, // Camera yaw/pitch as DualAxis
+    Prone,
+    MountLedge,
+
+    // Combat
+    Fire,
+    AimDownSights,
+    Reload,
+    PrimaryWeapon,
+    SecondaryWeapon,
+    Interact,
+    LethalEquipment,
+    TacticalEquipment,
+    Melee,
+    WeaponInspect,
+    ArmorPlate,
+    AlternateFire,
+
+    // Killstreaks & field upgrades
+    Killstreak1,
+    Killstreak2,
+    Killstreak3,
+    FieldUpgrade,
+
+    // Communication
+    TextChat,
+    TeamChat,
+    Ping,
+    PushToTalk,
+    Gesture1,
+    Gesture2,
+    Gesture3,
+    Gesture4,
+
+    // Misc
+    Scoreboard,
+    Map,
+    Inventory,
+    Pause,
+    NightVision,
 }
 
 impl Actionlike for CharacterAction {
     fn input_control_kind(&self) -> InputControlKind {
         match self {
-            Self::Move => InputControlKind::DualAxis,
-            Self::Look => InputControlKind::DualAxis,
-            Self::Jump => InputControlKind::Button,
-            Self::Sprint => InputControlKind::Button,
-            Self::Crouch => InputControlKind::Button,
-            Self::Shoot => InputControlKind::Button,
+            Self::Move | Self::Look => InputControlKind::DualAxis,
+            _ => InputControlKind::Button,
         }
     }
 }
@@ -74,7 +109,7 @@ pub(crate) struct ProtocolPlugin;
 
 impl Plugin for ProtocolPlugin {
     fn build(&self, app: &mut App) {
-        // Leafwing input for WASD/Jump/Shoot
+        // Add input manager plugin for CharacterAction, with rebroadcasting enabled so that inputs are sent to the server for processing.
         app.add_plugins(leafwing::InputPlugin::<CharacterAction> {
             config: InputConfig::<CharacterAction> {
                 rebroadcast_inputs: true,
@@ -91,8 +126,6 @@ impl Plugin for ProtocolPlugin {
         app.register_component::<ProjectileMarker>();
 
         app.register_component::<FloorMarker>();
-
-        app.register_component::<BlockMarker>();
 
         // Camera orientation - NOT predicted, client authority
         // Client updates this and server reads it directly
@@ -111,13 +144,9 @@ impl Plugin for ProtocolPlugin {
             .add_prediction()
             .add_should_rollback(angular_velocity_should_rollback);
 
-        // app.register_component::<ComputedMass>().add_prediction();
-
-        // Position and Rotation have a `correction_fn` set, which is used to smear rollback errors
-        // over a few frames, just for the rendering part in postudpate.
-        //
-        // They also set `interpolation_fn` which is used by the VisualInterpolationPlugin to smooth
-        // out rendering between fixedupdate ticks.
+        // Position and Rotation use `correction_fn` to smear rollback errors
+        // over a few frames visually, and `interpolation_fn` to smooth
+        // rendering between FixedUpdate ticks.
         app.register_component::<Position>()
             .add_prediction()
             .add_should_rollback(position_should_rollback)

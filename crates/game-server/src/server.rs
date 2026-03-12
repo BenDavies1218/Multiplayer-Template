@@ -1,23 +1,11 @@
 //! `ServerPlugin` — assembles all server-side systems into the Bevy app.
 //!
-//! Each concern lives in its own module:
-//!
-//! | Module        | Responsibility                                        |
-//! |---------------|-------------------------------------------------------|
-//! | `movement`    | Authoritative movement — reads inputs, drives physics |
-//! | `spawning`    | Client connect observers, character spawning          |
-//! | `diagnostics` | Per-tick state logging for comparison with client     |
-//!
-//! # FixedUpdate tick order
-//!
-//! ```text
-//! handle_character_actions  — apply movement forces (authoritative)
-//! update_crouch_collider    — resize collider on CrouchState change
-//! log_server_character_state — snapshot pos/vel for debugging
-//! ```
+//! Step 5: Camera-relative movement with jump, sprint, crouch.
 
 use bevy::prelude::*;
 use game_core::movement::update_crouch_collider;
+use lightyear::connection::client::Connected;
+use lightyear::prelude::server::ClientOf;
 
 use crate::diagnostics::log_server_character_state;
 use crate::movement::handle_character_actions;
@@ -40,5 +28,21 @@ impl Plugin for ServerPlugin {
 
         app.add_observer(handle_new_client);
         app.add_observer(handle_connected);
+        app.add_systems(Update, shutdown_when_empty);
+    }
+}
+
+/// Shut the server down once a client has connected and then all disconnect.
+fn shutdown_when_empty(
+    clients: Query<Entity, (With<ClientOf>, With<Connected>)>,
+    mut has_had_clients: Local<bool>,
+    mut exit: MessageWriter<AppExit>,
+) {
+    let count = clients.iter().count();
+    if count > 0 {
+        *has_had_clients = true;
+    } else if *has_had_clients {
+        info!("[server] no clients remaining, shutting down");
+        exit.write(AppExit::Success);
     }
 }

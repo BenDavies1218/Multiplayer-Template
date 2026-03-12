@@ -12,6 +12,7 @@ pub mod character_rendering;
 pub mod client;
 pub mod client_config;
 pub mod diagnostics;
+pub mod input_device;
 pub mod movement;
 pub mod prediction;
 pub mod renderer;
