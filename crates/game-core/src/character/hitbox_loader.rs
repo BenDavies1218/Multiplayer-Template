@@ -1,5 +1,5 @@
 use super::components::{CharacterHitboxMarker, HitboxRegion};
-use crate::core_config::{HitboxShape, GameCoreConfig};
+use crate::core_config::{GameCoreConfig, HitboxShape};
 use crate::world::parse_extras;
 use avian3d::prelude::*;
 use bevy::gltf::{Gltf, GltfNode};

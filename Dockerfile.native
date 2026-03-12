@@ -1,7 +1,18 @@
 # Multi-stage build for native client (3D game client with networking)
 
+# Chef planner stage
+FROM rust:1.93-bookworm as chef
+RUN cargo install cargo-chef
+WORKDIR /app
+
+FROM chef as planner
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates
+COPY apps ./apps
+RUN cargo chef prepare --recipe-path recipe.json
+
 # Build stage
-FROM rust:1.93-bookworm as builder
+FROM chef as builder
 
 # Install build dependencies required for Bevy (3D rendering, X11, input)
 RUN apt-get update && \
@@ -19,13 +30,20 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-# Copy workspace files
+# Build dependencies first (cached layer)
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --profile docker --recipe-path recipe.json -p native
+
+# Copy source and build
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
 COPY apps ./apps
 
-# Build release binary
-RUN cargo build --release -p native
+# Build with limited parallelism to reduce memory usage
+# Uses docker profile (thin LTO, 16 codegen units) for lower memory usage
+# CARGO_BUILD_JOBS=2: Limit to 2 parallel jobs (reduces peak memory by ~60%)
+ENV CARGO_BUILD_JOBS=2
+RUN cargo build --profile docker -p native
 
 # Runtime stage
 FROM debian:bookworm-slim
@@ -47,8 +65,8 @@ RUN apt-get update && \
     libgl1-mesa-dri \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy binary from builder
-COPY --from=builder /app/target/release/native /usr/local/bin/native
+# Copy binary from builder (docker profile outputs to target/docker/)
+COPY --from=builder /app/target/docker/native /usr/local/bin/native
 
 # Copy certificates (required for secure networking)
 COPY certificates /app/certificates
