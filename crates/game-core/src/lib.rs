@@ -18,4 +18,4 @@ pub use character::{
     CharacterHitboxData, CharacterHitboxMarker, CharacterMarker, CharacterModelId, HitboxRegion,
     attach_hitbox_to_character,
 };
-pub use core_config::GameCoreConfig;
+pub use core_config::{GameCoreConfig, HitboxRegionConfig, HitboxShape};

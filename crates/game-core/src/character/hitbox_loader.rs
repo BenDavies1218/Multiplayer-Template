@@ -1,14 +1,14 @@
 use super::components::{CharacterHitboxMarker, HitboxRegion};
-use crate::world::{extract_mesh_indices, extract_mesh_vertices, parse_extras};
+use crate::core_config::{HitboxShape, GameCoreConfig};
+use crate::world::parse_extras;
 use avian3d::prelude::*;
-use bevy::gltf::{Gltf, GltfMesh, GltfNode};
-use bevy::mesh::Mesh;
+use bevy::gltf::{Gltf, GltfNode};
 use bevy::prelude::*;
 
-/// Temporary component placed on a loader entity.
+/// Temporary component placed on a loader entity while the player model GLB loads.
 /// Removed after the GLB is processed into `CharacterHitboxData`.
 #[derive(Component, Debug)]
-pub struct CharacterHitboxLoader {
+pub struct CharacterModelLoader {
     pub handle: Handle<Gltf>,
 }
 
@@ -22,23 +22,22 @@ pub struct HitboxRegionData {
 }
 
 /// Resource holding the parsed hitbox regions.
-/// Inserted once the hitbox GLB has been processed.
+/// Inserted once the player model GLB has been processed.
 /// Used by the server when spawning characters to attach hitbox children.
 #[derive(Resource, Debug, Clone)]
 pub struct CharacterHitboxData {
     pub regions: Vec<HitboxRegionData>,
 }
 
-/// System that processes the hitbox GLB once it's loaded.
-/// Runs every frame until the loader entity is found and the asset is ready.
-/// After processing, inserts `CharacterHitboxData` resource and despawns the loader.
-pub fn process_character_hitbox(
+/// System that processes the player model GLB once it's loaded.
+/// Scans for nodes with a `hitbox_region` custom property set in Blender.
+/// Creates simple shape colliders (from config) positioned at the tagged node transforms.
+pub fn process_character_model_hitboxes(
     mut commands: Commands,
-    loader_query: Query<(Entity, &CharacterHitboxLoader)>,
+    loader_query: Query<(Entity, &CharacterModelLoader)>,
     gltf_assets: Res<Assets<Gltf>>,
-    gltf_meshes: Res<Assets<GltfMesh>>,
     gltf_nodes: Res<Assets<GltfNode>>,
-    meshes: Res<Assets<Mesh>>,
+    config: Res<GameCoreConfig>,
 ) {
     for (entity, loader) in loader_query.iter() {
         let Some(gltf) = gltf_assets.get(&loader.handle) else {
@@ -49,61 +48,56 @@ pub fn process_character_hitbox(
 
         for (node_name, node_handle) in &gltf.named_nodes {
             let Some(gltf_node) = gltf_nodes.get(node_handle) else {
-                warn!("GltfNode not found for hitbox node '{}'", node_name);
+                warn!("GltfNode not found for node '{}'", node_name);
                 continue;
             };
 
-            let Some(gltf_mesh_handle) = &gltf_node.mesh else {
-                continue; // Skip empty/grouping nodes
-            };
-
-            let Some(gltf_mesh) = gltf_meshes.get(gltf_mesh_handle) else {
-                warn!("GltfMesh not found for hitbox node '{}'", node_name);
-                continue;
-            };
-
-            // Parse custom properties from glTF extras
+            // Check for hitbox_region custom property in glTF extras
             let properties = parse_extras(&gltf_node.extras);
-            let base_damage = properties
-                .get("base_damage")
-                .and_then(|v| v.as_f64())
-                .unwrap_or(0.0) as f32;
+            let Some(region_name) = properties
+                .get("hitbox_region")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string())
+            else {
+                continue; // Not a hitbox node
+            };
 
-            for primitive in &gltf_mesh.primitives {
-                let Some(mesh) = meshes.get(&primitive.mesh) else {
-                    warn!("Mesh not found for hitbox node '{}'", node_name);
-                    continue;
-                };
-
-                let Some(vertices) = extract_mesh_vertices(mesh) else {
-                    warn!(
-                        "Could not extract vertices from hitbox node '{}'",
-                        node_name
-                    );
-                    continue;
-                };
-                let Some(indices) = extract_mesh_indices(mesh) else {
-                    warn!("Could not extract indices from hitbox node '{}'", node_name);
-                    continue;
-                };
-
-                let collider = Collider::trimesh(vertices, indices);
-
-                regions.push(HitboxRegionData {
-                    name: node_name.to_string(),
-                    base_damage,
-                    collider,
-                    transform: gltf_node.transform,
-                });
-
-                info!(
-                    "Parsed hitbox region '{}' with base_damage={}",
-                    node_name, base_damage
+            // Look up region config for damage and shape
+            let Some(region_config) = config.character.hitbox_regions.get(&region_name) else {
+                warn!(
+                    "Node '{}' has hitbox_region='{}' but no matching config entry — skipping",
+                    node_name, region_name
                 );
-            }
+                continue;
+            };
+
+            let collider = match &region_config.shape {
+                HitboxShape::Capsule {
+                    radius,
+                    half_height,
+                } => Collider::capsule(*radius, *half_height * 2.0),
+                HitboxShape::Box { half_extents } => {
+                    Collider::cuboid(half_extents[0], half_extents[1], half_extents[2])
+                }
+            };
+
+            regions.push(HitboxRegionData {
+                name: region_name.clone(),
+                base_damage: region_config.damage,
+                collider,
+                transform: gltf_node.transform,
+            });
+
+            info!(
+                "Parsed hitbox region '{}' from node '{}' with damage={}",
+                region_name, node_name, region_config.damage
+            );
         }
 
-        info!("Character hitbox loaded with {} regions", regions.len());
+        info!(
+            "Character model processed with {} hitbox regions",
+            regions.len()
+        );
         commands.insert_resource(CharacterHitboxData { regions });
         commands.entity(entity).despawn();
     }

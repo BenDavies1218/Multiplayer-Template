@@ -109,22 +109,83 @@ impl Default for MovementConfig {
 pub struct CharacterConfig {
     pub capsule_radius: f32,
     pub capsule_height: f32,
-    pub hitbox_catalog: HashMap<String, String>,
+    /// Maps model ID (e.g. "default") to the player model GLB path.
+    /// The server loads these to extract hitbox node transforms.
+    pub model_catalog: HashMap<String, String>,
+    /// Defines hitbox regions with damage and collider shape.
+    /// Region names must match the `hitbox_region` custom property on model nodes.
+    pub hitbox_regions: HashMap<String, HitboxRegionConfig>,
 }
 
 impl Default for CharacterConfig {
     fn default() -> Self {
-        let mut hitbox_catalog = HashMap::new();
-        hitbox_catalog.insert(
+        let mut model_catalog = HashMap::new();
+        model_catalog.insert(
             "default".to_string(),
-            "models/characters/default/hitbox.glb".to_string(),
+            "models/characters/default/player.glb".to_string(),
         );
+
+        let mut hitbox_regions = HashMap::new();
+        hitbox_regions.insert(
+            "head".to_string(),
+            HitboxRegionConfig {
+                damage: 2.0,
+                shape: HitboxShape::Capsule {
+                    radius: 0.15,
+                    half_height: 0.1,
+                },
+            },
+        );
+        hitbox_regions.insert(
+            "chest".to_string(),
+            HitboxRegionConfig {
+                damage: 1.0,
+                shape: HitboxShape::Box {
+                    half_extents: [0.25, 0.3, 0.15],
+                },
+            },
+        );
+        hitbox_regions.insert(
+            "arm".to_string(),
+            HitboxRegionConfig {
+                damage: 0.75,
+                shape: HitboxShape::Capsule {
+                    radius: 0.08,
+                    half_height: 0.2,
+                },
+            },
+        );
+        hitbox_regions.insert(
+            "leg".to_string(),
+            HitboxRegionConfig {
+                damage: 0.5,
+                shape: HitboxShape::Capsule {
+                    radius: 0.1,
+                    half_height: 0.25,
+                },
+            },
+        );
+
         Self {
             capsule_radius: 0.5,
             capsule_height: 0.5,
-            hitbox_catalog,
+            model_catalog,
+            hitbox_regions,
         }
     }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct HitboxRegionConfig {
+    pub damage: f32,
+    pub shape: HitboxShape,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type")]
+pub enum HitboxShape {
+    Capsule { radius: f32, half_height: f32 },
+    Box { half_extents: [f32; 3] },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
