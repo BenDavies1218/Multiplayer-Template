@@ -28,6 +28,9 @@ Screenshot*
 *.swo
 *~
 
+# Worktrees
+.worktrees/
+
 # OS
 .DS_Store
 Thumbs.db
