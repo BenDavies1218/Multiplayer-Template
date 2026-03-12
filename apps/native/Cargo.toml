@@ -13,6 +13,7 @@ doc = false
 [dependencies]
 # Internal crates
 game-core.workspace = true
+game-networking.workspace = true
 game-client.workspace = true
 game-camera.workspace = true
 

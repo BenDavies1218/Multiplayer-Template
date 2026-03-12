@@ -10,8 +10,8 @@ use lightyear::link::RecvLinkConditioner;
 use lightyear::prelude::*;
 
 use game_core::GameCoreConfig;
-use game_core::networking::settings::shared_settings_from_config;
 use game_core::utils::cli::log_plugin_from_config;
+use game_networking::config::shared_settings_from_config;
 
 use crate::client_config::GameClientConfig;
 use crate::transport::{ClientTransports, ExampleClient, connect};
@@ -30,10 +30,7 @@ pub fn window_plugin_from_config(config: &GameClientConfig) -> WindowPlugin {
     }
 }
 
-pub fn new_gui_app_from_config(
-    config: &GameClientConfig,
-    core_config: &GameCoreConfig,
-) -> App {
+pub fn new_gui_app_from_config(config: &GameClientConfig, core_config: &GameCoreConfig) -> App {
     let mut app = App::new();
     app.add_plugins(
         DefaultPlugins
@@ -83,8 +80,7 @@ pub fn spawn_client_connection_from_config(
     app.world_mut().spawn(ExampleClient {
         client_id,
         client_port: core_config.networking.client_port,
-        server_addr: game_core::networking::config::Config::from_core_config(core_config)
-            .server_addr(),
+        server_addr: game_networking::config::Config::from_core_config(core_config).server_addr(),
         conditioner,
         transport: {
             #[cfg(not(target_family = "wasm"))]

@@ -3313,6 +3313,7 @@ dependencies = [
  "console_error_panic_hook",
  "game-camera",
  "game-core",
+ "game-networking",
  "getrandom 0.2.17",
  "leafwing-input-manager",
  "lightyear",
@@ -3331,14 +3332,25 @@ dependencies = [
  "bevy",
  "cfg-if",
  "clap",
- "dotenvy",
  "getrandom 0.2.17",
- "leafwing-input-manager",
  "lightyear",
- "lightyear_frame_interpolation",
  "rand",
  "serde",
  "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "game-networking"
+version = "0.1.0"
+dependencies = [
+ "avian3d",
+ "bevy",
+ "dotenvy",
+ "game-core",
+ "leafwing-input-manager",
+ "lightyear",
+ "serde",
  "tracing",
 ]
 
@@ -3350,6 +3362,7 @@ dependencies = [
  "avian3d",
  "bevy",
  "game-core",
+ "game-networking",
  "leafwing-input-manager",
  "lightyear",
  "serde",
@@ -5193,6 +5206,7 @@ dependencies = [
  "game-camera",
  "game-client",
  "game-core",
+ "game-networking",
  "lightyear",
  "tracing",
 ]
@@ -6813,6 +6827,7 @@ dependencies = [
  "bevy",
  "clap",
  "game-core",
+ "game-networking",
  "game-server",
  "lightyear",
  "tracing",
@@ -7945,6 +7960,7 @@ dependencies = [
  "game-camera",
  "game-client",
  "game-core",
+ "game-networking",
  "getrandom 0.2.17",
  "lightyear",
  "rand",

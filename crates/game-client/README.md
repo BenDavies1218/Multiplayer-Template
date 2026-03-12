@@ -9,15 +9,20 @@ Client-side game logic: input handling, prediction, rendering, and network trans
 | `app` | Builds the client Bevy app with window, rendering, and input plugins |
 | `client` | `ClientPlugin` — input processing, predicted movement, crouch state |
 | `client_config` | `GameClientConfig` loaded from `assets/config/game_client_config.json` |
+| `character` | Attaches `InputMap` and physics bundle to new predicted characters |
 | `character_rendering` | `CharacterRenderingPlugin` — preloads character models, attaches POV (local) and third-person (remote) models |
 | `renderer` | `FirstPersonPlugin` — skybox, projectile cosmetics, camera follow, frame interpolation |
 | `transport` | Network transport setup: UDP, WebSocket, WebTransport (runtime-configurable) |
+| `prediction` | Prediction speed scaling for rollback thresholds |
+| `movement` | Client-side movement: applies shared movement on predicted entities, syncs camera to ActionState |
+| `input_device` | Runtime input device detection and hot-switching (keyboard/gamepad) |
+| `diagnostics` | Predicted entity lifecycle logging |
 
 ## Plugins
 
 ### `ClientPlugin`
 - Syncs mouse input to `CameraOrientation` as character action input
-- Applies predicted movement via shared `apply_character_movement()`
+- Applies predicted movement via shared `apply_character_movement()` from `game-networking`
 - Sets up `InputMap` with keyboard/gamepad bindings for new characters
 - Manages crouch state prediction
 
@@ -44,4 +49,4 @@ Client-side game logic: input handling, prediction, rendering, and network trans
 
 ## Dependencies
 
-Depends on `game-core` (shared logic) and `game-camera` (camera system). Uses Lightyear client features with WebTransport, WebSocket, and UDP support.
+Depends on `game-core` (config, world), `game-networking` (protocol, movement, replication types), and `game-camera` (camera system). Uses Lightyear client features with WebTransport, WebSocket, and UDP support.

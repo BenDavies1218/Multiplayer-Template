@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use super::events::*;
 use super::spawn_points::SpawnPoints;
 use super::zones::*;
-use crate::networking::protocol::CharacterMarker;
+use crate::character::CharacterMarker;
 
 /// Detect when characters enter zones (server-only, runs in FixedUpdate)
 pub fn detect_zone_collisions(

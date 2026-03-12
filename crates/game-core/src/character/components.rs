@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
+#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct CharacterMarker;
+
 /// Identifies which visual model a character uses.
 /// Replicated from server to all clients.
 /// The value is a key into the client's model catalog (e.g. "default", "soldier").

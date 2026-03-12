@@ -7,8 +7,8 @@ use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
 
 use game_core::GameCoreConfig;
-use game_core::networking::settings::shared_settings_from_config;
 use game_core::utils::cli::log_plugin_from_config;
+use game_networking::config::shared_settings_from_config;
 
 use crate::server_config::GameServerConfig;
 use crate::transport::{ExampleServer, ServerTransports, WebTransportCertificateSettings, start};

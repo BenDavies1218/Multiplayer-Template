@@ -1,11 +1,8 @@
 use crate::client_config::GameClientConfig;
 use bevy::prelude::*;
 use game_camera::GameCamera;
-use game_core::{
-    GameCoreConfig,
-    character::CharacterModelId,
-    networking::protocol::{CharacterMarker, ColorComponent},
-};
+use game_core::{GameCoreConfig, character::CharacterModelId};
+use game_networking::protocol::{CharacterMarker, ColorComponent};
 use lightyear::prelude::*;
 use std::collections::HashMap;
 

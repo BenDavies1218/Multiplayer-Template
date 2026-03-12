@@ -3,7 +3,7 @@
 //! Step 5: Camera-relative movement with jump, sprint, crouch.
 
 use bevy::prelude::*;
-use game_core::movement::update_crouch_collider;
+use game_networking::movement::update_crouch_collider;
 use lightyear::connection::client::Connected;
 use lightyear::prelude::server::ClientOf;
 

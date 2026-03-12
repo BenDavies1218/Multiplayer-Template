@@ -10,11 +10,14 @@ Server-side authoritative game logic and player management. Runs headless (no re
 | `server` | `ServerPlugin` — authoritative movement, shooting, entity lifecycle |
 | `server_config` | `GameServerConfig` loaded from `assets/config/game_server_config.json` |
 | `transport` | Network transport setup and TLS certificate handling |
+| `movement` | Server-side authoritative movement: applies shared movement on replicated entities |
+| `spawning` | Player entity spawning with physics bundle and color assignment |
+| `diagnostics` | Authoritative entity state logging for rollback debugging |
 
 ## Plugin: `ServerPlugin`
 
 ### Systems
-- **`handle_character_actions()`** — Reads replicated input and applies authoritative movement via shared `apply_character_movement()`
+- **`handle_character_actions()`** — Reads replicated input and applies authoritative movement via shared `apply_character_movement()` from `game-networking`
 
 ### Observers
 - **`handle_new_client()`** — Triggered on new client connection
@@ -29,4 +32,4 @@ Server-side authoritative game logic and player management. Runs headless (no re
 
 ## Dependencies
 
-Depends on `game-core` (shared logic). Uses Lightyear server features with WebTransport, WebSocket, and UDP support. Async support via `async-compat`.
+Depends on `game-core` (config, world), `game-networking` (protocol, movement, replication types), and Lightyear server features with WebTransport, WebSocket, and UDP support. Async support via `async-compat`.

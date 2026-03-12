@@ -8,13 +8,13 @@
 //!    and rebuilds the `InputMap` on all character entities.
 
 use bevy::input::gamepad::GamepadConnectionEvent;
-use bevy::prelude::*;
 use bevy::prelude::MessageReader;
-use game_core::networking::protocol::{CharacterAction, CharacterMarker};
+use bevy::prelude::*;
+use game_networking::protocol::{CharacterAction, CharacterMarker};
 use leafwing_input_manager::prelude::*;
 
-use crate::client_config::{ActiveInputDevice, GameClientConfig, InputDevice, ResolvedDevice};
 use crate::character::{build_gamepad_input_map, build_keyboard_input_map};
+use crate::client_config::{ActiveInputDevice, GameClientConfig, InputDevice, ResolvedDevice};
 
 /// Resolves `GameClientConfig.input.active_device` against the set of
 /// currently connected gamepads, updating `ActiveInputDevice`.

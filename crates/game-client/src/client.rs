@@ -3,13 +3,13 @@
 //! Step 5: Camera-relative movement with jump, sprint, crouch.
 
 use bevy::prelude::*;
-use game_core::movement::update_crouch_collider;
+use game_networking::movement::update_crouch_collider;
 use lightyear::prelude::client::input::InputSystems;
 use lightyear::prelude::is_in_rollback;
 
 use crate::character::handle_new_character;
 use crate::client_config::ActiveInputDevice;
-use crate::diagnostics::{log_new_predicted_entities, log_despawned_predicted_entities};
+use crate::diagnostics::{log_despawned_predicted_entities, log_new_predicted_entities};
 use crate::input_device::{detect_input_device, rebuild_character_input_map};
 use crate::movement::{handle_character_actions, sync_camera_to_character};
 use crate::prediction::update_prediction_speed;
@@ -50,10 +50,13 @@ impl Plugin for ClientPlugin {
         );
 
         // ── Update: entity lifecycle + diagnostics ──────────────────────────
-        app.add_systems(Update, (
-            handle_new_character,
-            log_new_predicted_entities,
-            log_despawned_predicted_entities,
-        ));
+        app.add_systems(
+            Update,
+            (
+                handle_new_character,
+                log_new_predicted_entities,
+                log_despawned_predicted_entities,
+            ),
+        );
     }
 }

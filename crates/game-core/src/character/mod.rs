@@ -5,7 +5,7 @@ use crate::core_config::GameCoreConfig;
 pub mod components;
 pub mod hitbox_loader;
 
-pub use components::{CharacterHitboxMarker, CharacterModelId, HitboxRegion};
+pub use components::{CharacterHitboxMarker, CharacterMarker, CharacterModelId, HitboxRegion};
 pub use hitbox_loader::{
     CharacterHitboxData, CharacterHitboxLoader, HitboxRegionData, attach_hitbox_to_character,
     process_character_hitbox,

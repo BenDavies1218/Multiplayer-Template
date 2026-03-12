@@ -7,12 +7,12 @@
 
 use avian3d::prelude::{Collider, LinearVelocity, Position, RigidBody};
 use bevy::prelude::*;
-use game_core::networking::protocol::{
-    CameraOrientation, CharacterMarker, ColorComponent, CrouchState, ProjectileMarker,
+use game_core::character::CharacterModelId;
+use game_networking::protocol::{
+    CameraOrientation, CharacterAction, CharacterMarker, ColorComponent, CrouchState,
+    ProjectileMarker,
 };
 use leafwing_input_manager::prelude::ActionState;
-use game_core::networking::protocol::CharacterAction;
-use game_core::character::CharacterModelId;
 use lightyear::prelude::*;
 
 /// Fires once in `Update` when a new `Predicted` entity appears.
@@ -37,9 +37,23 @@ pub fn log_new_predicted_entities(
     )>,
 ) {
     for entity in &query {
-        let Ok((pos, vel, name, is_char, is_proj, is_controlled,
-                has_rb, has_col, has_color, has_crouch, has_cam,
-                has_action, has_model, has_interp)) = world_query.get(entity) else {
+        let Ok((
+            pos,
+            vel,
+            name,
+            is_char,
+            is_proj,
+            is_controlled,
+            has_rb,
+            has_col,
+            has_color,
+            has_crouch,
+            has_cam,
+            has_action,
+            has_model,
+            has_interp,
+        )) = world_query.get(entity)
+        else {
             info!("[NEW-PRED] {entity:?} — could not query components");
             continue;
         };
@@ -53,17 +67,39 @@ pub fn log_new_predicted_entities(
         let name_str = name.map(|n| n.as_str()).unwrap_or("unnamed");
 
         let mut components = Vec::new();
-        if is_char { components.push("CharacterMarker"); }
-        if is_proj { components.push("ProjectileMarker"); }
-        if is_controlled { components.push("Controlled"); }
-        if has_rb { components.push("RigidBody"); }
-        if has_col { components.push("Collider"); }
-        if has_color { components.push("ColorComponent"); }
-        if has_crouch { components.push("CrouchState"); }
-        if has_cam { components.push("CameraOrientation"); }
-        if has_action { components.push("ActionState"); }
-        if has_model { components.push("CharacterModelId"); }
-        if has_interp { components.push("Interpolated"); }
+        if is_char {
+            components.push("CharacterMarker");
+        }
+        if is_proj {
+            components.push("ProjectileMarker");
+        }
+        if is_controlled {
+            components.push("Controlled");
+        }
+        if has_rb {
+            components.push("RigidBody");
+        }
+        if has_col {
+            components.push("Collider");
+        }
+        if has_color {
+            components.push("ColorComponent");
+        }
+        if has_crouch {
+            components.push("CrouchState");
+        }
+        if has_cam {
+            components.push("CameraOrientation");
+        }
+        if has_action {
+            components.push("ActionState");
+        }
+        if has_model {
+            components.push("CharacterModelId");
+        }
+        if has_interp {
+            components.push("Interpolated");
+        }
 
         info!(
             "[NEW-PRED] {entity:?} name={name_str} pos={pos_str} vel={vel_str}\n  \

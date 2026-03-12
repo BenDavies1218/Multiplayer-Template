@@ -9,12 +9,8 @@ use bevy::{
     window::{CursorGrabMode, CursorOptions},
 };
 use game_camera::{CameraConfig, CameraPlugin, GameCamera, GameCameraFileConfig};
-use game_core::{
-    GameCoreConfig,
-    core_config::parse_key_code,
-    networking::protocol::{CharacterMarker, CrouchState, FloorMarker, ProjectileMarker},
-    world::WorldAssets,
-};
+use game_core::{GameCoreConfig, core_config::parse_key_code, world::WorldAssets};
+use game_networking::protocol::{CharacterMarker, CrouchState, FloorMarker, ProjectileMarker};
 use lightyear::prelude::*;
 use lightyear_frame_interpolation::{FrameInterpolate, FrameInterpolationPlugin};
 

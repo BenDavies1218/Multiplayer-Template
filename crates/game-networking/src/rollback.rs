@@ -22,7 +22,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use avian3d::prelude::*;
 use bevy::prelude::*;
 
-use crate::core_config::RollbackConfig;
+use game_core::core_config::RollbackConfig;
 
 // ---------------------------------------------------------------------------
 // Global config — set once at startup
@@ -85,9 +85,14 @@ pub fn position_should_rollback(predicted: &Position, confirmed: &Position) -> b
     if should {
         info!(
             "[rollback] POSITION xz={diff_xz:.3} > threshold={threshold:.3} (base={:.2} speed={speed:.1} factor={:.2}) pred=({:.2},{:.2},{:.2}) conf=({:.2},{:.2},{:.2})",
-            cfg.position, cfg.position_speed_factor,
-            predicted.x, predicted.y, predicted.z,
-            confirmed.x, confirmed.y, confirmed.z,
+            cfg.position,
+            cfg.position_speed_factor,
+            predicted.x,
+            predicted.y,
+            predicted.z,
+            confirmed.x,
+            confirmed.y,
+            confirmed.z,
         );
     }
     should
@@ -106,7 +111,10 @@ pub fn rotation_should_rollback(_this: &Rotation, _that: &Rotation) -> bool {
 /// integration and ground-collision response, which naturally differ between
 /// client and server when positions have drifted.  Only XZ is set
 /// deterministically by `apply_character_movement`.
-pub fn linear_velocity_should_rollback(_predicted: &LinearVelocity, _confirmed: &LinearVelocity) -> bool {
+pub fn linear_velocity_should_rollback(
+    _predicted: &LinearVelocity,
+    _confirmed: &LinearVelocity,
+) -> bool {
     // Disabled — velocity is instantaneous and naturally differs between predicted
     // and confirmed ticks due to camera yaw changes during the prediction window.
     // Position rollback alone is sufficient to correct accumulated drift.

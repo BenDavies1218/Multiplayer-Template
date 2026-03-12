@@ -5,11 +5,12 @@ use lightyear::prelude::*;
 use game_camera::GameCameraFileConfig;
 use game_client::app::{build_client_app_from_config, spawn_client_connection_from_config};
 use game_client::{ClientPlugin, FirstPersonPlugin, GameClientConfig};
-use game_core::networking::config;
+use game_core::GameCoreConfig;
 use game_core::utils::cli::Cli;
 use game_core::utils::config_loader::load_config;
 use game_core::world::{WorldPlugin, WorldPluginConfig};
-use game_core::{GameCoreConfig, SharedPlugin};
+use game_networking::NetworkingPlugin;
+use game_networking::config;
 
 fn main() {
     config::init();
@@ -24,7 +25,7 @@ fn main() {
     let mut app = build_client_app_from_config(tick, &client_config, &core_config);
 
     app.insert_resource(camera_config.clone());
-    app.add_plugins(SharedPlugin {
+    app.add_plugins(NetworkingPlugin {
         config: core_config.clone(),
     });
     app.add_plugins(WorldPlugin {

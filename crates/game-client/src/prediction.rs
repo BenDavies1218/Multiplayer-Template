@@ -5,8 +5,8 @@
 
 use avian3d::prelude::LinearVelocity;
 use bevy::prelude::*;
-use game_core::networking::protocol::CharacterMarker;
-use game_core::networking::rollback::set_prediction_speed;
+use game_networking::protocol::CharacterMarker;
+use game_networking::rollback::set_prediction_speed;
 use lightyear::prelude::*;
 
 /// Updates the global speed used by `position_should_rollback` to scale the

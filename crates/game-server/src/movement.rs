@@ -7,8 +7,8 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use game_core::GameCoreConfig;
-use game_core::movement::apply_character_movement;
-use game_core::networking::protocol::{CameraOrientation, CharacterAction, CrouchState};
+use game_networking::movement::apply_character_movement;
+use game_networking::protocol::{CameraOrientation, CharacterAction, CrouchState};
 use leafwing_input_manager::prelude::*;
 
 /// Apply camera-relative movement to every character (authoritative).
@@ -26,7 +26,9 @@ pub fn handle_character_actions(
     )>,
     config: Res<GameCoreConfig>,
 ) {
-    for (entity, action_state, position, mut linear_velocity, mut crouch_state, mut cam_orient) in &mut query {
+    for (entity, action_state, position, mut linear_velocity, mut crouch_state, mut cam_orient) in
+        &mut query
+    {
         let look = action_state.axis_pair(&CharacterAction::Look);
         let camera_yaw = look.x;
 

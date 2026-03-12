@@ -6,7 +6,7 @@
 
 use avian3d::prelude::*;
 use bevy::prelude::*;
-use game_core::networking::protocol::CharacterMarker;
+use game_networking::protocol::CharacterMarker;
 use lightyear::core::timeline::LocalTimeline;
 
 /// Log authoritative server state for every character each `FixedUpdate` tick.
@@ -20,8 +20,7 @@ pub fn log_server_character_state(
         info!(
             "[SRV-STATE] tick={tick:?} {entity:?} \
              pos=({:.3},{:.3},{:.3}) vel=({:.3},{:.3},{:.3}) speed={horiz_speed:.3}",
-            pos.x, pos.y, pos.z,
-            vel.x, vel.y, vel.z,
+            pos.x, pos.y, pos.z, vel.x, vel.y, vel.z,
         );
     }
 }

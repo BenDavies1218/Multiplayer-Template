@@ -9,6 +9,7 @@ publish = false
 [dependencies]
 # Internal
 game-core.workspace = true
+game-networking.workspace = true
 game-camera.workspace = true
 
 # Workspace dependencies

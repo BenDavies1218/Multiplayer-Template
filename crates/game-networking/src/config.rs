@@ -1,10 +1,16 @@
-//! Configuration module for loading environment variables
+//! Networking configuration
 //!
-//! This module handles loading configuration from environment variables with sensible defaults.
+//! This module consolidates environment variable loading and shared networking settings.
 //! Configuration is loaded from a .env file if present, falling back to defaults if not.
 
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::time::Duration;
+
+use game_core::core_config::GameCoreConfig;
+
+// ---------------------------------------------------------------------------
+// Environment variable configuration
+// ---------------------------------------------------------------------------
 
 /// Application configuration loaded from environment variables
 #[derive(Debug, Clone)]
@@ -104,7 +110,7 @@ impl Default for Config {
 impl Config {
     /// Create a Config using `GameCoreConfig` values as defaults.
     /// Environment variables still override.
-    pub fn from_core_config(core: &crate::core_config::GameCoreConfig) -> Self {
+    pub fn from_core_config(core: &GameCoreConfig) -> Self {
         Self {
             server_host: std::env::var("SERVER_HOST")
                 .unwrap_or_else(|_| core.networking.server_host.clone()),
@@ -146,6 +152,43 @@ impl Config {
 /// It's safe to call this function multiple times or if the .env file doesn't exist.
 pub fn init() {
     dotenvy::dotenv().ok(); // Ignore error if .env doesn't exist
+}
+
+// ---------------------------------------------------------------------------
+// Shared networking settings
+// ---------------------------------------------------------------------------
+
+/// Get send interval from config
+pub fn send_interval() -> Duration {
+    Config::load().send_interval()
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct SharedSettings {
+    /// An id to identify the protocol version
+    pub protocol_id: u64,
+
+    /// a 32-byte array to authenticate via the Netcode.io protocol
+    pub private_key: [u8; 32],
+}
+
+pub fn client_port_from_config(config: &GameCoreConfig) -> u16 {
+    config.networking.client_port
+}
+
+pub fn shared_settings_from_config(config: &GameCoreConfig) -> SharedSettings {
+    SharedSettings {
+        protocol_id: config.networking.protocol_id,
+        private_key: [0u8; 32],
+    }
+}
+
+pub fn send_interval_from_config(config: &GameCoreConfig) -> Duration {
+    Duration::from_secs_f64(1.0 / config.networking.send_interval_hz)
+}
+
+pub fn steam_app_id_from_config(config: &GameCoreConfig) -> u32 {
+    config.networking.steam_app_id
 }
 
 #[cfg(test)]

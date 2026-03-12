@@ -4,8 +4,8 @@ use avian3d::prelude::*;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
 
-use crate::core_config::{CharacterConfig, GameCoreConfig, MovementConfig};
-use crate::networking::protocol::{CharacterAction, CrouchState};
+use crate::protocol::{CharacterAction, CrouchState};
+use game_core::core_config::{CharacterConfig, GameCoreConfig, MovementConfig};
 
 /// Apply camera-relative character movement via direct velocity setting.
 /// Used by both client (predicted) and server (authoritative).

@@ -13,8 +13,8 @@ use avian3d::prelude::*;
 use bevy::prelude::*;
 use game_camera::GameCamera;
 use game_core::GameCoreConfig;
-use game_core::movement::apply_character_movement;
-use game_core::networking::protocol::{CharacterAction, CharacterMarker, CrouchState};
+use game_networking::movement::apply_character_movement;
+use game_networking::protocol::{CharacterAction, CharacterMarker, CrouchState};
 use leafwing_input_manager::prelude::*;
 use lightyear::prelude::*;
 

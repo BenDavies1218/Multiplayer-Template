@@ -8,10 +8,10 @@ use avian3d::prelude::Position;
 use bevy::prelude::*;
 use game_core::GameCoreConfig;
 use game_core::character::{CharacterHitboxData, CharacterModelId, attach_hitbox_to_character};
-use game_core::networking::protocol::*;
-use game_core::networking::settings::send_interval_from_config;
-use game_core::networking::shared::CharacterPhysicsBundle;
 use game_core::zones::SpawnPoints;
+use game_networking::config::send_interval_from_config;
+use game_networking::protocol::*;
+use game_networking::replication::CharacterPhysicsBundle;
 use leafwing_input_manager::prelude::*;
 use lightyear::connection::client::Connected;
 use lightyear::prelude::server::*;
@@ -33,7 +33,10 @@ pub(crate) fn handle_new_client(
             SendUpdatesMode::SinceLastAck,
             false,
         ));
-    debug!("[spawning] new client link {entity:?} — ReplicationSender attached", entity = trigger.entity);
+    debug!(
+        "[spawning] new client link {entity:?} — ReplicationSender attached",
+        entity = trigger.entity
+    );
 }
 
 /// Spawn a character entity when a client finishes connecting.
@@ -99,7 +102,10 @@ pub(crate) fn handle_connected(
             CharacterPhysicsBundle::new(&core_config.character),
             ColorComponent(color),
             CharacterMarker,
-            CameraOrientation { yaw: 0.0, pitch: 0.0 },
+            CameraOrientation {
+                yaw: 0.0,
+                pitch: 0.0,
+            },
             CrouchState::default(),
             // Prevent hitbox children from being replicated to clients.
             // Without this, Lightyear replicates child entities with Predicted +
@@ -109,7 +115,9 @@ pub(crate) fn handle_connected(
         ))
         .id();
 
-    commands.entity(character).insert(CharacterModelId::default());
+    commands
+        .entity(character)
+        .insert(CharacterModelId::default());
 
     if let Some(ref hitbox) = hitbox_data {
         attach_hitbox_to_character(&mut commands, character, hitbox);
@@ -118,7 +126,9 @@ pub(crate) fn handle_connected(
             hitbox.regions.len()
         );
     } else {
-        warn!("[spawning] CharacterHitboxData not loaded — character {character:?} spawned without hitbox");
+        warn!(
+            "[spawning] CharacterHitboxData not loaded — character {character:?} spawned without hitbox"
+        );
     }
 
     info!("[spawning] entity {character:?} created for client {client_id:?}");

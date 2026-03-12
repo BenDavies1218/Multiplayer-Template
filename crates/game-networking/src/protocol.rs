@@ -6,22 +6,22 @@ use lightyear::prelude::input::leafwing;
 use lightyear::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::character::CharacterModelId;
 use super::rollback::{
-    position_should_rollback, rotation_should_rollback,
-    linear_velocity_should_rollback, angular_velocity_should_rollback,
+    angular_velocity_should_rollback, linear_velocity_should_rollback, position_should_rollback,
+    rotation_should_rollback,
 };
+use game_core::character::CharacterModelId;
 
 // Re-export so callers that previously used `protocol::set_prediction_speed` still compile.
 pub use super::rollback::{init_rollback_config, set_prediction_speed};
+
+// Re-export CharacterMarker from game-core so it's accessible via `game_networking::protocol::CharacterMarker`
+pub use game_core::character::CharacterMarker;
 
 // Components
 
 #[derive(Component, Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct ColorComponent(pub Color);
-
-#[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct CharacterMarker;
 
 #[derive(Component, Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct FloorMarker;
@@ -43,8 +43,8 @@ pub struct CameraOrientation {
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Reflect, Serialize, Deserialize)]
 pub enum CharacterAction {
     // Movement
-    Move,           // DualAxis
-    Look,           // DualAxis
+    Move, // DualAxis
+    Look, // DualAxis
     Jump,
     Sprint,
     Crouch,
@@ -104,7 +104,7 @@ impl Actionlike for CharacterAction {
 pub struct CrouchState(pub bool);
 
 // Protocol
-#[derive(Clone)] // Added Clone
+#[derive(Clone)]
 pub(crate) struct ProtocolPlugin;
 
 impl Plugin for ProtocolPlugin {
@@ -160,4 +160,3 @@ impl Plugin for ProtocolPlugin {
             .add_linear_interpolation();
     }
 }
-
