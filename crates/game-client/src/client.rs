@@ -27,6 +27,8 @@ use game_core::movement::update_crouch_collider;
 use lightyear::prelude::is_in_rollback;
 
 use crate::character::handle_new_character;
+use crate::client_config::ActiveInputDevice;
+use crate::input_device::{detect_input_device, rebuild_character_input_map};
 use crate::diagnostics::{
     log_all_predicted_state, log_despawned_predicted_entities, log_new_predicted_entities,
 };
@@ -37,6 +39,15 @@ pub struct ClientPlugin;
 
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
+        // Insert the active device resource (starts as KeyboardMouse, updated at runtime).
+        app.init_resource::<ActiveInputDevice>();
+
+        // Update: detect gamepad connect/disconnect, then rebuild InputMap if needed.
+        app.add_systems(
+            Update,
+            (detect_input_device, rebuild_character_input_map).chain(),
+        );
+
         // ── FixedUpdate: main simulation chain ──────────────────────────────
         app.add_systems(
             FixedUpdate,

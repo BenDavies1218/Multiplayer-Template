@@ -27,8 +27,35 @@ pub struct WindowConfig {
 #[serde(rename_all = "snake_case")]
 pub enum InputDevice {
     #[default]
+    Auto,
     KeyboardMouse,
     Gamepad,
+}
+
+/// The actual device currently in use — never `Auto`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Resource)]
+pub enum ResolvedDevice {
+    #[default]
+    KeyboardMouse,
+    Gamepad,
+}
+
+/// Runtime resource tracking which input device is actually active.
+#[derive(Debug, Resource)]
+pub struct ActiveInputDevice {
+    /// The resolved device in use right now.
+    pub device: ResolvedDevice,
+    /// The first connected gamepad entity, if any.
+    pub gamepad: Option<Entity>,
+}
+
+impl Default for ActiveInputDevice {
+    fn default() -> Self {
+        Self {
+            device: ResolvedDevice::KeyboardMouse,
+            gamepad: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -190,7 +217,7 @@ impl Default for WindowConfig {
 impl Default for InputConfig {
     fn default() -> Self {
         Self {
-            active_device: InputDevice::KeyboardMouse,
+            active_device: InputDevice::Auto,
             keyboard: KeyboardBindings::default(),
             gamepad: GamepadBindings::default(),
             cursor_grab_button: "Left".to_string(),

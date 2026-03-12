@@ -5,7 +5,7 @@
         "height": 768
     },
     "input": {
-        "active_device": "keyboard_mouse",
+        "active_device": "auto",
         "keyboard": {
             "move_up":            "KeyW",
             "move_down":          "KeyS",
