@@ -22,6 +22,7 @@ use lightyear::prelude::*;
 ///
 /// Runs every `FixedUpdate` tick on all `Predicted` character entities,
 /// including during rollback re-simulation.
+#[allow(clippy::type_complexity)]
 pub fn handle_character_actions(
     spatial_query: SpatialQuery,
     mut query: Query<
@@ -57,6 +58,7 @@ pub fn handle_character_actions(
 ///
 /// Skipped during rollback — Lightyear restores the historical `ActionState`
 /// including the Look axis before each re-simulated tick.
+#[allow(clippy::type_complexity)]
 pub fn sync_camera_to_character(
     camera_query: Query<&GameCamera>,
     mut character_query: Query<

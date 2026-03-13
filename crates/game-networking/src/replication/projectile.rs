@@ -13,6 +13,7 @@ use super::DespawnAfter;
 use crate::protocol::{CameraOrientation, CharacterAction, CharacterMarker, ProjectileMarker};
 use game_core::core_config::GameCoreConfig;
 
+#[allow(clippy::type_complexity)]
 pub fn shoot_bullet(
     mut commands: Commands,
     query: Query<
@@ -45,6 +46,7 @@ pub fn shoot_bullet(
             Name::new("Projectile"),
             ProjectileMarker,
             RigidBody::Dynamic,
+            Collider::sphere(config.projectile.radius),
             *position,
             Rotation::default(),
             LinearVelocity(velocity),

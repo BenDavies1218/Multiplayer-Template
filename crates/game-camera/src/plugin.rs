@@ -3,16 +3,9 @@ use bevy::input::mouse::AccumulatedMouseMotion;
 use bevy::prelude::*;
 
 /// Main camera plugin for first-person controls
+#[derive(Default)]
 pub struct CameraPlugin {
     pub config: CameraConfig,
-}
-
-impl Default for CameraPlugin {
-    fn default() -> Self {
-        Self {
-            config: CameraConfig::default(),
-        }
-    }
 }
 
 impl Plugin for CameraPlugin {

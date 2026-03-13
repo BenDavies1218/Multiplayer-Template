@@ -14,6 +14,7 @@ use super::{WorldCollisionBundle, WorldCollisionLoader, WorldPluginConfig};
 ///
 /// IMPORTANT: This processes the glTF scene hierarchy to preserve node transforms
 /// (position, rotation, scale) from Blender exports.
+#[allow(clippy::too_many_arguments)]
 pub fn process_collision_meshes(
     mut commands: Commands,
     collision_query: Query<(Entity, &WorldCollisionLoader)>,
@@ -89,35 +90,34 @@ pub fn process_collision_meshes(
                         commands.spawn((bundle, Name::new(format!("Collision: {}", node_name))));
 
                     // Only create debug visualization if enabled and resources are available
-                    if config.enable_debug {
-                        if let (Some(settings), Some(mesh_res), Some(mat_res)) =
+                    if config.enable_debug
+                        && let (Some(settings), Some(mesh_res), Some(mat_res)) =
                             (&debug_settings, &mut meshes, &mut materials)
-                        {
-                            // Use the pre-cloned mesh for visualization
-                            let debug_mesh_handle = mesh_res.add(mesh_clone_for_debug);
+                    {
+                        // Use the pre-cloned mesh for visualization
+                        let debug_mesh_handle = mesh_res.add(mesh_clone_for_debug);
 
-                            // Create semi-transparent material
-                            let debug_material = mat_res.add(StandardMaterial {
-                                base_color: settings.color,
-                                alpha_mode: AlphaMode::Blend,
-                                double_sided: true,
-                                cull_mode: None,
-                                ..default()
-                            });
+                        // Create semi-transparent material
+                        let debug_material = mat_res.add(StandardMaterial {
+                            base_color: settings.color,
+                            alpha_mode: AlphaMode::Blend,
+                            double_sided: true,
+                            cull_mode: None,
+                            ..default()
+                        });
 
-                            // Add debug mesh as child
-                            entity_commands.with_children(|parent| {
-                                parent.spawn((
-                                    Mesh3d(debug_mesh_handle),
-                                    MeshMaterial3d(debug_material),
-                                    Transform::default(), // Use parent's transform
-                                    GlobalTransform::default(),
-                                    Visibility::Hidden, // Start hidden
-                                    CollisionDebugMesh,
-                                    Name::new(format!("DebugMesh: {}", node_name)),
-                                ));
-                            });
-                        }
+                        // Add debug mesh as child
+                        entity_commands.with_children(|parent| {
+                            parent.spawn((
+                                Mesh3d(debug_mesh_handle),
+                                MeshMaterial3d(debug_material),
+                                Transform::default(), // Use parent's transform
+                                GlobalTransform::default(),
+                                Visibility::Hidden, // Start hidden
+                                CollisionDebugMesh,
+                                Name::new(format!("DebugMesh: {}", node_name)),
+                            ));
+                        });
                     }
                 } else {
                     error!("Failed to create collider from node {}", node_name);

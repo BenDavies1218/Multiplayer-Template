@@ -126,19 +126,10 @@ pub struct WorldCollisionLoader {
 }
 
 /// Resource to store handles to world assets
-#[derive(Resource, Debug)]
+#[derive(Resource, Debug, Default)]
 pub struct WorldAssets {
     pub visual: Option<Handle<Scene>>, // Handle to the visual scene (high-poly mesh)
     pub collision: Option<Handle<Gltf>>, // Handle to the collision mesh (low-poly mesh)
-}
-
-impl Default for WorldAssets {
-    fn default() -> Self {
-        Self {
-            visual: None,
-            collision: None,
-        }
-    }
 }
 
 /// Bundle for spawning world collision entities

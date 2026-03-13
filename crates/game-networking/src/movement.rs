@@ -13,6 +13,7 @@ use game_core::core_config::{CharacterConfig, GameCoreConfig, MovementConfig};
 /// Sets LinearVelocity directly instead of applying forces — this makes
 /// the simulation deterministic between client and server since both sides
 /// compute `Quat::from_rotation_y(yaw) * input * speed` (pure math).
+#[allow(clippy::too_many_arguments)]
 pub fn apply_character_movement(
     entity: Entity,
     linear_velocity: &mut LinearVelocity,

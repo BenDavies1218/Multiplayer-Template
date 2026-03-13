@@ -40,6 +40,7 @@ pub(crate) fn handle_new_client(
 }
 
 /// Spawn a character entity when a client finishes connecting.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn handle_connected(
     trigger: On<Add, Connected>,
     query: Query<&RemoteId, With<ClientOf>>,

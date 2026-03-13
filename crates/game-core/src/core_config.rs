@@ -312,6 +312,7 @@ impl Default for LoggingConfig {
 pub struct ProjectileConfig {
     pub velocity: f32,
     pub lifetime_ms: u64,
+    pub radius: f32,
 }
 
 impl Default for ProjectileConfig {
@@ -319,6 +320,7 @@ impl Default for ProjectileConfig {
         Self {
             velocity: 50.0,
             lifetime_ms: 5000,
+            radius: 0.1,
         }
     }
 }
@@ -388,24 +390,25 @@ pub fn parse_key_code(s: &str) -> Option<KeyCode> {
     }
 
     // Function keys: F1 .. F12
-    if s.starts_with('F') && s.len() <= 3 {
-        if let Ok(n) = s[1..].parse::<u8>() {
-            return match n {
-                1 => Some(KeyCode::F1),
-                2 => Some(KeyCode::F2),
-                3 => Some(KeyCode::F3),
-                4 => Some(KeyCode::F4),
-                5 => Some(KeyCode::F5),
-                6 => Some(KeyCode::F6),
-                7 => Some(KeyCode::F7),
-                8 => Some(KeyCode::F8),
-                9 => Some(KeyCode::F9),
-                10 => Some(KeyCode::F10),
-                11 => Some(KeyCode::F11),
-                12 => Some(KeyCode::F12),
-                _ => None,
-            };
-        }
+    if s.starts_with('F')
+        && s.len() <= 3
+        && let Ok(n) = s[1..].parse::<u8>()
+    {
+        return match n {
+            1 => Some(KeyCode::F1),
+            2 => Some(KeyCode::F2),
+            3 => Some(KeyCode::F3),
+            4 => Some(KeyCode::F4),
+            5 => Some(KeyCode::F5),
+            6 => Some(KeyCode::F6),
+            7 => Some(KeyCode::F7),
+            8 => Some(KeyCode::F8),
+            9 => Some(KeyCode::F9),
+            10 => Some(KeyCode::F10),
+            11 => Some(KeyCode::F11),
+            12 => Some(KeyCode::F12),
+            _ => None,
+        };
     }
 
     // Named keys

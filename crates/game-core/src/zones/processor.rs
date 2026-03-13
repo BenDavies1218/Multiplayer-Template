@@ -18,6 +18,7 @@ use bevy::prelude::*;
 /// - `trigger_` -> TriggerZone (sensor trimesh collider)
 ///
 /// Custom properties from Blender are read from GltfExtras JSON.
+#[allow(clippy::too_many_arguments)]
 pub fn process_zone_meshes(
     mut commands: Commands,
     zone_query: Query<(Entity, &ZoneLoader)>,
@@ -66,31 +67,30 @@ pub fn process_zone_meshes(
                 ));
 
                 // Add debug sphere for spawn points
-                if plugin_config.enable_debug {
-                    if let (Some(settings), Some(mesh_res), Some(mat_res)) =
+                if plugin_config.enable_debug
+                    && let (Some(settings), Some(mesh_res), Some(mat_res)) =
                         (&debug_settings, &mut meshes, &mut materials)
-                    {
-                        let debug_mesh = mesh_res.add(Sphere::new(0.5));
-                        let debug_material = mat_res.add(StandardMaterial {
-                            base_color: settings.spawn_point_color,
-                            alpha_mode: AlphaMode::Blend,
-                            double_sided: true,
-                            cull_mode: None,
-                            ..default()
-                        });
+                {
+                    let debug_mesh = mesh_res.add(Sphere::new(0.5));
+                    let debug_material = mat_res.add(StandardMaterial {
+                        base_color: settings.spawn_point_color,
+                        alpha_mode: AlphaMode::Blend,
+                        double_sided: true,
+                        cull_mode: None,
+                        ..default()
+                    });
 
-                        spawn_commands.with_children(|parent| {
-                            parent.spawn((
-                                Mesh3d(debug_mesh),
-                                MeshMaterial3d(debug_material),
-                                Transform::default(),
-                                GlobalTransform::default(),
-                                Visibility::Hidden,
-                                ZoneDebugMesh,
-                                Name::new(format!("DebugSpawn: {}", node_name)),
-                            ));
-                        });
-                    }
+                    spawn_commands.with_children(|parent| {
+                        parent.spawn((
+                            Mesh3d(debug_mesh),
+                            MeshMaterial3d(debug_material),
+                            Transform::default(),
+                            GlobalTransform::default(),
+                            Visibility::Hidden,
+                            ZoneDebugMesh,
+                            Name::new(format!("DebugSpawn: {}", node_name)),
+                        ));
+                    });
                 }
 
                 info!(
@@ -178,31 +178,30 @@ pub fn process_zone_meshes(
                     }
 
                     // Add debug mesh visualization
-                    if plugin_config.enable_debug {
-                        if let (Some(color), Some(mesh_res), Some(mat_res)) =
+                    if plugin_config.enable_debug
+                        && let (Some(color), Some(mesh_res), Some(mat_res)) =
                             (debug_color, &mut meshes, &mut materials)
-                        {
-                            let debug_mesh_handle = mesh_res.add(mesh_clone_for_debug);
-                            let debug_material = mat_res.add(StandardMaterial {
-                                base_color: color,
-                                alpha_mode: AlphaMode::Blend,
-                                double_sided: true,
-                                cull_mode: None,
-                                ..default()
-                            });
+                    {
+                        let debug_mesh_handle = mesh_res.add(mesh_clone_for_debug);
+                        let debug_material = mat_res.add(StandardMaterial {
+                            base_color: color,
+                            alpha_mode: AlphaMode::Blend,
+                            double_sided: true,
+                            cull_mode: None,
+                            ..default()
+                        });
 
-                            entity_commands.with_children(|parent| {
-                                parent.spawn((
-                                    Mesh3d(debug_mesh_handle),
-                                    MeshMaterial3d(debug_material),
-                                    Transform::default(),
-                                    GlobalTransform::default(),
-                                    Visibility::Hidden,
-                                    ZoneDebugMesh,
-                                    Name::new(format!("DebugZone: {}", node_name)),
-                                ));
-                            });
-                        }
+                        entity_commands.with_children(|parent| {
+                            parent.spawn((
+                                Mesh3d(debug_mesh_handle),
+                                MeshMaterial3d(debug_material),
+                                Transform::default(),
+                                GlobalTransform::default(),
+                                Visibility::Hidden,
+                                ZoneDebugMesh,
+                                Name::new(format!("DebugZone: {}", node_name)),
+                            ));
+                        });
                     }
                 }
             } else {

@@ -7,6 +7,7 @@ use super::zones::*;
 use crate::character::CharacterMarker;
 
 /// Detect when characters enter zones (server-only, runs in FixedUpdate)
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn detect_zone_collisions(
     mut collision_events: MessageReader<CollisionStart>,
     mut spawn_points: Option<ResMut<SpawnPoints>>,
@@ -121,6 +122,7 @@ pub fn detect_zone_collisions(
 }
 
 /// Detect when characters exit zones
+#[allow(clippy::type_complexity)]
 pub fn detect_zone_exits(
     mut collision_events: MessageReader<CollisionEnd>,
     character_query: Query<Entity, With<CharacterMarker>>,

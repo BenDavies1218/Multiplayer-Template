@@ -93,15 +93,15 @@ fn check_assets_loaded(
 
     // Check world assets
     if let Some(ref world) = world_assets {
-        if let Some(ref visual) = world.visual {
-            if !asset_server.is_loaded_with_dependencies(visual) {
-                return;
-            }
+        if let Some(ref visual) = world.visual
+            && !asset_server.is_loaded_with_dependencies(visual)
+        {
+            return;
         }
-        if let Some(ref collision) = world.collision {
-            if !asset_server.is_loaded_with_dependencies(collision) {
-                return;
-            }
+        if let Some(ref collision) = world.collision
+            && !asset_server.is_loaded_with_dependencies(collision)
+        {
+            return;
         }
     }
 
@@ -286,6 +286,7 @@ fn setup_cursor_grab(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn fps_camera_follow(
     mut camera_query: Query<&mut Transform, (With<GameCamera>, Without<CharacterMarker>)>,
     player_query: Query<
@@ -333,6 +334,7 @@ fn add_visual_interpolation_components(
     ));
 }
 
+#[allow(clippy::type_complexity)]
 fn add_projectile_cosmetics(
     mut commands: Commands,
     projectile_query: Query<
@@ -345,16 +347,19 @@ fn add_projectile_cosmetics(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     config: Res<GameClientConfig>,
+    core_config: Res<GameCoreConfig>,
 ) {
     for entity in &projectile_query {
         commands.entity(entity).insert((
             Mesh3d(meshes.add(Sphere::new(config.rendering.projectile_radius))),
             MeshMaterial3d(materials.add(Color::from(MAGENTA))),
             RigidBody::Dynamic,
+            Collider::sphere(core_config.projectile.radius),
         ));
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn disable_projectile_rollback(
     mut commands: Commands,
     projectile_query: Query<

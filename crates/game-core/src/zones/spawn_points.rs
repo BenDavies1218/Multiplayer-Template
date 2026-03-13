@@ -30,6 +30,7 @@ impl SpawnPoints {
 
     /// Get the next spawn position (round-robin).
     /// Returns the default position if no spawn points are defined.
+    #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Vec3 {
         if self.points.is_empty() {
             return self.default_position;

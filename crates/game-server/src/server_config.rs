@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Server configuration loaded from game_server_config.json
-#[derive(Resource, Debug, Clone, Serialize, Deserialize)]
+#[derive(Resource, Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GameServerConfig {
     pub spawning: SpawningConfig,
@@ -24,15 +24,6 @@ pub struct ServerTransportJsonConfig {
     /// Transport type: "udp", "webtransport", or "websocket"
     pub transport_type: String,
     pub certificate_sans: Vec<String>,
-}
-
-impl Default for GameServerConfig {
-    fn default() -> Self {
-        Self {
-            spawning: SpawningConfig::default(),
-            transport: ServerTransportJsonConfig::default(),
-        }
-    }
 }
 
 impl Default for SpawningConfig {

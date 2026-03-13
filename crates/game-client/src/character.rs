@@ -150,6 +150,7 @@ pub fn build_gamepad_input_map(config: &GameClientConfig) -> InputMap<CharacterA
 /// predicted characters.
 ///
 /// Runs in `Update` so it fires once, the frame the entity is added.
+#[allow(clippy::type_complexity)]
 pub fn handle_new_character(
     mut commands: Commands,
     mut character_query: Query<

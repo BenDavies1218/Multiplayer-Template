@@ -17,6 +17,7 @@ use lightyear::prelude::*;
 
 /// Fires once in `Update` when a new `Predicted` entity appears.
 /// Logs all relevant components to identify ghost entities.
+#[allow(clippy::type_complexity)]
 pub fn log_new_predicted_entities(
     query: Query<Entity, Added<Predicted>>,
     world_query: Query<(

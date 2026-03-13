@@ -14,6 +14,7 @@ use leafwing_input_manager::prelude::*;
 /// Apply camera-relative movement to every character (authoritative).
 ///
 /// Runs each `FixedUpdate` tick on the server.
+#[allow(clippy::type_complexity)]
 pub fn handle_character_actions(
     spatial_query: SpatialQuery,
     mut query: Query<(

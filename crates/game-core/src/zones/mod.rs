@@ -7,6 +7,7 @@ mod processor;
 pub mod spawn_points;
 mod systems;
 pub mod zone_debug;
+#[allow(clippy::module_inception)]
 pub mod zones;
 
 pub use events::*;
