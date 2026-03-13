@@ -30,6 +30,7 @@ bevy = { workspace = true, features = [
     "bevy_image",
     "bevy_render",
     "x11",
+    "bevy_animation",
     "png",
     "jpeg",
     "ktx2",

@@ -38,7 +38,7 @@ fn main() {
             config: game_core::zones::ZonePluginConfig::viewer(),
         })
         .add_systems(Startup, setup)
-        .add_systems(Update, camera_controller)
+        .add_systems(Update, (camera_controller, auto_play_gltf_animations))
         .run();
 }
 
@@ -109,6 +109,21 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Gam
 
     info!("Test capsule spawned at Y=5.0 - should fall and land on collision mesh");
     info!("World viewer setup complete!");
+}
+
+/// Auto-play all animations from loaded glTF scenes on loop.
+fn auto_play_gltf_animations(
+    mut players: Query<(&mut AnimationPlayer, &AnimationGraphHandle), Added<AnimationPlayer>>,
+    graphs: Res<Assets<AnimationGraph>>,
+) {
+    for (mut player, graph_handle) in &mut players {
+        let Some(graph) = graphs.get(&graph_handle.0) else {
+            continue;
+        };
+        for index in graph.nodes() {
+            player.play(index).repeat();
+        }
+    }
 }
 
 /// Free-fly camera controller
