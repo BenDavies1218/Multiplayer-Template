@@ -44,7 +44,7 @@ impl Plugin for FirstPersonPlugin {
         app.add_systems(Startup, start_loading_assets);
         app.add_systems(
             Update,
-            (check_assets_loaded, fps_camera_follow, setup_cursor_grab),
+            (check_assets_loaded, fps_camera_follow, setup_cursor_grab, auto_play_gltf_animations),
         );
         app.add_systems(
             PreUpdate,
@@ -266,6 +266,21 @@ const CUBE_FACE_DIRS: [fn(f32, f32) -> [f32; 3]; 6] = [
     |u, v| [u, -v, 1.0],   // +Z
     |u, v| [-u, -v, -1.0], // -Z
 ];
+
+/// Auto-play all animations from loaded glTF scenes on loop.
+fn auto_play_gltf_animations(
+    mut players: Query<(&mut AnimationPlayer, &AnimationGraphHandle), Added<AnimationPlayer>>,
+    graphs: Res<Assets<AnimationGraph>>,
+) {
+    for (mut player, graph_handle) in &mut players {
+        let Some(graph) = graphs.get(&graph_handle.0) else {
+            continue;
+        };
+        for index in graph.nodes() {
+            player.play(index).repeat();
+        }
+    }
+}
 
 fn setup_cursor_grab(
     mut cursor_options: Single<&mut CursorOptions>,
