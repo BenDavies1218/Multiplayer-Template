@@ -31,6 +31,8 @@ bevy = { workspace = true, features = [
     "bevy_render",
     "bevy_winit",
     "exr",
+    "bevy_animation",
+    "bevy_gltf",
 ] }
 lightyear = { workspace = true, features = [
     "client",
