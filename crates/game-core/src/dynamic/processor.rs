@@ -93,6 +93,7 @@ pub fn process_dynamic_objects(
                 DynamicObject {
                     object_type: node_name.to_string(),
                     object_id: object_id.to_string(),
+                    entity_type: node_config.node_type.clone(),
                 },
                 state,
                 DynamicBehavior { triggers },

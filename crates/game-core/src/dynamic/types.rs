@@ -3,6 +3,21 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // ---------------------------------------------------------------------------
+// Entity type
+// ---------------------------------------------------------------------------
+
+/// Classifies what kind of scene entity a dynamic object wraps.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum EntityType {
+    Mesh,
+    Light,
+    #[default]
+    Empty,
+    Camera,
+}
+
+// ---------------------------------------------------------------------------
 // Trigger types
 // ---------------------------------------------------------------------------
 
@@ -22,6 +37,14 @@ pub enum TriggerType {
     OnEntityHealth,
     /// Fires once when the entity first spawns (startup animations, lights).
     OnEntitySpawn,
+    /// Fires when the entity's own state transitions.
+    OnStateChange,
+    /// Fires on a repeating timer.
+    OnTimer,
+    /// Fires once after a delay from spawn.
+    OnDelay,
+    /// Fires when another entity's state changes.
+    OnTargetStateChange,
 }
 
 // ---------------------------------------------------------------------------
@@ -32,18 +55,33 @@ pub enum TriggerType {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ActionType {
+    // Universal
+    ToggleState,
+    SetState,
+    Enable,
+    Disable,
+    Collect,
+    DisplayText,
+    HideText,
+    PlaySound,
+    Delay,
+    SetVisibility,
+    // Light effects
+    StartLightEffect,
+    StopLightEffect,
+    // Mesh transforms
+    MoveTo,
+    RotateTo,
+    ScaleTo,
+    SetMaterialColor,
+    // Camera (future)
+    ActivateCamera,
+    DeactivateCamera,
+    // Legacy (keep for backward compat)
     PlayAnimation,
     StopAnimation,
     SetLightIntensity,
     SetLightColor,
-    ToggleState,
-    Collect,
-    MoveTo,
-    DisplayText,
-    HideText,
-    PlaySound,
-    Enable,
-    Disable,
 }
 
 // ---------------------------------------------------------------------------
@@ -89,9 +127,21 @@ fn default_initial_state() -> String {
 // Config (loaded from JSON)
 // ---------------------------------------------------------------------------
 
+/// Light metadata attached to a dynamic node when `node_type` is `light`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LightInfo {
+    pub light_type: String,
+    pub color: [f32; 3],
+    pub intensity: f32,
+}
+
 /// Per-node config entry in `dynamic_objects_config.json`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DynamicNodeConfig {
+    #[serde(rename = "type", default)]
+    pub node_type: EntityType,
+    #[serde(default)]
+    pub light_info: Option<LightInfo>,
     #[serde(default)]
     pub triggers: Vec<TriggerDef>,
     #[serde(default)]
@@ -116,6 +166,9 @@ pub struct DynamicObject {
     pub object_type: String,
     /// Unique identifier derived from the Blender node name.
     pub object_id: String,
+    /// What kind of scene entity this wraps (mesh, light, empty, camera).
+    #[serde(default)]
+    pub entity_type: EntityType,
 }
 
 /// Replicated state of a dynamic object (e.g. "open" / "closed").
