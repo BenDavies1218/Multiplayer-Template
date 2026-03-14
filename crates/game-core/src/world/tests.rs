@@ -7,7 +7,6 @@ mod tests {
     fn test_world_assets_default() {
         let assets = WorldAssets::default();
         assert!(assets.visual.is_none());
-        assert!(assets.collision.is_none());
     }
 
     #[test]

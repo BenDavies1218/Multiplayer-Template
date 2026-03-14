@@ -7,8 +7,9 @@ Shared game logic and configuration used by all crates. Does not contain network
 | Module | Purpose |
 |--------|---------|
 | `core_config` | Master `GameCoreConfig` resource containing all subsystem settings |
-| `world` | Loads visual/collision meshes from glTF/GLB, converts to Avian3d colliders |
-| `zones` | Spawn points, death zones, damage zones, trigger zones with collision detection |
+| `world` | Loads visual meshes from glTF/GLB, provides collision bundle and mesh helpers |
+| `zones` | Loads zones + collision from a single GLB, spawn points, death/damage/trigger zones, collision detection |
+| `dynamic` | Data-driven interactable objects (doors, pickups, lights) with trigger/action system |
 | `character` | Character marker, hitbox loading from glTF/GLB, model identity, hitbox region components |
 | `utils` | CLI argument parsing (`clap`), config file loading, log setup |
 
@@ -19,12 +20,17 @@ Shared game logic and configuration used by all crates. Does not contain network
 - **`CharacterModelId`** — Replicated string identifier for character visual model (e.g. `"default"`). Key into client's model catalog.
 - **`HitboxRegion`** — Component on hitbox child entities. Contains region `name` and `base_damage` from glTF extras.
 - **`CharacterHitboxData`** — Resource holding parsed hitbox regions from character hitbox GLB. Used to attach hitbox colliders on spawn.
+- **`DynamicObject`** — Replicated marker component with `object_type` and `object_id` for interactable objects.
+- **`DynamicState`** — Replicated state of a dynamic object (current state string, togglable flag).
+- **`DynamicBehavior`** — Parsed trigger/action definitions from Blender custom properties. Server + viewer only.
+- **`DynamicObjectRegistry`** — Resource mapping object IDs (Blender node names) to entities for cross-object targeting.
 
 ## Plugins
 
 - **`WorldPlugin`** — Loads world assets. Constructed with `WorldPluginConfig::server()`, `::client()`, or `::viewer()`.
 - **`ZonePlugin`** — Processes zone meshes and runs collision detection. Server and viewer only.
 - **`CharacterPlugin`** — Loads character hitbox GLBs from catalog, parses regions with damage attributes, provides `CharacterHitboxData` resource.
+- **`DynamicPlugin`** — Loads dynamic interactable objects from GLB, runs trigger detection and state actions. Constructed with `DynamicPluginConfig::server()`, `::client()`, or `::viewer()`.
 
 ## Configuration
 

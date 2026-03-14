@@ -1,10 +1,9 @@
 use avian3d::prelude::*;
-use bevy::gltf::Gltf;
 use bevy::mesh::Mesh;
 use bevy::prelude::*;
 
 // Module declarations
-mod collision_debug;
+pub mod collision_debug;
 mod loader;
 mod processor;
 #[cfg(test)]
@@ -14,104 +13,56 @@ mod utils;
 // Re-export public items from submodules
 pub use collision_debug::{CollisionDebugMesh, CollisionDebugSettings, apply_debug_config};
 pub use loader::load_world_assets;
-pub use processor::{
-    create_compound_collider, create_convex_hull_collider, process_collision_meshes,
-};
+pub use processor::{create_compound_collider, create_convex_hull_collider};
 pub use utils::{extract_mesh_indices, extract_mesh_vertices, parse_extras};
 
 /// Configuration for WorldPlugin
 ///
-/// Controls what assets are loaded and what features are enabled.
+/// Controls whether visual meshes are loaded. Collision is now handled by ZonePlugin.
 #[derive(Resource, Debug, Clone)]
 pub struct WorldPluginConfig {
     /// Whether to load visual meshes (high-poly glTF/GLB)
     pub load_visual: bool,
-    /// Whether to load collision meshes (low-poly glTF/GLB)
-    pub load_collision: bool,
-    /// Whether to enable collision debug visualization
-    pub enable_debug: bool,
 }
 
 impl Default for WorldPluginConfig {
     fn default() -> Self {
-        Self {
-            load_visual: true,
-            load_collision: true,
-            enable_debug: true,
-        }
+        Self { load_visual: true }
     }
 }
 
 impl WorldPluginConfig {
-    /// Server configuration: collision only, no visuals, no debug
+    /// Server configuration: no visuals
     pub fn server() -> Self {
-        Self {
-            load_visual: false,
-            load_collision: true,
-            enable_debug: false,
-        }
+        Self { load_visual: false }
     }
 
-    /// Client configuration: full features no debug
+    /// Client configuration: load visuals
     pub fn client() -> Self {
-        Self {
-            load_visual: true,
-            load_collision: true,
-            enable_debug: false,
-        }
+        Self { load_visual: true }
     }
 
-    /// World viewer configuration: full features with debug
+    /// World viewer configuration: load visuals
     pub fn viewer() -> Self {
-        Self {
-            load_visual: true,
-            load_collision: true,
-            enable_debug: true,
-        }
+        Self { load_visual: true }
     }
 }
 
-/// Plugin for loading and managing world assets from Blender exports.
+/// Plugin for loading world visual assets from Blender exports.
 ///
-/// This plugin handles:
-/// - Loading visual meshes (high-poly glTF/GLB files)
-/// - Loading collision meshes (low-poly glTF/GLB files)
-/// - Converting Blender meshes to Avian3d colliders
-/// - Automatic collision generation from naming conventions
-///
-/// Use `WorldPluginConfig` to customize what gets loaded for different environments.
+/// Handles loading visual meshes (high-poly glTF/GLB files).
+/// Collision and zone processing is handled by `ZonePlugin`.
 pub struct WorldPlugin {
     pub config: WorldPluginConfig,
 }
 
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
-        // Insert configuration as resource
         app.insert_resource(self.config.clone());
         app.init_resource::<WorldAssets>();
 
-        // Only initialize debug settings if debug is enabled
-        if self.config.enable_debug {
-            app.init_resource::<CollisionDebugSettings>();
-        }
-
         // Add loader system
         app.add_systems(Startup, load_world_assets);
-
-        // Add collision processing system
-        app.add_systems(Update, process_collision_meshes);
-
-        // Only add debug systems if debug is enabled
-        if self.config.enable_debug {
-            app.add_systems(Startup, apply_debug_config);
-            app.add_systems(
-                Update,
-                (
-                    collision_debug::toggle_collision_debug,
-                    collision_debug::update_collision_debug_visibility,
-                ),
-            );
-        }
     }
 }
 
@@ -119,17 +70,10 @@ impl Plugin for WorldPlugin {
 #[derive(Component, Debug)]
 pub struct WorldVisual;
 
-/// Component for collision mesh loaders (temporary, removed after processing)
-#[derive(Component, Debug)]
-pub struct WorldCollisionLoader {
-    pub handle: Handle<Gltf>,
-}
-
 /// Resource to store handles to world assets
 #[derive(Resource, Debug, Default)]
 pub struct WorldAssets {
-    pub visual: Option<Handle<Scene>>, // Handle to the visual scene (high-poly mesh)
-    pub collision: Option<Handle<Gltf>>, // Handle to the collision mesh (low-poly mesh)
+    pub visual: Option<Handle<Scene>>,
 }
 
 /// Bundle for spawning world collision entities
@@ -145,7 +89,6 @@ impl WorldCollisionBundle {
     /// Create a new collision bundle from a mesh
     /// Uses trimesh collider for complex geometry
     pub fn from_mesh(mesh: &Mesh, transform: Transform) -> Option<Self> {
-        // Extract vertices and indices from mesh
         let vertices = extract_mesh_vertices(mesh)?;
         let indices = extract_mesh_indices(mesh)?;
 

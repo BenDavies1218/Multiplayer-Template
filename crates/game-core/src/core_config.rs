@@ -192,7 +192,7 @@ pub enum HitboxShape {
 #[serde(default)]
 pub struct WorldAssetsConfig {
     pub visual_path: String,
-    pub collision_path: String,
+    pub dynamic_path: String,
     pub zones_path: String,
     pub skybox_path: String,
 }
@@ -201,7 +201,7 @@ impl Default for WorldAssetsConfig {
     fn default() -> Self {
         Self {
             visual_path: "models/example_world_visual.glb".to_string(),
-            collision_path: "models/example_world_collision.glb".to_string(),
+            dynamic_path: "models/world_dynamic.glb".to_string(),
             zones_path: "models/example_world_zones.glb".to_string(),
             skybox_path: "sunset_sky_hdr.exr".to_string(),
         }
@@ -261,6 +261,7 @@ pub struct DebugColorsConfig {
     pub damage_zone: [f32; 4],
     pub trigger_zone: [f32; 4],
     pub spawn_point: [f32; 4],
+    pub dynamic_object: [f32; 4],
 }
 
 impl Default for DebugColorsConfig {
@@ -271,6 +272,7 @@ impl Default for DebugColorsConfig {
             damage_zone: [1.0, 1.0, 0.0, 0.3],
             trigger_zone: [0.0, 0.5, 1.0, 0.3],
             spawn_point: [0.0, 1.0, 0.0, 0.3],
+            dynamic_object: [0.0, 1.0, 1.0, 0.3],
         }
     }
 }
@@ -280,6 +282,7 @@ impl Default for DebugColorsConfig {
 pub struct DebugToggleKeysConfig {
     pub collision: String,
     pub zone: String,
+    pub dynamic: String,
 }
 
 impl Default for DebugToggleKeysConfig {
@@ -287,6 +290,7 @@ impl Default for DebugToggleKeysConfig {
         Self {
             collision: "KeyC".to_string(),
             zone: "KeyZ".to_string(),
+            dynamic: "KeyD".to_string(),
         }
     }
 }

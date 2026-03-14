@@ -37,8 +37,18 @@ fn main() {
         .add_plugins(game_core::zones::ZonePlugin {
             config: game_core::zones::ZonePluginConfig::viewer(),
         })
+        .add_plugins(game_core::dynamic::DynamicPlugin {
+            config: game_core::dynamic::DynamicPluginConfig::viewer(),
+        })
         .add_systems(Startup, setup)
-        .add_systems(Update, (camera_controller, auto_play_gltf_animations))
+        .add_systems(
+            Update,
+            (
+                camera_controller,
+                auto_play_gltf_animations,
+                test_light_controls,
+            ),
+        )
         .run();
 }
 
@@ -71,6 +81,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Gam
     info!("  Click - Grab cursor");
     info!("  Escape - Release cursor");
     info!("  C - Toggle collision mesh visualization");
+    info!("  D - Toggle dynamic object visualization");
+    info!("  1 - Toggle red light (intensity + color)");
+    info!("  2 - Toggle blue light (intensity + color)");
     info!("");
     info!("Loading world from: {}", config.world_assets.visual_path);
 
@@ -108,6 +121,33 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Gam
     ));
 
     info!("Test capsule spawned at Y=5.0 - should fall and land on collision mesh");
+
+    // Test lights for dynamic object light action verification
+    commands.spawn((
+        Name::new("test_light_red"),
+        PointLight {
+            color: Color::WHITE,
+            intensity: 50_000.0,
+            range: 30.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(-3.0, 3.0, 0.0),
+    ));
+
+    commands.spawn((
+        Name::new("test_light_blue"),
+        PointLight {
+            color: Color::WHITE,
+            intensity: 50_000.0,
+            range: 30.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(3.0, 3.0, 0.0),
+    ));
+
+    info!("Test lights spawned: 'test_light_red' at (-3,3,0), 'test_light_blue' at (3,3,0)");
     info!("World viewer setup complete!");
 }
 
@@ -122,6 +162,48 @@ fn auto_play_gltf_animations(
         };
         for index in graph.nodes() {
             player.play(index).repeat();
+        }
+    }
+}
+
+/// Test light controls — press 1/2 to toggle light intensity and color.
+fn test_light_controls(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut point_lights: Query<(&Name, &mut PointLight)>,
+) {
+    if keys.just_pressed(KeyCode::Digit1) {
+        for (name, mut light) in point_lights.iter_mut() {
+            if name.as_str() == "test_light_red" {
+                if light.intensity > 10_000.0 {
+                    // Turn on: red, high intensity
+                    light.color = Color::srgb(1.0, 0.0, 0.0);
+                    light.intensity = 800_000.0;
+                    info!("test_light_red → RED, intensity 800000");
+                } else {
+                    // Reset: white, default intensity
+                    light.color = Color::WHITE;
+                    light.intensity = 50_000.0;
+                    info!("test_light_red → WHITE, intensity 50000");
+                }
+            }
+        }
+    }
+
+    if keys.just_pressed(KeyCode::Digit2) {
+        for (name, mut light) in point_lights.iter_mut() {
+            if name.as_str() == "test_light_blue" {
+                if light.intensity > 10_000.0 {
+                    // Turn on: blue, high intensity
+                    light.color = Color::srgb(0.0, 0.3, 1.0);
+                    light.intensity = 800_000.0;
+                    info!("test_light_blue → BLUE, intensity 800000");
+                } else {
+                    // Reset: white, default intensity
+                    light.color = Color::WHITE;
+                    light.intensity = 50_000.0;
+                    info!("test_light_blue → WHITE, intensity 50000");
+                }
+            }
         }
     }
 }

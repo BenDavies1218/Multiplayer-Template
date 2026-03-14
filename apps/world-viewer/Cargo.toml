@@ -34,6 +34,7 @@ bevy = { workspace = true, features = [
     "png",
     "jpeg",
     "ktx2",
+    "file_watcher",
 ] }
 
 # Physics for collision visualization

@@ -3,15 +3,19 @@ use super::zone_debug::{ZoneDebugMesh, ZoneDebugSettings};
 use super::zones::*;
 use super::{ZoneLoader, ZonePluginConfig};
 use crate::core_config::GameCoreConfig;
-use crate::world::{extract_mesh_indices, extract_mesh_vertices, parse_extras};
+use crate::world::{
+    CollisionDebugMesh, CollisionDebugSettings, WorldCollisionBundle, extract_mesh_indices,
+    extract_mesh_vertices, parse_extras,
+};
 use avian3d::prelude::*;
 use bevy::gltf::{Gltf, GltfMesh, GltfNode};
 use bevy::mesh::Mesh;
 use bevy::prelude::*;
 
-/// Process zone meshes from loaded zones GLB file.
+/// Process zone and collision meshes from loaded zones GLB file.
 ///
-/// Parses node names by prefix to determine zone type:
+/// Parses node names by prefix to determine type:
+/// - `collision_` -> Static trimesh collider (world geometry)
 /// - `spawn_` -> SpawnPoint (transform only, no collider)
 /// - `deathzone_` -> DeathZone (sensor trimesh collider)
 /// - `damage_` -> DamageZone (sensor trimesh collider)
@@ -29,6 +33,7 @@ pub fn process_zone_meshes(
     mut materials: Option<ResMut<Assets<StandardMaterial>>>,
     plugin_config: Res<ZonePluginConfig>,
     debug_settings: Option<Res<ZoneDebugSettings>>,
+    collision_debug_settings: Option<Res<CollisionDebugSettings>>,
     config: Res<GameCoreConfig>,
 ) {
     for (entity, loader) in zone_query.iter() {
@@ -204,8 +209,74 @@ pub fn process_zone_meshes(
                         });
                     }
                 }
+            } else if name_lower.starts_with("collision_") {
+                if !plugin_config.load_collision {
+                    continue;
+                }
+
+                let Some(gltf_mesh_handle) = &gltf_node.mesh else {
+                    warn!("Collision node '{}' has no mesh — skipping", node_name);
+                    continue;
+                };
+
+                let Some(gltf_mesh) = gltf_meshes.get(gltf_mesh_handle) else {
+                    warn!("GltfMesh not found for collision node {}", node_name);
+                    continue;
+                };
+
+                for primitive in &gltf_mesh.primitives {
+                    let mesh = meshes.as_ref().and_then(|m| m.get(&primitive.mesh));
+                    let Some(mesh) = mesh else {
+                        warn!("Mesh not found for collision node {}", node_name);
+                        continue;
+                    };
+
+                    let mesh_clone_for_debug = mesh.clone();
+
+                    if let Some(bundle) =
+                        WorldCollisionBundle::from_mesh(mesh, node_transform)
+                    {
+                        let mut entity_commands = commands
+                            .spawn((bundle, Name::new(format!("Collision: {}", node_name))));
+
+                        // Add collision debug mesh if enabled
+                        if plugin_config.collision_debug
+                            && let (Some(settings), Some(mesh_res), Some(mat_res)) =
+                                (&collision_debug_settings, &mut meshes, &mut materials)
+                        {
+                            let debug_mesh_handle = mesh_res.add(mesh_clone_for_debug);
+                            let debug_material = mat_res.add(StandardMaterial {
+                                base_color: settings.color,
+                                alpha_mode: AlphaMode::Blend,
+                                double_sided: true,
+                                cull_mode: None,
+                                ..default()
+                            });
+
+                            entity_commands.with_children(|parent| {
+                                parent.spawn((
+                                    Mesh3d(debug_mesh_handle),
+                                    MeshMaterial3d(debug_material),
+                                    Transform::default(),
+                                    GlobalTransform::default(),
+                                    Visibility::Hidden,
+                                    CollisionDebugMesh,
+                                    Name::new(format!("DebugMesh: {}", node_name)),
+                                ));
+                            });
+                        }
+                    } else {
+                        error!("Failed to create collider from node {}", node_name);
+                    }
+                }
+
+                info!("Created collision from '{}'", node_name);
             } else {
-                warn!("Unknown zone node prefix for '{}' — skipping", node_name);
+                warn!(
+                    "Unrecognized node prefix for '{}' in zones file — skipping. \
+                     Expected: collision_, spawn_, deathzone_, damage_, trigger_",
+                    node_name
+                );
             }
         }
 

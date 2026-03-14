@@ -7,7 +7,7 @@ The web browser client for the multiplayer Bevy game. This binary compiles to We
 The web client provides:
 
 - Browser-based gameplay without installation
-- Same features as native client (prediction, rendering, interpolation)
+- Same features as native client (prediction, rendering, interpolation, dynamic objects)
 - Automatic client ID generation
 - WebTransport or WebSocket connectivity
 

@@ -1,6 +1,7 @@
 use core::time::Duration;
 
 use game_core::GameCoreConfig;
+use game_core::dynamic::{DynamicPlugin, DynamicPluginConfig};
 use game_core::utils::config_loader::load_config;
 use game_core::world::{WorldPlugin, WorldPluginConfig};
 use game_core::zones::{ZonePlugin, ZonePluginConfig};
@@ -28,6 +29,9 @@ fn main() {
     });
     app.add_plugins(ZonePlugin {
         config: ZonePluginConfig::server(),
+    });
+    app.add_plugins(DynamicPlugin {
+        config: DynamicPluginConfig::server(),
     });
     app.add_plugins(game_core::character::CharacterPlugin);
     app.add_plugins(ServerPlugin);

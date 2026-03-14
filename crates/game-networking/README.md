@@ -25,6 +25,8 @@ Shared networking protocol, replication, and movement logic used by both client 
 - **`SharedSettings`** — Protocol ID and private key for Netcode.io authentication.
 - **`DespawnAfter`** — Timed entity despawn component for projectile lifetime.
 - **Marker components** — `ProjectileMarker`, `FloorMarker`, `BlockMarker`, `ColorComponent`. (`CharacterMarker` is defined in `game-core` and re-exported here.)
+- **`DynamicObject`** — Replicated marker with `object_type` and `object_id` for dynamic interactable objects. Registered in protocol for server→client replication.
+- **`DynamicState`** — Replicated state of a dynamic object (current state string, togglable flag). Server-authoritative, registered in protocol for server→client replication.
 
 ## Extending Replication
 

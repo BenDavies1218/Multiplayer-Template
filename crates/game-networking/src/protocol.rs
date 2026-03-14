@@ -11,6 +11,7 @@ use super::rollback::{
     rotation_should_rollback,
 };
 use game_core::character::CharacterModelId;
+use game_core::dynamic::{DynamicObject, DynamicState};
 
 // Re-export so callers that previously used `protocol::set_prediction_speed` still compile.
 pub use super::rollback::{init_rollback_config, set_prediction_speed};
@@ -134,6 +135,10 @@ impl Plugin for ProtocolPlugin {
         app.register_component::<CharacterModelId>();
 
         app.register_component::<CrouchState>().add_prediction();
+
+        // Dynamic object replication (server → client)
+        app.register_component::<DynamicObject>();
+        app.register_component::<DynamicState>();
 
         // Fully replicated, but not visual, so no need for lerp/corrections:
         app.register_component::<LinearVelocity>()

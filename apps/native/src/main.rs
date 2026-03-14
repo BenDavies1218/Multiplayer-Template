@@ -4,11 +4,13 @@ use lightyear::prelude::*;
 
 use game_camera::GameCameraFileConfig;
 use game_client::app::{build_client_app_from_config, spawn_client_connection_from_config};
-use game_client::{ClientPlugin, FirstPersonPlugin, GameClientConfig};
+use game_client::{ClientPlugin, DynamicRenderingPlugin, FirstPersonPlugin, GameClientConfig};
 use game_core::GameCoreConfig;
+use game_core::dynamic::{DynamicPlugin, DynamicPluginConfig};
 use game_core::utils::cli::Cli;
 use game_core::utils::config_loader::load_config;
 use game_core::world::{WorldPlugin, WorldPluginConfig};
+use game_core::zones::{ZonePlugin, ZonePluginConfig};
 use game_networking::NetworkingPlugin;
 use game_networking::config;
 
@@ -31,6 +33,13 @@ fn main() {
     app.add_plugins(WorldPlugin {
         config: WorldPluginConfig::client(),
     });
+    app.add_plugins(ZonePlugin {
+        config: ZonePluginConfig::client(),
+    });
+    app.add_plugins(DynamicPlugin {
+        config: DynamicPluginConfig::client(),
+    });
+    app.add_plugins(DynamicRenderingPlugin);
     app.add_plugins(ClientPlugin);
     app.add_plugins(FirstPersonPlugin {
         camera_config: game_camera::CameraConfig::first_person_from_config(&camera_config),

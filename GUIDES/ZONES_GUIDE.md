@@ -1,30 +1,30 @@
 # World Zones Guide
 
-How to define gameplay zones in Blender (spawn points, death zones, damage zones, triggers) and export them for use in the game.
+How to define gameplay zones and collision in Blender (spawn points, death zones, damage zones, triggers, collision geometry) and export them for use in the game.
 
 ---
 
 ## How It Works
 
-Zones are loaded from a separate GLB file (`example_world_zones.glb`). The server loads this file, parses node names and custom properties, and creates sensor colliders for gameplay logic. The client never loads zones — it only sees the effects (e.g., player teleporting after entering a death zone).
+All world data (collision geometry, spawn points, death zones, damage zones, triggers) lives in a single GLB file. The zone processor parses node names by prefix to determine their type and creates the appropriate entities.
 
 **Key files:**
 
 - `crates/game-core/src/zones/` — zone plugin, loader, processor, collision detection
-- `crates/game-core/src/shared.rs` — `WORLD_ZONES_PATH` constant
 
-**Asset path:** `assets/models/example_world_zones.glb`
+**Asset path:** Configured via `zones_path` in `game_core_config.json` (default: `models/world_zones.glb`)
 
 ---
 
-## Zone Types
+## Node Types
 
-| Type        | Node Prefix  | Collider              | Behavior                                         |
-| ----------- | ------------ | --------------------- | ------------------------------------------------ |
-| Spawn Point | `spawn_`     | None (transform only) | Defines where players spawn/respawn              |
-| Death Zone  | `deathzone_` | Sensor trimesh        | Instant kill — teleports player to a spawn point |
-| Damage Zone | `damage_`    | Sensor trimesh        | Logs damage (future: health system integration)  |
-| Trigger     | `trigger_`   | Sensor trimesh        | Fires `ZoneEnteredEvent` / `ZoneExitedEvent`     |
+| Type        | Node Prefix    | Collider              | Behavior                                         |
+| ----------- | -------------- | --------------------- | ------------------------------------------------ |
+| Collision   | `collision_`   | Trimesh (static)      | Static world physics geometry                    |
+| Spawn Point | `spawn_`       | None (transform only) | Defines where players spawn/respawn              |
+| Death Zone  | `deathzone_`   | Sensor trimesh        | Instant kill — teleports player to a spawn point |
+| Damage Zone | `damage_`      | Sensor trimesh        | Logs damage (future: health system integration)  |
+| Trigger     | `trigger_`     | Sensor trimesh        | Fires `ZoneEnteredEvent` / `ZoneExitedEvent`     |
 
 ---
 
@@ -32,29 +32,45 @@ Zones are loaded from a separate GLB file (`example_world_zones.glb`). The serve
 
 ### 1. Create a Zones Collection
 
-Create a dedicated collection in Blender (e.g., `ExampleWorld_zones`). This keeps zones separate from visual and collision meshes.
+Create a dedicated collection in Blender (e.g., `World_zones`). This keeps all world data (collision + zones) together.
 
-### 2. Add Zone Objects
+### 2. Add Objects
 
-For each zone, add a simple mesh (cube, plane, or custom shape) that defines the zone's area:
+#### Collision Geometry
+
+Add simplified meshes that define the physical boundaries of the world:
+
+```
+collision_floor      → Static floor collider
+collision_walls      → Static wall collider
+collision_ramp_01    → Static ramp collider
+```
+
+See the [Collision Guide](COLLISION_GUIDE.md) for best practices on collision mesh creation.
+
+#### Zone Objects
+
+For each zone, add a simple mesh that defines the zone's area:
 
 - **Spawn points**: Place an empty or small cube where players should spawn. Only the position matters.
-- **Death zones**: Create a mesh covering the kill area (e.g., a flat plane under the map for void death, a box around lava).
+- **Death zones**: Create a mesh covering the kill area (e.g., a flat plane under the map for void death).
 - **Damage zones**: Same as death zones but for areas that deal damage over time.
 - **Triggers**: Any volume that should fire an event when a player enters/exits.
 
 ### 3. Name Your Objects
 
-The node name prefix determines the zone type:
+The node name prefix determines the type:
 
 ```
-spawn_01          → Spawn point, index 1
-spawn_02          → Spawn point, index 2
-deathzone_void    → Death zone named "void"
-deathzone_lava    → Death zone named "lava"
-damage_acid       → Damage zone named "acid"
-damage_fire       → Damage zone named "fire"
-trigger_door      → Generic trigger named "door"
+collision_floor    → Static physics collider
+collision_walls    → Static physics collider
+spawn_01           → Spawn point, index 1
+spawn_02           → Spawn point, index 2
+deathzone_void     → Death zone named "void"
+deathzone_lava     → Death zone named "lava"
+damage_acid        → Damage zone named "acid"
+damage_fire        → Damage zone named "fire"
+trigger_door       → Generic trigger named "door"
 trigger_checkpoint → Generic trigger named "checkpoint"
 ```
 
@@ -106,46 +122,42 @@ Geometry:
 Materials:
   ❌ No Export
 
-Save as: example_world_zones.glb
+Save as: world_zones.glb
 ```
 
 ---
 
 ## Server vs Client
 
-| Environment  | Loads Zones | Detection | Debug |
-| ------------ | ----------- | --------- | ----- |
-| Server       | Yes         | Yes       | No    |
-| Client       | No          | No        | No    |
-| World Viewer | Yes         | No        | Yes   |
+| Environment  | Collision | Zones | Detection | Debug |
+| ------------ | --------- | ----- | --------- | ----- |
+| Server       | Yes       | Yes   | Yes       | No    |
+| Client       | Yes       | Yes   | No        | No    |
+| World Viewer | Yes       | Yes   | No        | Yes   |
 
-The server is fully authoritative over zone logic. The client never loads the zones file.
+The server is fully authoritative over zone logic. The client loads collision for physics prediction but does not run zone detection.
 
 ---
 
 ## Debug Visualization
 
-The world viewer includes debug visualization for zones, similar to collision debug (C key).
+The world viewer includes debug visualization for both collision and zones.
 
-**Toggle:** Press `Z` to show/hide zone debug meshes.
+**Toggle keys:**
+- Press `C` to show/hide collision debug meshes
+- Press `Z` to show/hide zone debug meshes
 
 **Color coding:**
 
-| Zone Type   | Color                        |
+| Type        | Color                        |
 | ----------- | ---------------------------- |
+| Collision   | Red (30% opacity)            |
 | Death Zone  | Red (30% opacity)            |
 | Damage Zone | Yellow (30% opacity)         |
 | Trigger     | Blue (30% opacity)           |
 | Spawn Point | Green sphere (30% opacity)   |
 
-Debug meshes are semi-transparent overlays rendered on top of zone colliders so you can verify placement matches the visual world. Spawn points display as small spheres at their position.
-
-Debug visualization is only available in the world viewer (`ZonePluginConfig::viewer()`). The server and client never render debug meshes.
-
-**Key files:**
-
-- `crates/game-core/src/zones/zone_debug.rs` — `ZoneDebugSettings`, toggle and visibility systems
-- `crates/game-core/src/zones/processor.rs` — spawns debug meshes alongside zone entities
+Debug meshes are semi-transparent overlays so you can verify placement matches the visual world. Debug visualization is only available in the world viewer (`ZonePluginConfig::viewer()`).
 
 ---
 
@@ -168,7 +180,7 @@ Debug visualization is only available in the world viewer (`ZonePluginConfig::vi
 ### Alignment
 
 - Apply all transforms before export: select all → `Ctrl+A` → All Transforms
-- Use the same origin point as your visual and collision meshes
+- Use the same origin point as your visual meshes
 - Zone positions should match the visual world (e.g., death zone under the lava mesh)
 
 ---
@@ -181,5 +193,6 @@ Debug visualization is only available in the world viewer (`ZonePluginConfig::vi
 | Death zone doesn't trigger          | Ensure mesh has volume (not a single plane), check node name starts with `deathzone_` |
 | Custom properties not parsed        | Enable "Custom Properties" in export settings                                         |
 | Zone positions are wrong            | Apply transforms in Blender before export                                             |
-| No zones loading                    | Check file is at `assets/models/example_world_zones.glb`                              |
-| Debug meshes not showing            | Press `Z` to toggle, only works in world viewer (not server/client)                   |
+| No zones loading                    | Check `zones_path` in `game_core_config.json`                                        |
+| Debug meshes not showing            | Press `Z`/`C` to toggle, only works in world viewer                                  |
+| Unrecognized node prefix warning    | Node names must start with: `collision_`, `spawn_`, `deathzone_`, `damage_`, `trigger_` |

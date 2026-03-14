@@ -17,6 +17,7 @@ Client-side game logic: input handling, prediction, rendering, and network trans
 | `movement` | Client-side movement: applies shared movement on predicted entities, syncs camera to ActionState |
 | `input_device` | Runtime input device detection and hot-switching (keyboard/gamepad) |
 | `diagnostics` | Predicted entity lifecycle logging |
+| `dynamic_rendering` | Client-side visual action execution for dynamic objects (lights, animations, text, sound) |
 
 ## Plugins
 
@@ -37,6 +38,11 @@ Client-side game logic: input handling, prediction, rendering, and network trans
 - Preloads character models from config catalog (third-person + POV variants)
 - Local player: attaches POV model as child of camera
 - Remote players: attaches third-person model to entity (falls back to capsule if missing)
+
+### `DynamicRenderingPlugin`
+
+- Executes client-side visual actions from `DynamicActionEvent` (light intensity/color, animations, text, sound)
+- Reacts to replicated `DynamicState` changes from the server for visual state sync
 
 ## Configuration
 

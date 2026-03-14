@@ -20,24 +20,42 @@ pub use zones::*;
 pub struct ZonePluginConfig {
     /// Whether to run collision detection systems (server-only)
     pub enable_detection: bool,
-    /// Whether to enable debug visualization (viewer-only)
+    /// Whether to enable zone debug visualization (viewer-only)
     pub enable_debug: bool,
+    /// Whether to process collision_ prefixed nodes into static colliders
+    pub load_collision: bool,
+    /// Whether to enable collision debug visualization
+    pub collision_debug: bool,
 }
 
 impl ZonePluginConfig {
-    /// Server: load zones and run collision detection
+    /// Server: load zones + collision, run collision detection, no debug
     pub fn server() -> Self {
         Self {
             enable_detection: true,
             enable_debug: false,
+            load_collision: true,
+            collision_debug: false,
         }
     }
 
-    /// World viewer: load zones with debug visualization, no detection
+    /// Client: load collision for physics prediction, no zone detection or debug
+    pub fn client() -> Self {
+        Self {
+            enable_detection: false,
+            enable_debug: false,
+            load_collision: true,
+            collision_debug: false,
+        }
+    }
+
+    /// World viewer: load zones + collision with debug visualization, no detection
     pub fn viewer() -> Self {
         Self {
             enable_detection: false,
             enable_debug: true,
+            load_collision: true,
+            collision_debug: true,
         }
     }
 }
@@ -48,16 +66,18 @@ pub struct ZoneLoader {
     pub handle: Handle<Gltf>,
 }
 
-/// Plugin for loading world zones from Blender exports.
+/// Plugin for loading world zones and collision from Blender exports.
 ///
-/// Handles spawn points, death zones, damage zones, and generic triggers.
-/// Server loads zones and detects collisions. Client never loads zones.
+/// Handles collision geometry, spawn points, death zones, damage zones, and
+/// generic triggers — all from a single GLB file using name prefixes.
 pub struct ZonePlugin {
     pub config: ZonePluginConfig,
 }
 
 impl Plugin for ZonePlugin {
     fn build(&self, app: &mut App) {
+        use crate::world::collision_debug;
+
         app.insert_resource(self.config.clone());
 
         // Register messages
@@ -76,7 +96,7 @@ impl Plugin for ZonePlugin {
             );
         }
 
-        // Debug visualization (viewer-only)
+        // Zone debug visualization (viewer-only)
         if self.config.enable_debug {
             app.init_resource::<ZoneDebugSettings>();
             app.add_systems(Startup, zone_debug::apply_zone_debug_config);
@@ -85,6 +105,19 @@ impl Plugin for ZonePlugin {
                 (
                     zone_debug::toggle_zone_debug,
                     zone_debug::update_zone_debug_visibility,
+                ),
+            );
+        }
+
+        // Collision debug visualization (viewer-only)
+        if self.config.collision_debug {
+            app.init_resource::<crate::world::CollisionDebugSettings>();
+            app.add_systems(Startup, collision_debug::apply_debug_config);
+            app.add_systems(
+                Update,
+                (
+                    collision_debug::toggle_collision_debug,
+                    collision_debug::update_collision_debug_visibility,
                 ),
             );
         }

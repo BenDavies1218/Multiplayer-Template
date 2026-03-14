@@ -44,7 +44,12 @@ impl Plugin for FirstPersonPlugin {
         app.add_systems(Startup, start_loading_assets);
         app.add_systems(
             Update,
-            (check_assets_loaded, fps_camera_follow, setup_cursor_grab, auto_play_gltf_animations),
+            (
+                check_assets_loaded,
+                fps_camera_follow,
+                setup_cursor_grab,
+                auto_play_gltf_animations,
+            ),
         );
         app.add_systems(
             PreUpdate,
@@ -92,17 +97,11 @@ fn check_assets_loaded(
     }
 
     // Check world assets
-    if let Some(ref world) = world_assets {
-        if let Some(ref visual) = world.visual
-            && !asset_server.is_loaded_with_dependencies(visual)
-        {
-            return;
-        }
-        if let Some(ref collision) = world.collision
-            && !asset_server.is_loaded_with_dependencies(collision)
-        {
-            return;
-        }
+    if let Some(ref world) = world_assets
+        && let Some(ref visual) = world.visual
+        && !asset_server.is_loaded_with_dependencies(visual)
+    {
+        return;
     }
 
     // Check skybox
@@ -129,7 +128,7 @@ fn check_assets_loaded(
             GameCamera::default(),
             Skybox {
                 image: skybox_handle,
-                brightness: 1000.0,
+                brightness: 100.0,
                 rotation: Quat::IDENTITY,
             },
         ));

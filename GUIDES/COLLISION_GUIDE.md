@@ -6,33 +6,31 @@ How collision meshes work in this project — what's supported, how to set them 
 
 ## How It Works
 
-Collision uses a **separate low-poly GLB file** loaded independently from the visual mesh. The collision processor extracts meshes from the glTF scene hierarchy, preserves Blender transforms, and creates Avian3d physics colliders.
+Collision meshes live in the **zones GLB file** alongside spawn points, death zones, and other zone types. Collision nodes use the `collision_` prefix. The zone processor extracts meshes from the glTF scene hierarchy, preserves Blender transforms, and creates Avian3d physics colliders.
 
 **Key files:**
 
-- `crates/game-core/src/world/loader.rs` — loads the collision GLB
-- `crates/game-core/src/world/processor.rs` — converts meshes to Avian3d colliders
-- `crates/game-core/src/world/utils.rs` — vertex/index extraction helpers
+- `crates/game-core/src/zones/processor.rs` — processes `collision_` prefixed nodes into Avian3d colliders
+- `crates/game-core/src/world/mod.rs` — `WorldCollisionBundle` and mesh extraction helpers
 - `crates/game-core/src/world/collision_debug.rs` — debug visualization (press `C`)
 
-**Asset path:** `assets/models/example_world_collision.glb`
+**Asset path:** Configured via `zones_path` in `game_core_config.json` (default: `models/world_zones.glb`)
 
 ---
 
 ## What's Supported
 
-| Feature                          | Supported | Notes                                                            |
-| -------------------------------- | --------- | ---------------------------------------------------------------- |
-| Trimesh colliders                | Yes       | Default for static world geometry                                |
-| Convex hull colliders            | Yes       | Via `create_convex_hull_collider()` for dynamic objects          |
-| Compound colliders               | Yes       | Via `create_compound_collider()` for manual shape composition    |
-| Static rigid bodies              | Yes       | All collision meshes are `RigidBody::Static`                     |
-| Transform preservation           | Yes       | Node transforms from Blender are preserved                       |
-| Named nodes                      | Yes       | Each collision entity gets `Name::new("Collision: {node_name}")` |
-| Debug visualization              | Yes       | Toggle with `C` key when `enable_debug: true`                    |
-| Multiple mesh primitives         | Yes       | All primitives per node are processed                            |
-| Separate collision file          | Yes       | Recommended approach for multiplayer                             |
-| Naming convention (`_collision`) | Partial   | Mentioned in docs but not actively used in current code          |
+| Feature                  | Supported | Notes                                                            |
+| ------------------------ | --------- | ---------------------------------------------------------------- |
+| Trimesh colliders        | Yes       | Default for static world geometry                                |
+| Convex hull colliders    | Yes       | Via `create_convex_hull_collider()` for dynamic objects          |
+| Compound colliders       | Yes       | Via `create_compound_collider()` for manual shape composition    |
+| Static rigid bodies      | Yes       | All collision meshes are `RigidBody::Static`                     |
+| Transform preservation   | Yes       | Node transforms from Blender are preserved                       |
+| Named nodes              | Yes       | Each collision entity gets `Name::new("Collision: {node_name}")` |
+| Debug visualization      | Yes       | Toggle with `C` key when collision debug is enabled              |
+| Multiple mesh primitives | Yes       | All primitives per node are processed                            |
+| `collision_` prefix      | Yes       | Required — nodes must be named `collision_floor`, etc.           |
 
 ---
 
@@ -41,7 +39,7 @@ Collision uses a **separate low-poly GLB file** loaded independently from the vi
 ### Trimesh (Default)
 
 - Used for: Static world geometry (floors, walls, terrain)
-- Created automatically from the collision GLB
+- Created automatically from `collision_` prefixed nodes in the zones GLB
 - Handles complex concave shapes
 - Best for: Static environment
 
@@ -67,14 +65,35 @@ let collider = create_compound_collider(vec![
 
 ---
 
-## Blender Export Settings for Collision Meshes
+## Blender Setup
+
+Collision meshes now live in the **same file** as zones. In your Blender scene:
+
+1. Name collision objects with the `collision_` prefix (e.g., `collision_floor`, `collision_walls`)
+2. Keep them in the same collection as your zones, or a sub-collection
+3. Simplify geometry aggressively — collision meshes should be 10-20x fewer polygons than visual
+
+### Naming Convention
+
+```
+collision_floor      → Static floor collider
+collision_walls      → Static wall collider
+collision_ramp_01    → Static ramp collider
+collision_platform   → Static platform collider
+```
+
+### Export Settings
+
+Export alongside zones:
 
 ```
 File → Export → glTF 2.0
 
 Include:
   ✅ Selected Objects
-  ❌ Everything else
+  ✅ Custom Properties
+  ❌ Cameras
+  ❌ Punctual Lights
 
 Transform:
   ✅ +Y Up
@@ -88,7 +107,7 @@ Geometry:
 Materials:
   ❌ No Export
 
-Save as: example_world_collision.glb
+Save as: world_zones.glb
 ```
 
 ---
@@ -97,12 +116,11 @@ Save as: example_world_collision.glb
 
 ### Creating Collision Meshes in Blender
 
-1. **Use a separate collection** (e.g., `Example_World_collision`)
-2. **Simplify aggressively** — collision meshes should be 10-20x fewer polygons than visual
-3. **Use basic shapes** where possible — boxes for walls, planes for floors
-4. **Close all geometry** — no holes or gaps, or characters fall through
-5. **Check normals** — face outward (use Face Orientation overlay in Blender)
-6. **Match origins** — collision and visual collections should share the same origin point
+1. **Simplify aggressively** — collision meshes should be 10-20x fewer polygons than visual
+2. **Use basic shapes** where possible — boxes for walls, planes for floors
+3. **Close all geometry** — no holes or gaps, or characters fall through
+4. **Check normals** — face outward (use Face Orientation overlay in Blender)
+5. **Match origins** — collision and visual meshes should share the same origin point
 
 ### Polygon Budget
 
@@ -115,23 +133,23 @@ Save as: example_world_collision.glb
 
 ### Alignment
 
-Both meshes must align in world space:
+Both collision and visual meshes must align in world space:
 
-- Apply all transforms in both collections before export (`Ctrl+A → All Transforms`)
+- Apply all transforms before export (`Ctrl+A → All Transforms`)
 - Export both at the same origin point
 - Both are loaded at `Transform::default()` (origin) in Bevy
 
 ### Server vs Client
 
-| Environment  | Visual | Collision   | Config                        |
-| ------------ | ------ | ----------- | ----------------------------- |
-| Server       | No     | Yes         | `WorldPluginConfig::server()` |
-| Client       | Yes    | Yes         | `WorldPluginConfig::client()` |
-| World Viewer | Yes    | Yes + debug | `WorldPluginConfig::viewer()` |
+| Environment  | Visual | Collision   | Config                       |
+| ------------ | ------ | ----------- | ---------------------------- |
+| Server       | No     | Yes         | `ZonePluginConfig::server()` |
+| Client       | Yes    | Yes         | `ZonePluginConfig::client()` |
+| World Viewer | Yes    | Yes + debug | `ZonePluginConfig::viewer()` |
 
 ### Debug Visualization
 
-When running with `WorldPluginConfig::viewer()` or `enable_debug: true`:
+When running with `ZonePluginConfig::viewer()` or `collision_debug: true`:
 
 - Press `C` to toggle collision mesh visibility
 - Collision meshes render as semi-transparent overlays
@@ -145,8 +163,7 @@ When running with `WorldPluginConfig::viewer()` or `enable_debug: true`:
 | --------------------------------- | ------------------------------------------------------------- |
 | Character falls through floor     | Check collision mesh has no holes, normals face outward       |
 | Collision offset from visual      | Apply transforms in both collections, export at same origin   |
-| Collision not loading             | Check `WorldPluginConfig` has `load_collision: true`          |
-| No collision debug visible        | Press `C`, ensure `enable_debug: true` in config              |
+| Collision not loading             | Check node names have `collision_` prefix                     |
+| No collision debug visible        | Press `C`, ensure `collision_debug: true` in ZonePluginConfig |
 | Collision too detailed            | Simplify mesh — high-poly collision hurts physics performance |
 | "Failed to create collider" error | Mesh may have degenerate triangles or no valid geometry       |
-| Collision file too large          | Remove materials from export, simplify geometry               |

@@ -21,6 +21,7 @@ The server is the authority for:
 - **Netcode Security**: Token-based authentication
 - **Physics Simulation**: Avian3d running in FixedUpdate
 - **Player Management**: Automatic spawning/despawning on connect/disconnect
+- **Dynamic Objects**: Server-authoritative trigger detection and state management for interactable objects
 - **JSON Configuration**: All settings driven by config files
 
 ## Building
@@ -147,7 +148,7 @@ Run the server from the repository root so these paths resolve correctly.
 
 The server binary depends on:
 
-- **game-core**: Shared protocol, game logic, and configuration
+- **game-core**: Shared protocol, game logic, configuration, and dynamic objects (`DynamicPlugin`)
 - **game-server**: Server-specific systems, transport, and logic
 
 ### Key Systems

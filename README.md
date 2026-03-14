@@ -20,6 +20,7 @@ A multiplayer 3D character controller game template built with Bevy, featuring c
 - **Cross-Platform**: Native desktop and WASM web builds
 - **JSON Configuration**: All game settings driven by JSON config files in `assets/config/`
 - **Camera Modes**: First-person, third-person, and free-view camera system
+- **Dynamic Objects**: Data-driven interactable objects (doors, pickups, lights) defined via Blender custom properties
 
 ## Technology Stack
 
@@ -50,7 +51,7 @@ multiplayer-bevy/
 │   └── web/                # WASM web client [→ README](apps/web/README.md)
 │
 ├── assets/                 # Game assets
-│   ├── models/             # World meshes (visual, collision, zones)
+│   ├── models/             # World meshes (visual, collision, zones, dynamic)
 │   ├── textures/
 │   ├── audio/
 │   ├── fonts/
@@ -123,7 +124,7 @@ Open <http://localhost:8080> in your browser.
 
 All game settings are driven by JSON config files in `assets/config/`:
 
-- **`game_core_config.json`** — Asset path, networking (host, port, tick rate), movement, physics, world assets, zones
+- **`game_core_config.json`** — Asset path, networking (host, port, tick rate), movement, physics, world assets, zones, dynamic objects
 - **`game_client_config.json`** — Window settings, input bindings, rendering, transport
 - **`game_camera_config.json`** — Camera modes (first-person, third-person, free-view), sensitivity
 - **`game_server_config.json`** — Projectile settings, spawning, transport type, certificate SANs
@@ -275,7 +276,7 @@ your-crate.workspace = true
 
 ### Crate Separation
 
-- **[game-core](crates/game-core/README.md)**: Contains the protocol definition, shared game logic, physics bundles, world/zone loading, configuration types, and common utilities. Used by both client and server.
+- **[game-core](crates/game-core/README.md)**: Contains the protocol definition, shared game logic, physics bundles, world/zone/dynamic object loading, configuration types, and common utilities. Used by both client and server.
 - **[game-client](crates/game-client/README.md)**: Client-specific code including input handling, prediction, rendering, and transport setup.
 - **[game-server](crates/game-server/README.md)**: Server authority logic, player spawning, projectile management, and server transport setup.
 - **[game-camera](crates/game-camera/README.md)**: Flexible camera system supporting first-person, third-person, and free-view modes with configurable sensitivity and smoothing.
@@ -294,6 +295,16 @@ your-crate.workspace = true
 - [Native Client Documentation](apps/native/README.md)
 - [World Viewer Documentation](apps/world-viewer/README.md)
 - [Web Client Documentation](apps/web/README.md)
+
+## Guides
+
+- [Dynamic Objects Guide](GUIDES/DYNAMIC_OBJECTS_GUIDE.md) — Data-driven interactable objects via Blender custom properties
+- [World Zones Guide](GUIDES/ZONES_GUIDE.md) — Spawn points, death zones, damage zones, triggers
+- [Collision Guide](GUIDES/COLLISION_GUIDE.md) — World collision mesh setup
+- [Meshes Guide](GUIDES/MESHES_GUIDE.md) — World visual mesh export
+- [Lighting Guide](GUIDES/LIGHTING_GUIDE.md) — Scene lighting setup
+- [Baked Animations Guide](GUIDES/BAKED_ANIMATIONS_GUIDE.md) — glTF animation support
+- [Skybox Guide](GUIDES/SKYBOX_GUIDE.md) — Skybox configuration
 
 ## Performance Tips
 

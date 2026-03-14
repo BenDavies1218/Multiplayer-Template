@@ -101,8 +101,8 @@ cargo run -p native -- client -c 3
 
 The native client depends on:
 
-- **game-core**: Shared protocol, game logic, and configuration
-- **game-client**: Client-specific systems (prediction, rendering, input, transport)
+- **game-core**: Shared protocol, game logic, configuration, and dynamic objects (`DynamicPlugin`)
+- **game-client**: Client-specific systems (prediction, rendering, input, transport, `DynamicRenderingPlugin`)
 - **game-camera**: Camera system with multiple view modes
 
 ### Configuration

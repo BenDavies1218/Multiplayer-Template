@@ -32,4 +32,6 @@ Server-side authoritative game logic and player management. Runs headless (no re
 
 ## Dependencies
 
-Depends on `game-core` (config, world), `game-networking` (protocol, movement, replication types), and Lightyear server features with WebTransport, WebSocket, and UDP support. Async support via `async-compat`.
+Depends on `game-core` (config, world, dynamic objects), `game-networking` (protocol, movement, replication types), and Lightyear server features with WebTransport, WebSocket, and UDP support. Async support via `async-compat`.
+
+Note: The server app also loads `DynamicPlugin` with `DynamicPluginConfig::server()` for trigger detection and state management on dynamic objects. See [Dynamic Objects Guide](../../GUIDES/DYNAMIC_OBJECTS_GUIDE.md).

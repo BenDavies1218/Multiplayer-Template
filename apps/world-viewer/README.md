@@ -11,6 +11,7 @@ This tool lets you test your world visual and collision meshes quickly without r
 - Checking collision mesh generation
 - Iterating on world design
 - Testing zone configurations (damage zones, spawn points, triggers)
+- Verifying dynamic object placement and debug visualization
 
 ## Usage
 
@@ -32,14 +33,15 @@ cargo run -p world-viewer
 - **Left Click** — Grab/lock cursor
 - **Escape** — Release cursor
 - **C** — Toggle collision mesh visualization
+- **D** — Toggle dynamic object debug visualization
 
 ## What It Loads
 
 The viewer loads world assets configured in `assets/config/game_core_config.json`:
 
 - **Visual mesh**: `assets/models/example_world_visual.glb`
-- **Collision mesh**: `assets/models/example_world_collision.glb`
-- **Zone mesh**: `assets/models/example_world_zones.glb`
+- **Zones + collision mesh**: `assets/models/example_world_zones.glb`
+- **Dynamic objects mesh**: `assets/models/world_dynamic.glb`
 - **Lighting**: Outdoor day lighting preset
 - **Test capsule**: Physics-enabled capsule that falls and collides with the world (uses character dimensions from config)
 
@@ -51,7 +53,7 @@ Minimal dependencies compared to the full game:
 
 - Bevy (rendering only)
 - Avian3D (physics/collision)
-- game-core (world/zone loading and configuration)
+- game-core (world/zone/dynamic object loading and configuration)
 
 No networking, no lightyear, no multiplayer overhead.
 
