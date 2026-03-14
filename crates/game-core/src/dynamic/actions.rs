@@ -70,14 +70,13 @@ pub fn execute_state_actions(
             ActionType::SetState => {
                 if let Some(value) =
                     event.action.params.get("value").and_then(|v| v.as_str())
+                    && let Ok((mut state, obj)) = state_query.get_mut(event.object)
                 {
-                    if let Ok((mut state, obj)) = state_query.get_mut(event.object) {
-                        info!(
-                            "Dynamic '{}' state: {} -> {}",
-                            obj.object_id, state.current, value
-                        );
-                        state.current = value.to_string();
-                    }
+                    info!(
+                        "Dynamic '{}' state: {} -> {}",
+                        obj.object_id, state.current, value
+                    );
+                    state.current = value.to_string();
                 }
             }
             ActionType::SetVisibility => {

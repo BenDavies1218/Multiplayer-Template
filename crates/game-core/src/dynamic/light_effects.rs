@@ -8,6 +8,7 @@ use super::types::{
 };
 
 /// System that ticks all active light effects and applies computed values to light components.
+#[allow(clippy::type_complexity)]
 pub fn tick_light_effects(
     time: Res<Time>,
     mut query: Query<(
@@ -247,7 +248,7 @@ pub fn apply_start_light_effect(
                 elapsed: 0.0,
             });
         }
-        "fixed" | _ => {
+        _ => {
             // Fixed can set intensity, color, or both
             if let Some(intensity) = params.get("intensity").and_then(|v| v.as_f64()) {
                 effects.intensity_effect = Some(LightEffectInstance {

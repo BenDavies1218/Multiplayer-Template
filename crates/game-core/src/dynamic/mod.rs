@@ -16,6 +16,8 @@ pub mod types;
 
 pub use debug::{DynamicDebugMesh, DynamicDebugSettings};
 pub use events::*;
+pub use light_effects::{apply_start_light_effect, apply_stop_light_effect};
+pub use mesh_effects::start_tween_from_action;
 pub use types::*;
 
 /// Configuration for DynamicPlugin.

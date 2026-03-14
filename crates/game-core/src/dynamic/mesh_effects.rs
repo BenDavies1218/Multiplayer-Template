@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-use super::types::{ActionType, DynamicTween, EasingType, TweenType};
+use super::types::{ActionType, DynamicTween, TweenType};
 
 /// System that ticks all active mesh tweens and applies computed values to transforms.
 pub fn tick_mesh_tweens(
@@ -87,7 +87,7 @@ pub fn start_tween_from_action(
     let easing = params
         .get("easing")
         .and_then(|v| v.as_str())
-        .map(EasingType::from_str)
+        .and_then(|s| s.parse().ok())
         .unwrap_or_default();
 
     match action_type {

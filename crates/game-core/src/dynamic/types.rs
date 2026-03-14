@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::str::FromStr;
 
 // ---------------------------------------------------------------------------
 // Entity type
@@ -285,15 +286,20 @@ pub enum EasingType {
     EaseInOut,
 }
 
-impl EasingType {
-    pub fn from_str(s: &str) -> Self {
-        match s {
+impl FromStr for EasingType {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
             "ease_in" => Self::EaseIn,
             "ease_out" => Self::EaseOut,
             "ease_in_out" => Self::EaseInOut,
             _ => Self::Linear,
-        }
+        })
     }
+}
+
+impl EasingType {
 
     pub fn apply(&self, t: f32) -> f32 {
         match self {

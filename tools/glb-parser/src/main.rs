@@ -154,25 +154,25 @@ fn detect_node_type(node: &GltfNode, root: &GltfRoot) -> DetectedNode {
     let name = node.name.clone().unwrap_or_default();
 
     // Check for light (KHR_lights_punctual extension on node)
-    if let Some(ref exts) = node.extensions {
-        if let Some(ref light_ref) = exts.khr_lights_punctual {
-            let light_info = root
-                .extensions
-                .as_ref()
-                .and_then(|re| re.khr_lights_punctual.as_ref())
-                .and_then(|lp| lp.lights.get(light_ref.light))
-                .map(|light| LightInfo {
-                    light_type: light.light_type.clone().unwrap_or_else(|| "point".to_string()),
-                    color: light.color,
-                    intensity: light.intensity,
-                });
+    if let Some(ref exts) = node.extensions
+        && let Some(ref light_ref) = exts.khr_lights_punctual
+    {
+        let light_info = root
+            .extensions
+            .as_ref()
+            .and_then(|re| re.khr_lights_punctual.as_ref())
+            .and_then(|lp| lp.lights.get(light_ref.light))
+            .map(|light| LightInfo {
+                light_type: light.light_type.clone().unwrap_or_else(|| "point".to_string()),
+                color: light.color,
+                intensity: light.intensity,
+            });
 
-            return DetectedNode {
-                name,
-                node_type: "light".to_string(),
-                light_info,
-            };
-        }
+        return DetectedNode {
+            name,
+            node_type: "light".to_string(),
+            light_info,
+        };
     }
 
     // Check for mesh

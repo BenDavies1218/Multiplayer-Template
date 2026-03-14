@@ -17,6 +17,7 @@ impl Plugin for DynamicRenderingPlugin {
 }
 
 /// Execute client-side visual actions from `DynamicActionEvent`.
+#[allow(clippy::too_many_arguments)]
 fn execute_visual_actions(
     mut commands: Commands,
     mut action_events: MessageReader<DynamicActionEvent>,
