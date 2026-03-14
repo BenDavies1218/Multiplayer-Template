@@ -77,7 +77,8 @@ impl Plugin for DynamicPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(self.config.clone());
 
-        let dynamic_objects_config: DynamicObjectsConfig = load_config("dynamic_objects_config.json");
+        let dynamic_objects_config: DynamicObjectsConfig =
+            load_config("dynamic_objects_config.json");
         app.insert_resource(dynamic_objects_config);
 
         // Register events

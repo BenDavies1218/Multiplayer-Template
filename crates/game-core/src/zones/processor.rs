@@ -233,9 +233,7 @@ pub fn process_zone_meshes(
 
                     let mesh_clone_for_debug = mesh.clone();
 
-                    if let Some(bundle) =
-                        WorldCollisionBundle::from_mesh(mesh, node_transform)
-                    {
+                    if let Some(bundle) = WorldCollisionBundle::from_mesh(mesh, node_transform) {
                         let mut entity_commands = commands
                             .spawn((bundle, Name::new(format!("Collision: {}", node_name))));
 

@@ -4,9 +4,9 @@ use bevy::mesh::Mesh;
 use bevy::prelude::*;
 
 use super::debug::{DynamicDebugMesh, DynamicDebugSettings};
+use super::types::DynamicObjectsConfig;
 use super::types::*;
 use super::{DynamicLoader, DynamicPluginConfig};
-use super::types::DynamicObjectsConfig;
 use crate::world::{extract_mesh_indices, extract_mesh_vertices};
 
 /// Process dynamic object nodes from the loaded GLB.
