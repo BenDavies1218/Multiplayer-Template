@@ -160,6 +160,48 @@ pub fn process_dynamic_objects(
                 }
             }
 
+            // Attach timer/delay components for time-based triggers
+            for (trigger_index, trigger_def) in node_config.triggers.iter().enumerate() {
+                match trigger_def.trigger_type {
+                    TriggerType::OnTimer => {
+                        let interval = trigger_def
+                            .params
+                            .get("interval")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(1.0) as f32;
+                        let repeat = trigger_def
+                            .params
+                            .get("repeat")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(true);
+                        let mode = if repeat {
+                            bevy::time::TimerMode::Repeating
+                        } else {
+                            bevy::time::TimerMode::Once
+                        };
+                        entity_commands.insert(DynamicTimer {
+                            timer: bevy::time::Timer::from_seconds(interval, mode),
+                            trigger_index,
+                        });
+                    }
+                    TriggerType::OnDelay => {
+                        let delay = trigger_def
+                            .params
+                            .get("delay")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(1.0) as f32;
+                        entity_commands.insert(DynamicDelay {
+                            timer: bevy::time::Timer::from_seconds(
+                                delay,
+                                bevy::time::TimerMode::Once,
+                            ),
+                            trigger_index,
+                        });
+                    }
+                    _ => {}
+                }
+            }
+
             // Extract mesh data for collider and/or debug visualization
             if needs_sensor || plugin_config.enable_debug {
                 if let Some(gltf_mesh_handle) = &gltf_node.mesh {

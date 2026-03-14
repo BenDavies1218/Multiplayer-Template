@@ -193,6 +193,20 @@ pub struct InteractionRadius(pub f32);
 #[derive(Component, Debug, Clone)]
 pub struct DynamicEnabled(pub bool);
 
+/// Timer component for `onTimer` triggers. Fires repeatedly on interval.
+#[derive(Component, Debug)]
+pub struct DynamicTimer {
+    pub timer: bevy::time::Timer,
+    pub trigger_index: usize,
+}
+
+/// Delay component for `onDelay` triggers. Fires once then removed.
+#[derive(Component, Debug)]
+pub struct DynamicDelay {
+    pub timer: bevy::time::Timer,
+    pub trigger_index: usize,
+}
+
 // ---------------------------------------------------------------------------
 // Light effects
 // ---------------------------------------------------------------------------

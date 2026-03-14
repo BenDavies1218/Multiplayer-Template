@@ -100,6 +100,10 @@ impl Plugin for DynamicPlugin {
                     triggers::detect_enter_exit_triggers,
                     triggers::detect_spawn_triggers,
                     triggers::detect_interact_triggers,
+                    triggers::detect_timer_triggers,
+                    triggers::detect_delay_triggers,
+                    triggers::detect_state_change_triggers,
+                    triggers::detect_target_state_change_triggers,
                     triggers::dispatch_trigger_actions,
                     actions::execute_state_actions,
                 )
