@@ -7,6 +7,7 @@ use crate::utils::config_loader::load_config;
 pub mod actions;
 pub mod debug;
 pub mod events;
+pub mod light_effects;
 mod loader;
 mod processor;
 pub mod triggers;
@@ -104,6 +105,11 @@ impl Plugin for DynamicPlugin {
                 )
                     .chain(),
             );
+        }
+
+        // Light effects (client + viewer)
+        if self.config.enable_visuals || self.config.enable_debug {
+            app.add_systems(Update, light_effects::tick_light_effects);
         }
 
         // Debug visualization (viewer-only)

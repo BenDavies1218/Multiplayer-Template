@@ -194,6 +194,51 @@ pub struct InteractionRadius(pub f32);
 pub struct DynamicEnabled(pub bool);
 
 // ---------------------------------------------------------------------------
+// Light effects
+// ---------------------------------------------------------------------------
+
+/// Active light effects on a dynamic light entity.
+#[derive(Component, Debug, Clone, Default)]
+pub struct ActiveLightEffects {
+    pub intensity_effect: Option<LightEffectInstance>,
+    pub color_effect: Option<LightColorEffectInstance>,
+}
+
+/// A running intensity effect instance.
+#[derive(Debug, Clone)]
+pub struct LightEffectInstance {
+    pub effect_type: LightEffectType,
+    pub min: f32,
+    pub max: f32,
+    pub speed: f32,
+    pub elapsed: f32,
+}
+
+/// A running color effect instance.
+#[derive(Debug, Clone)]
+pub struct LightColorEffectInstance {
+    pub effect_type: LightColorEffectType,
+    pub elapsed: f32,
+}
+
+/// Intensity effect variant.
+#[derive(Debug, Clone)]
+pub enum LightEffectType {
+    Flicker,
+    Pulse,
+    Fixed,
+}
+
+/// Color effect variant.
+#[derive(Debug, Clone)]
+pub enum LightColorEffectType {
+    Fixed { color: [f32; 3] },
+    Cycle { colors: Vec<[f32; 3]>, speed: f32 },
+    Flicker { min: [f32; 3], max: [f32; 3], speed: f32 },
+    Pulse { min: [f32; 3], max: [f32; 3], speed: f32 },
+}
+
+// ---------------------------------------------------------------------------
 // Registry
 // ---------------------------------------------------------------------------
 
