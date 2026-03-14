@@ -8,6 +8,7 @@ use game_client::{ClientPlugin, DynamicRenderingPlugin, FirstPersonPlugin, GameC
 use game_core::GameCoreConfig;
 use game_core::dynamic::{DynamicPlugin, DynamicPluginConfig};
 use game_core::utils::cli::Cli;
+use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
 use game_core::utils::config_loader::load_config;
 use game_core::world::{WorldPlugin, WorldPluginConfig};
 use game_core::zones::{ZonePlugin, ZonePluginConfig};
@@ -27,6 +28,10 @@ fn main() {
     let mut app = build_client_app_from_config(tick, &client_config, &core_config);
 
     app.insert_resource(camera_config.clone());
+    app.add_plugins(ConfigHotReloadPlugin::default());
+    app.watch_config::<GameCoreConfig>("game_core_config.json");
+    app.watch_config::<GameClientConfig>("game_client_config.json");
+    app.watch_config::<GameCameraFileConfig>("game_camera_config.json");
     app.add_plugins(NetworkingPlugin {
         config: core_config.clone(),
     });

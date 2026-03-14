@@ -8983,6 +8983,7 @@ version = "0.1.0"
 dependencies = [
  "avian3d",
  "bevy",
+ "game-camera",
  "game-core",
  "tracing",
 ]

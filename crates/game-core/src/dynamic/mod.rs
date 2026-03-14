@@ -1,6 +1,7 @@
 use bevy::gltf::Gltf;
 use bevy::prelude::*;
 
+use crate::utils::config_hot_reload::ConfigWatchExt;
 use crate::utils::config_loader::load_config;
 
 pub mod actions;
@@ -80,6 +81,7 @@ impl Plugin for DynamicPlugin {
         let dynamic_objects_config: DynamicObjectsConfig =
             load_config("dynamic_objects_config.json");
         app.insert_resource(dynamic_objects_config);
+        app.watch_config::<DynamicObjectsConfig>("dynamic_objects_config.json");
 
         // Register events
         app.add_message::<DynamicTriggerEvent>();

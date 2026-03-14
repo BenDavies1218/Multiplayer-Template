@@ -6,11 +6,16 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
+use game_camera::{
+    CameraConfig, CameraPlugin, CameraViewMode, GameCamera, GameCameraFileConfig,
+};
 use game_core::GameCoreConfig;
+use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
 use game_core::utils::config_loader::load_config;
 
 fn main() {
     let core_config: GameCoreConfig = load_config("game_core_config.json");
+    let camera_config: GameCameraFileConfig = load_config("game_camera_config.json");
 
     App::new()
         .insert_resource(core_config.clone())
@@ -30,6 +35,12 @@ fn main() {
                     ..default()
                 }),
         )
+        .add_plugins(ConfigHotReloadPlugin::default())
+        .watch_config::<GameCoreConfig>("game_core_config.json")
+        .watch_config::<GameCameraFileConfig>("game_camera_config.json")
+        .add_plugins(CameraPlugin {
+            config: CameraConfig::free_view_from_config(&camera_config),
+        })
         .add_plugins(PhysicsPlugins::default())
         .add_plugins(game_core::world::WorldPlugin {
             config: game_core::world::WorldPluginConfig::viewer(),
@@ -44,7 +55,9 @@ fn main() {
         .add_systems(
             Update,
             (
-                camera_controller,
+                toggle_camera_mode,
+                viewer_camera_controller,
+                cursor_grab,
                 auto_play_gltf_animations,
                 test_light_controls,
             ),
@@ -52,34 +65,20 @@ fn main() {
         .run();
 }
 
+/// Marker for the test capsule that camera follows in first/third person.
 #[derive(Component)]
-struct FlyCamera {
-    pub yaw: f32,
-    pub pitch: f32,
-    pub speed: f32,
-    pub sensitivity: f32,
-}
-
-impl Default for FlyCamera {
-    fn default() -> Self {
-        Self {
-            yaw: 0.0,
-            pitch: 0.0,
-            speed: 10.0,
-            sensitivity: 0.002,
-        }
-    }
-}
+struct ViewerTarget;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<GameCoreConfig>) {
     info!("=== World Viewer Started ===");
     info!("Controls:");
-    info!("  WASD - Move camera");
+    info!("  WASD - Move (camera in FreeView, capsule in FP/TP)");
     info!("  Space/Shift - Up/Down");
     info!("  Ctrl - Speed boost");
     info!("  Mouse - Look around");
     info!("  Click - Grab cursor");
     info!("  Escape - Release cursor");
+    info!("  V - Toggle camera mode (FreeView / FirstPerson / ThirdPerson)");
     info!("  C - Toggle collision mesh visualization");
     info!("  D - Toggle dynamic object visualization");
     info!("  1 - Toggle red light (intensity + color)");
@@ -90,30 +89,28 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Gam
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(0.0, 5.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y),
-        FlyCamera::default(),
+        GameCamera::default(),
     ));
 
     // Spawn a test character capsule with physics to test collision
-    // This capsule will fall due to gravity and collide with the world
     let capsule_mesh = Capsule3d::new(
         config.character.capsule_radius,
         config.character.capsule_height,
     );
     commands.spawn((
         Name::new("Test Character (Physics Enabled)"),
+        ViewerTarget,
         Mesh3d(asset_server.add(Mesh::from(capsule_mesh))),
         MeshMaterial3d(asset_server.add(StandardMaterial {
             base_color: Color::srgb(0.0, 1.0, 0.0),
             ..default()
         })),
-        Transform::from_xyz(0.0, 5.0, 0.0), // Spawn higher to see it fall
-        // Physics components
+        Transform::from_xyz(0.0, 5.0, 0.0),
         RigidBody::Dynamic,
         Collider::capsule(
             config.character.capsule_radius,
             config.character.capsule_height,
         ),
-        // Lock rotation so it stays upright
         LockedAxes::default()
             .lock_rotation_x()
             .lock_rotation_y()
@@ -151,6 +148,165 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Gam
     info!("World viewer setup complete!");
 }
 
+/// Toggle camera mode with V key: FreeView -> FirstPerson -> ThirdPerson.
+fn toggle_camera_mode(
+    keys: Res<ButtonInput<KeyCode>>,
+    mut config: ResMut<CameraConfig>,
+    file_config: Res<GameCameraFileConfig>,
+) {
+    if !keys.just_pressed(KeyCode::KeyV) {
+        return;
+    }
+
+    let new_config = match config.view_mode {
+        CameraViewMode::FreeView => {
+            info!("[CAMERA] Switched to FirstPerson");
+            CameraConfig::first_person_from_config(&file_config)
+        }
+        CameraViewMode::FirstPerson => {
+            info!("[CAMERA] Switched to ThirdPerson");
+            CameraConfig::third_person_from_config(&file_config)
+        }
+        CameraViewMode::ThirdPerson => {
+            info!("[CAMERA] Switched to FreeView");
+            CameraConfig::free_view_from_config(&file_config)
+        }
+    };
+    *config = new_config;
+}
+
+/// Unified camera controller that behaves differently per mode.
+fn viewer_camera_controller(
+    time: Res<Time>,
+    keys: Res<ButtonInput<KeyCode>>,
+    config: Res<CameraConfig>,
+    core_config: Res<GameCoreConfig>,
+    mut camera_query: Query<(&GameCamera, &mut Transform), Without<ViewerTarget>>,
+    mut target_query: Query<(&Transform, &mut LinearVelocity), With<ViewerTarget>>,
+) {
+    let Ok((game_camera, mut cam_transform)) = camera_query.single_mut() else {
+        return;
+    };
+
+    match config.view_mode {
+        CameraViewMode::FreeView => {
+            let mut direction = Vec3::ZERO;
+
+            if keys.pressed(KeyCode::KeyW) {
+                direction += cam_transform.forward().as_vec3();
+            }
+            if keys.pressed(KeyCode::KeyS) {
+                direction -= cam_transform.forward().as_vec3();
+            }
+            if keys.pressed(KeyCode::KeyA) {
+                direction -= cam_transform.right().as_vec3();
+            }
+            if keys.pressed(KeyCode::KeyD) {
+                direction += cam_transform.right().as_vec3();
+            }
+            if keys.pressed(KeyCode::Space) {
+                direction += Vec3::Y;
+            }
+            if keys.pressed(KeyCode::ShiftLeft) {
+                direction -= Vec3::Y;
+            }
+
+            let speed = if keys.pressed(KeyCode::ControlLeft) {
+                config.free_camera_speed * 3.0
+            } else {
+                config.free_camera_speed
+            };
+
+            if direction.length() > 0.0 {
+                direction = direction.normalize();
+                cam_transform.translation += direction * speed * time.delta_secs();
+            }
+        }
+        CameraViewMode::FirstPerson | CameraViewMode::ThirdPerson => {
+            let Ok((target_transform, mut velocity)) = target_query.single_mut() else {
+                return;
+            };
+
+            let forward = game_camera.forward_direction();
+            let right = game_camera.right_direction();
+            let mut move_dir = Vec3::ZERO;
+
+            if keys.pressed(KeyCode::KeyW) {
+                move_dir += forward;
+            }
+            if keys.pressed(KeyCode::KeyS) {
+                move_dir -= forward;
+            }
+            if keys.pressed(KeyCode::KeyA) {
+                move_dir -= right;
+            }
+            if keys.pressed(KeyCode::KeyD) {
+                move_dir += right;
+            }
+
+            let speed = core_config.movement.max_speed;
+            if move_dir.length() > 0.0 {
+                move_dir = move_dir.normalize();
+                velocity.x = move_dir.x * speed;
+                velocity.z = move_dir.z * speed;
+            } else {
+                velocity.x = 0.0;
+                velocity.z = 0.0;
+            }
+
+            if keys.just_pressed(KeyCode::Space) {
+                velocity.y = core_config.movement.jump_impulse;
+            }
+
+            let target_pos = target_transform.translation;
+            let eye_height = core_config.character.capsule_height / 2.0
+                + core_config.character.capsule_radius;
+
+            match config.view_mode {
+                CameraViewMode::FirstPerson => {
+                    cam_transform.translation =
+                        target_pos + Vec3::new(0.0, eye_height, 0.0);
+                }
+                CameraViewMode::ThirdPerson => {
+                    let look_dir = Quat::from_euler(
+                        EulerRot::YXZ,
+                        game_camera.yaw,
+                        game_camera.pitch,
+                        0.0,
+                    ) * Vec3::NEG_Z;
+                    let offset = target_pos
+                        + Vec3::new(0.0, config.third_person_height, 0.0)
+                        - look_dir * config.third_person_distance;
+                    if config.smooth_camera {
+                        cam_transform.translation = cam_transform
+                            .translation
+                            .lerp(offset, config.smooth_factor);
+                    } else {
+                        cam_transform.translation = offset;
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+}
+
+/// Handle cursor grab/release.
+fn cursor_grab(
+    keys: Res<ButtonInput<KeyCode>>,
+    mouse_button: Res<ButtonInput<MouseButton>>,
+    mut cursor_options: Single<&mut bevy::window::CursorOptions>,
+) {
+    if keys.just_pressed(KeyCode::Escape) {
+        cursor_options.visible = true;
+        cursor_options.grab_mode = bevy::window::CursorGrabMode::None;
+    }
+    if mouse_button.just_pressed(MouseButton::Left) {
+        cursor_options.visible = false;
+        cursor_options.grab_mode = bevy::window::CursorGrabMode::Locked;
+    }
+}
+
 /// Auto-play all animations from loaded glTF scenes on loop.
 fn auto_play_gltf_animations(
     mut players: Query<(&mut AnimationPlayer, &AnimationGraphHandle), Added<AnimationPlayer>>,
@@ -175,12 +331,10 @@ fn test_light_controls(
         for (name, mut light) in point_lights.iter_mut() {
             if name.as_str() == "test_light_red" {
                 if light.intensity > 10_000.0 {
-                    // Turn on: red, high intensity
                     light.color = Color::srgb(1.0, 0.0, 0.0);
                     light.intensity = 800_000.0;
                     info!("test_light_red → RED, intensity 800000");
                 } else {
-                    // Reset: white, default intensity
                     light.color = Color::WHITE;
                     light.intensity = 50_000.0;
                     info!("test_light_red → WHITE, intensity 50000");
@@ -193,83 +347,15 @@ fn test_light_controls(
         for (name, mut light) in point_lights.iter_mut() {
             if name.as_str() == "test_light_blue" {
                 if light.intensity > 10_000.0 {
-                    // Turn on: blue, high intensity
                     light.color = Color::srgb(0.0, 0.3, 1.0);
                     light.intensity = 800_000.0;
                     info!("test_light_blue → BLUE, intensity 800000");
                 } else {
-                    // Reset: white, default intensity
                     light.color = Color::WHITE;
                     light.intensity = 50_000.0;
                     info!("test_light_blue → WHITE, intensity 50000");
                 }
             }
         }
-    }
-}
-
-/// Free-fly camera controller
-fn camera_controller(
-    time: Res<Time>,
-    keys: Res<ButtonInput<KeyCode>>,
-    mouse_button: Res<ButtonInput<MouseButton>>,
-    mut mouse_motion: MessageReader<bevy::input::mouse::MouseMotion>,
-    mut cursor_options: Single<&mut bevy::window::CursorOptions>,
-    mut camera_query: Query<(&mut Transform, &mut FlyCamera)>,
-) {
-    let Ok((mut transform, mut fly_camera)) = camera_query.single_mut() else {
-        return;
-    };
-
-    // Cursor grab/release
-    if keys.just_pressed(KeyCode::Escape) {
-        cursor_options.visible = true;
-        cursor_options.grab_mode = bevy::window::CursorGrabMode::None;
-    }
-    if mouse_button.just_pressed(MouseButton::Left) {
-        cursor_options.visible = false;
-        cursor_options.grab_mode = bevy::window::CursorGrabMode::Locked;
-    }
-
-    // Mouse look
-    for motion in mouse_motion.read() {
-        fly_camera.yaw -= motion.delta.x * fly_camera.sensitivity;
-        fly_camera.pitch -= motion.delta.y * fly_camera.sensitivity;
-        fly_camera.pitch = fly_camera.pitch.clamp(-1.54, 1.54);
-        transform.rotation = Quat::from_euler(EulerRot::YXZ, fly_camera.yaw, fly_camera.pitch, 0.0);
-    }
-
-    // Movement
-    let mut direction = Vec3::ZERO;
-
-    if keys.pressed(KeyCode::KeyW) {
-        direction += transform.forward().as_vec3();
-    }
-    if keys.pressed(KeyCode::KeyS) {
-        direction -= transform.forward().as_vec3();
-    }
-    if keys.pressed(KeyCode::KeyA) {
-        direction -= transform.right().as_vec3();
-    }
-    if keys.pressed(KeyCode::KeyD) {
-        direction += transform.right().as_vec3();
-    }
-    if keys.pressed(KeyCode::Space) {
-        direction += Vec3::Y;
-    }
-    if keys.pressed(KeyCode::ShiftLeft) {
-        direction -= Vec3::Y;
-    }
-
-    // Speed boost with Ctrl
-    let speed = if keys.pressed(KeyCode::ControlLeft) {
-        fly_camera.speed * 3.0
-    } else {
-        fly_camera.speed
-    };
-
-    if direction.length() > 0.0 {
-        direction = direction.normalize();
-        transform.translation += direction * speed * time.delta_secs();
     }
 }
