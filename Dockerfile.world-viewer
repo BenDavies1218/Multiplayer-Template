@@ -23,6 +23,7 @@ WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY crates ./crates
 COPY apps ./apps
+COPY tools ./tools
 
 # Build release binary
 RUN cargo build --release -p world-viewer
