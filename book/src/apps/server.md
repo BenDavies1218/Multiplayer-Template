@@ -254,7 +254,7 @@ sudo ufw allow 5888
 
 ## Related Documentation
 
-- [Root README](../../README.md)
-- [Native Client README](../native/README.md)
-- [Web Client README](../web/README.md)
-- [World Viewer README](../world-viewer/README.md)
+- [Introduction](../introduction.md)
+- [Native Client](native-client.md)
+- [Web Client](web-client.md)
+- [World Viewer](world-viewer.md)

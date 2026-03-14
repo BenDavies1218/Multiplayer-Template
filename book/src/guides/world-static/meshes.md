@@ -29,7 +29,7 @@ Visual meshes are loaded as a Bevy `SceneRoot` from a `.glb` file. The entire sc
 | External textures    | No        | Use embedded textures instead                                         |
 | Skeletal meshes      | Not used  | Supported by Bevy but not set up in this project                      |
 | Morph targets        | Not used  | Supported by Bevy but not set up in this project                      |
-| Animations           | Yes       | Looping ambient animations auto-play — see BAKED_ANIMATIONS_GUIDE.md |
+| Animations           | Yes       | Looping ambient animations auto-play — see [Baked Animations](baked-animations.md) |
 
 ---
 
@@ -71,7 +71,7 @@ File → Export → glTF 2.0
 
 Include:
   ✅ Selected Objects
-  ✅ Punctual Lights    (if scene contains lights — see LIGHTING_GUIDE.md)
+  ✅ Punctual Lights    (if scene contains lights — see [Lighting Guide](lighting.md))
 
 Transform:
   ✅ +Y Up
@@ -145,4 +145,4 @@ Before exporting, verify:
 | Wrong scale                     | Apply scale in Blender (`Ctrl+A` → Scale), 1 unit = 1 meter       |
 | Huge file size                  | Reduce texture resolution, use Draco compression, decimate mesh    |
 | `missing field nodes` error     | Export had no objects selected — select all meshes + lights first   |
-| Lights not appearing            | Enable Punctual Lights in export Include tab (see LIGHTING_GUIDE)  |
+| Lights not appearing            | Enable Punctual Lights in export Include tab (see [Lighting Guide](lighting.md)) |

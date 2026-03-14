@@ -59,7 +59,7 @@ No networking, no lightyear, no multiplayer overhead.
 
 ## Related Documentation
 
-- [Root README](../../README.md)
-- [Server README](../server/README.md)
-- [Native Client README](../native/README.md)
-- [Web Client README](../web/README.md)
+- [Introduction](../introduction.md)
+- [Server](server.md)
+- [Native Client](native-client.md)
+- [Web Client](web-client.md)

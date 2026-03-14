@@ -1,3 +1,13 @@
 {
-  "nodes": {}
+  "nodes": {
+    "Point": {
+      "type": "light",
+      "light_info": {
+        "light_type": "point",
+        "color": [1.0, 0.03966067, 0.009816596],
+        "intensity": 27175.707
+      },
+      "triggers": []
+    }
+  }
 }

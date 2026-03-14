@@ -1,0 +1,13 @@
+[book]
+authors = ["Ben Davies"]
+language = "en"
+src = "src"
+title = "Multiplayer Bevy Template"
+description = "A production-ready multiplayer game template using Bevy + Lightyear"
+
+[build]
+build-dir = "output"
+
+[output.html]
+git-repository-url = "https://github.com/BenDavies1218/Multiplayer-Template"
+edit-url-template = "https://github.com/BenDavies1218/Multiplayer-Template/edit/main/book/{path}"

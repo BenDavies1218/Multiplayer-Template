@@ -46,7 +46,7 @@ collision_walls      → Static wall collider
 collision_ramp_01    → Static ramp collider
 ```
 
-See the [Collision Guide](COLLISION_GUIDE.md) for best practices on collision mesh creation.
+See the [Collision Guide](collision.md) for best practices on collision mesh creation.
 
 #### Zone Objects
 

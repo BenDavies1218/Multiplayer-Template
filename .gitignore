@@ -45,3 +45,6 @@ CLAUDE.md
 /examples/
 
 /lightyear_book/
+
+# mdBook build output
+book/output/

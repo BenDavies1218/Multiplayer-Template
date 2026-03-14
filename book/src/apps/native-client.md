@@ -229,7 +229,7 @@ Speed up builds:
 
 ## Related Documentation
 
-- [Root README](../../README.md)
-- [Server README](../server/README.md)
-- [Web Client README](../web/README.md)
-- [World Viewer README](../world-viewer/README.md)
+- [Introduction](../introduction.md)
+- [Server](server.md)
+- [Web Client](web-client.md)
+- [World Viewer](world-viewer.md)

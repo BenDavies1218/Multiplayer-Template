@@ -61,7 +61,7 @@ Animation:
   Animations
   Always Sample Animations
 
-(all other settings same as MESHES_GUIDE.md)
+(all other settings same as [Meshes Guide](meshes.md))
 ```
 
 **Important:** Make sure animated objects are **selected** when exporting with "Selected Objects" enabled.

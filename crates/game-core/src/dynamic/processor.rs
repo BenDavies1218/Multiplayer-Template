@@ -99,6 +99,7 @@ pub fn process_dynamic_objects(
                 DynamicEnabled(true),
                 node_transform,
                 GlobalTransform::default(),
+                Visibility::default(),
                 Name::new(format!("Dynamic: {}", node_name)),
             ));
 
@@ -106,8 +107,10 @@ pub fn process_dynamic_objects(
                 entity_commands.insert(InteractionRadius(radius));
             }
 
-            // Extract mesh data for collider and/or debug visualization
-            if needs_sensor || plugin_config.enable_debug {
+            // Extract mesh data for visuals, collider, and/or debug visualization
+            let needs_mesh =
+                needs_sensor || plugin_config.enable_visuals || plugin_config.enable_debug;
+            if needs_mesh {
                 if let Some(gltf_mesh_handle) = &gltf_node.mesh {
                     if let Some(gltf_mesh) = gltf_meshes.get(gltf_mesh_handle) {
                         for primitive in &gltf_mesh.primitives {
@@ -117,8 +120,8 @@ pub fn process_dynamic_objects(
                                 continue;
                             };
 
-                            // Clone mesh for debug before consuming for collider
-                            let mesh_clone_for_debug = mesh.clone();
+                            // Clone mesh upfront to avoid borrow conflicts
+                            let mesh_clone = mesh.clone();
 
                             // Create sensor collider if needed
                             if needs_sensor
@@ -133,12 +136,35 @@ pub fn process_dynamic_objects(
                                 ));
                             }
 
+                            // Spawn visual mesh with original material (client)
+                            if plugin_config.enable_visuals {
+                                let visual_material = primitive
+                                    .material
+                                    .clone()
+                                    .unwrap_or_else(|| {
+                                        materials
+                                            .as_mut()
+                                            .map(|m| m.add(StandardMaterial::default()))
+                                            .unwrap()
+                                    });
+
+                                entity_commands.with_children(|parent| {
+                                    parent.spawn((
+                                        Mesh3d(primitive.mesh.clone()),
+                                        MeshMaterial3d(visual_material),
+                                        Transform::default(),
+                                        GlobalTransform::default(),
+                                        Name::new(format!("Visual: {}", node_name)),
+                                    ));
+                                });
+                            }
+
                             // Add debug visualization mesh
                             if plugin_config.enable_debug
                                 && let (Some(settings), Some(mesh_res), Some(mat_res)) =
                                     (&debug_settings, &mut meshes, &mut materials)
                             {
-                                let debug_mesh_handle = mesh_res.add(mesh_clone_for_debug);
+                                let debug_mesh_handle = mesh_res.add(mesh_clone.clone());
                                 let debug_material = mat_res.add(StandardMaterial {
                                     base_color: settings.dynamic_object_color,
                                     alpha_mode: AlphaMode::Blend,

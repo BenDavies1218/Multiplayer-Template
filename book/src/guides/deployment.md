@@ -39,7 +39,7 @@ RUST_LOG=info
 
 ### Standalone Binary
 
-Build or download the server binary from the [Releases](../../releases) page, then run it directly:
+Build or download the server binary from the [Releases](https://github.com/BenDavies1218/Multiplayer-Template/releases) page, then run it directly:
 
 ```bash
 # Set the asset path and start the server
@@ -72,7 +72,7 @@ The resulting `dist/` directory can be served from any static file host: nginx, 
 
 ### Native Client
 
-Native clients are available as pre-built binaries from the [Releases](../../releases) page, or can be built from source:
+Native clients are available as pre-built binaries from the [Releases](https://github.com/BenDavies1218/Multiplayer-Template/releases) page, or can be built from source:
 
 ```bash
 cargo build --release -p native

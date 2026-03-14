@@ -80,7 +80,7 @@
   },
   "transport": {
     "token_expiration": -1,
-    "simulate_latency": true
+    "simulate_latency": false
   },
   "character": {
     "model_catalog": {
