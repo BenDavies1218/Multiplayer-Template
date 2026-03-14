@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use game_core::dynamic::{
-    light_effects, ActionType, ActiveLightEffects, DynamicActionEvent, DynamicObject,
-    DynamicObjectRegistry, DynamicState,
+    light_effects, mesh_effects, ActionType, ActiveLightEffects, DynamicActionEvent,
+    DynamicObject, DynamicObjectRegistry, DynamicState,
 };
 
 /// Client-side plugin for visual action execution on dynamic objects.
@@ -18,12 +18,14 @@ impl Plugin for DynamicRenderingPlugin {
 
 /// Execute client-side visual actions from `DynamicActionEvent`.
 fn execute_visual_actions(
+    mut commands: Commands,
     mut action_events: MessageReader<DynamicActionEvent>,
     _registry: Option<Res<DynamicObjectRegistry>>,
     name_query: Query<&Name>,
     mut point_lights: Query<(&Name, &mut PointLight)>,
     mut spot_lights: Query<(&Name, &mut SpotLight)>,
     mut effects_query: Query<&mut ActiveLightEffects>,
+    transform_query: Query<&Transform>,
 ) {
     for event in action_events.read() {
         match event.action.action_type {
@@ -135,6 +137,17 @@ fn execute_visual_actions(
             ActionType::StopLightEffect => {
                 if let Ok(mut effects) = effects_query.get_mut(event.object) {
                     light_effects::apply_stop_light_effect(&mut effects, &event.action.params);
+                }
+            }
+            ActionType::MoveTo | ActionType::RotateTo | ActionType::ScaleTo => {
+                if let Ok(transform) = transform_query.get(event.object) {
+                    mesh_effects::start_tween_from_action(
+                        &mut commands,
+                        event.object,
+                        transform,
+                        &event.action.action_type,
+                        &event.action.params,
+                    );
                 }
             }
             // State actions (toggle, collect, enable, disable) are handled server-side

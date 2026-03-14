@@ -9,6 +9,7 @@ pub mod debug;
 pub mod events;
 pub mod light_effects;
 mod loader;
+pub mod mesh_effects;
 mod processor;
 pub mod triggers;
 pub mod types;
@@ -111,9 +112,15 @@ impl Plugin for DynamicPlugin {
             );
         }
 
-        // Light effects (client + viewer)
+        // Light effects and mesh tweens (client + viewer)
         if self.config.enable_visuals || self.config.enable_debug {
-            app.add_systems(Update, light_effects::tick_light_effects);
+            app.add_systems(
+                Update,
+                (
+                    light_effects::tick_light_effects,
+                    mesh_effects::tick_mesh_tweens,
+                ),
+            );
         }
 
         // Debug visualization (viewer-only)

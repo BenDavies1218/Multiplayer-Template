@@ -253,6 +253,65 @@ pub enum LightColorEffectType {
 }
 
 // ---------------------------------------------------------------------------
+// Mesh transform tweens
+// ---------------------------------------------------------------------------
+
+/// Active tween on a dynamic object entity.
+#[derive(Component, Debug, Clone)]
+pub struct DynamicTween {
+    pub tween_type: TweenType,
+    pub start: Vec3,
+    pub target: Vec3,
+    pub duration: f32,
+    pub elapsed: f32,
+    pub easing: EasingType,
+}
+
+/// Which transform property is being tweened.
+#[derive(Debug, Clone)]
+pub enum TweenType {
+    Translation,
+    Rotation,
+    Scale,
+}
+
+/// Easing function for tweens.
+#[derive(Debug, Clone, Default)]
+pub enum EasingType {
+    #[default]
+    Linear,
+    EaseIn,
+    EaseOut,
+    EaseInOut,
+}
+
+impl EasingType {
+    pub fn from_str(s: &str) -> Self {
+        match s {
+            "ease_in" => Self::EaseIn,
+            "ease_out" => Self::EaseOut,
+            "ease_in_out" => Self::EaseInOut,
+            _ => Self::Linear,
+        }
+    }
+
+    pub fn apply(&self, t: f32) -> f32 {
+        match self {
+            Self::Linear => t,
+            Self::EaseIn => t * t,
+            Self::EaseOut => 1.0 - (1.0 - t) * (1.0 - t),
+            Self::EaseInOut => {
+                if t < 0.5 {
+                    2.0 * t * t
+                } else {
+                    1.0 - (-2.0 * t + 2.0).powi(2) / 2.0
+                }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Registry
 // ---------------------------------------------------------------------------
 
