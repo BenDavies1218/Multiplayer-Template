@@ -93,6 +93,7 @@ pub fn process_dynamic_objects(
                 DynamicObject {
                     object_type: node_name.to_string(),
                     object_id: object_id.to_string(),
+                    entity_type: node_config.node_type.clone(),
                 },
                 state,
                 DynamicBehavior { triggers },
@@ -105,6 +106,101 @@ pub fn process_dynamic_objects(
 
             if let Some(radius) = interaction_radius {
                 entity_commands.insert(InteractionRadius(radius));
+            }
+
+            // Spawn light components for light-type nodes
+            if node_config.node_type == EntityType::Light {
+                if let Some(ref light_info) = node_config.light_info {
+                    let color = Color::linear_rgb(
+                        light_info.color[0],
+                        light_info.color[1],
+                        light_info.color[2],
+                    );
+                    let intensity = light_info.intensity;
+
+                    match light_info.light_type.as_str() {
+                        "point" => {
+                            entity_commands.insert(PointLight {
+                                color,
+                                intensity,
+                                shadows_enabled: true,
+                                ..default()
+                            });
+                        }
+                        "spot" => {
+                            entity_commands.insert(SpotLight {
+                                color,
+                                intensity,
+                                shadows_enabled: true,
+                                ..default()
+                            });
+                        }
+                        "directional" => {
+                            entity_commands.insert(DirectionalLight {
+                                color,
+                                illuminance: intensity,
+                                shadows_enabled: true,
+                                ..default()
+                            });
+                        }
+                        other => {
+                            warn!(
+                                "Unknown light_type '{}' for dynamic node '{}'",
+                                other, node_name
+                            );
+                        }
+                    }
+
+                    // Insert ActiveLightEffects for procedural light effect system
+                    entity_commands.insert(ActiveLightEffects::default());
+                } else {
+                    warn!(
+                        "Dynamic node '{}' is EntityType::Light but has no light_info",
+                        node_name
+                    );
+                }
+            }
+
+            // Attach timer/delay components for time-based triggers
+            for (trigger_index, trigger_def) in node_config.triggers.iter().enumerate() {
+                match trigger_def.trigger_type {
+                    TriggerType::OnTimer => {
+                        let interval = trigger_def
+                            .params
+                            .get("interval")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(1.0) as f32;
+                        let repeat = trigger_def
+                            .params
+                            .get("repeat")
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(true);
+                        let mode = if repeat {
+                            bevy::time::TimerMode::Repeating
+                        } else {
+                            bevy::time::TimerMode::Once
+                        };
+                        entity_commands.insert(DynamicTimer {
+                            timer: bevy::time::Timer::from_seconds(interval, mode),
+                            trigger_index,
+                        });
+                    }
+                    TriggerType::OnDelay => {
+                        let delay = trigger_def
+                            .params
+                            .get("delay")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(1.0) as f32;
+                        entity_commands.insert(DynamicDelay {
+                            timer: bevy::time::Timer::from_seconds(
+                                delay,
+                                bevy::time::TimerMode::Once,
+                            ),
+                            trigger_index,
+                        });
+                    }
+                    _ => {}
+                }
             }
 
             // Extract mesh data for visuals, collider, and/or debug visualization

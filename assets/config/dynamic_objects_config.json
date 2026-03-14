@@ -4,10 +4,18 @@
       "type": "light",
       "light_info": {
         "light_type": "point",
-        "color": [1.0, 0.03966067, 0.009816596],
-        "intensity": 27175.707
+        "color": [1.0, 0.04, 0.01],
+        "intensity": 27175.7
       },
-      "triggers": []
+      "triggers": [
+        {
+          "type": "onEntitySpawn",
+          "actions": [
+            { "type": "start_light_effect", "effect": "flicker", "channel": "intensity", "min": 15000, "max": 35000, "speed": 6.0 },
+            { "type": "start_light_effect", "effect": "fixed", "color": [1.0, 0.04, 0.01] }
+          ]
+        }
+      ]
     }
   }
 }

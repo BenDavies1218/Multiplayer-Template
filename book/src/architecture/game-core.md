@@ -9,7 +9,7 @@ Shared game logic and configuration used by all crates. Does not contain network
 | `core_config` | Master `GameCoreConfig` resource containing all subsystem settings |
 | `world` | Loads visual meshes from glTF/GLB, provides collision bundle and mesh helpers |
 | `zones` | Loads zones + collision from a single GLB, spawn points, death/damage/trigger zones, collision detection |
-| `dynamic` | Data-driven interactable objects (doors, pickups, lights) with trigger/action system |
+| `dynamic` | Data-driven interactable objects (doors, pickups, lights, zones) with trigger/action system, entity type detection (mesh/light/empty/camera), procedural light effects (flicker/pulse/cycle/fixed), and mesh transform tweens (move/rotate/scale) |
 | `character` | Character marker, hitbox loading from glTF/GLB, model identity, hitbox region components |
 | `utils` | CLI argument parsing (`clap`), config file loading, log setup |
 
@@ -20,9 +20,11 @@ Shared game logic and configuration used by all crates. Does not contain network
 - **`CharacterModelId`** — Replicated string identifier for character visual model (e.g. `"default"`). Key into client's model catalog.
 - **`HitboxRegion`** — Component on hitbox child entities. Contains region `name` and `base_damage` from glTF extras.
 - **`CharacterHitboxData`** — Resource holding parsed hitbox regions from character hitbox GLB. Used to attach hitbox colliders on spawn.
-- **`DynamicObject`** — Replicated marker component with `object_type` and `object_id` for interactable objects.
+- **`DynamicObject`** — Replicated marker component with `object_type`, `object_id`, and `entity_type: EntityType` (mesh/light/empty/camera) for interactable objects.
 - **`DynamicState`** — Replicated state of a dynamic object (current state string, togglable flag).
-- **`DynamicBehavior`** — Parsed trigger/action definitions from Blender custom properties. Server + viewer only.
+- **`DynamicBehavior`** — Parsed trigger/action definitions from JSON config. Server + viewer only.
+- **`ActiveLightEffects`** — Currently running procedural intensity and color effects on a light entity (flicker, pulse, cycle, fixed).
+- **`DynamicTween`** — Active translation/rotation/scale tween on a dynamic object, with easing support.
 - **`DynamicObjectRegistry`** — Resource mapping object IDs (Blender node names) to entities for cross-object targeting.
 
 ## Plugins

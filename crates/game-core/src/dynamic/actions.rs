@@ -11,6 +11,7 @@ pub fn execute_state_actions(
     mut action_events: MessageReader<DynamicActionEvent>,
     mut state_query: Query<(&mut DynamicState, &DynamicObject)>,
     mut enabled_query: Query<&mut DynamicEnabled>,
+    mut visibility_query: Query<&mut Visibility>,
     registry: Option<Res<DynamicObjectRegistry>>,
     mut commands: Commands,
 ) {
@@ -64,6 +65,33 @@ pub fn execute_state_actions(
                 if let Ok(mut enabled) = enabled_query.get_mut(target_entity) {
                     enabled.0 = false;
                     info!("Dynamic object {:?} disabled", target_entity);
+                }
+            }
+            ActionType::SetState => {
+                if let Some(value) =
+                    event.action.params.get("value").and_then(|v| v.as_str())
+                    && let Ok((mut state, obj)) = state_query.get_mut(event.object)
+                {
+                    info!(
+                        "Dynamic '{}' state: {} -> {}",
+                        obj.object_id, state.current, value
+                    );
+                    state.current = value.to_string();
+                }
+            }
+            ActionType::SetVisibility => {
+                let visible = event
+                    .action
+                    .params
+                    .get("visible")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(true);
+                if let Ok(mut vis) = visibility_query.get_mut(event.object) {
+                    *vis = if visible {
+                        Visibility::Inherited
+                    } else {
+                        Visibility::Hidden
+                    };
                 }
             }
             // Other action types are handled by client-side systems

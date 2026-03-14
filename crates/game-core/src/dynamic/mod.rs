@@ -7,13 +7,17 @@ use crate::utils::config_loader::load_config;
 pub mod actions;
 pub mod debug;
 pub mod events;
+pub mod light_effects;
 mod loader;
+pub mod mesh_effects;
 mod processor;
 pub mod triggers;
 pub mod types;
 
 pub use debug::{DynamicDebugMesh, DynamicDebugSettings};
 pub use events::*;
+pub use light_effects::{apply_start_light_effect, apply_stop_light_effect};
+pub use mesh_effects::start_tween_from_action;
 pub use types::*;
 
 /// Configuration for DynamicPlugin.
@@ -99,10 +103,25 @@ impl Plugin for DynamicPlugin {
                     triggers::detect_enter_exit_triggers,
                     triggers::detect_spawn_triggers,
                     triggers::detect_interact_triggers,
+                    triggers::detect_timer_triggers,
+                    triggers::detect_delay_triggers,
+                    triggers::detect_state_change_triggers,
+                    triggers::detect_target_state_change_triggers,
                     triggers::dispatch_trigger_actions,
                     actions::execute_state_actions,
                 )
                     .chain(),
+            );
+        }
+
+        // Light effects and mesh tweens (client + viewer)
+        if self.config.enable_visuals || self.config.enable_debug {
+            app.add_systems(
+                Update,
+                (
+                    light_effects::tick_light_effects,
+                    mesh_effects::tick_mesh_tweens,
+                ),
             );
         }
 
