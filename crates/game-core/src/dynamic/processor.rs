@@ -107,6 +107,59 @@ pub fn process_dynamic_objects(
                 entity_commands.insert(InteractionRadius(radius));
             }
 
+            // Spawn light components for light-type nodes
+            if node_config.node_type == EntityType::Light {
+                if let Some(ref light_info) = node_config.light_info {
+                    let color = Color::linear_rgb(
+                        light_info.color[0],
+                        light_info.color[1],
+                        light_info.color[2],
+                    );
+                    let intensity = light_info.intensity;
+
+                    match light_info.light_type.as_str() {
+                        "point" => {
+                            entity_commands.insert(PointLight {
+                                color,
+                                intensity,
+                                shadows_enabled: true,
+                                ..default()
+                            });
+                        }
+                        "spot" => {
+                            entity_commands.insert(SpotLight {
+                                color,
+                                intensity,
+                                shadows_enabled: true,
+                                ..default()
+                            });
+                        }
+                        "directional" => {
+                            entity_commands.insert(DirectionalLight {
+                                color,
+                                illuminance: intensity,
+                                shadows_enabled: true,
+                                ..default()
+                            });
+                        }
+                        other => {
+                            warn!(
+                                "Unknown light_type '{}' for dynamic node '{}'",
+                                other, node_name
+                            );
+                        }
+                    }
+
+                    // Insert ActiveLightEffects for procedural light effect system
+                    entity_commands.insert(ActiveLightEffects::default());
+                } else {
+                    warn!(
+                        "Dynamic node '{}' is EntityType::Light but has no light_info",
+                        node_name
+                    );
+                }
+            }
+
             // Extract mesh data for collider and/or debug visualization
             if needs_sensor || plugin_config.enable_debug {
                 if let Some(gltf_mesh_handle) = &gltf_node.mesh {
