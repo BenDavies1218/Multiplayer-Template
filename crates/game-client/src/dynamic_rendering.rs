@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use game_core::dynamic::{
-    ActionType, DynamicActionEvent, DynamicObject, DynamicObjectRegistry, DynamicState,
+    light_effects, ActionType, ActiveLightEffects, DynamicActionEvent, DynamicObject,
+    DynamicObjectRegistry, DynamicState,
 };
 
 /// Client-side plugin for visual action execution on dynamic objects.
@@ -22,6 +23,7 @@ fn execute_visual_actions(
     name_query: Query<&Name>,
     mut point_lights: Query<(&Name, &mut PointLight)>,
     mut spot_lights: Query<(&Name, &mut SpotLight)>,
+    mut effects_query: Query<&mut ActiveLightEffects>,
 ) {
     for event in action_events.read() {
         match event.action.action_type {
@@ -124,6 +126,16 @@ fn execute_visual_actions(
                     .unwrap_or("");
                 info!("Play sound: '{}'", sound);
                 // TODO: Play audio clip
+            }
+            ActionType::StartLightEffect => {
+                if let Ok(mut effects) = effects_query.get_mut(event.object) {
+                    light_effects::apply_start_light_effect(&mut effects, &event.action.params);
+                }
+            }
+            ActionType::StopLightEffect => {
+                if let Ok(mut effects) = effects_query.get_mut(event.object) {
+                    light_effects::apply_stop_light_effect(&mut effects, &event.action.params);
+                }
             }
             // State actions (toggle, collect, enable, disable) are handled server-side
             _ => {}
