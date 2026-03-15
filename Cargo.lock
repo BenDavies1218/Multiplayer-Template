@@ -3367,10 +3367,21 @@ dependencies = [
  "bevy",
  "dotenvy",
  "game-core",
+ "game-protocol",
  "leafwing-input-manager",
  "lightyear",
  "serde",
  "tracing",
+]
+
+[[package]]
+name = "game-protocol"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "leafwing-input-manager",
+ "lightyear",
+ "serde",
 ]
 
 [[package]]

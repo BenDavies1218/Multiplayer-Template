@@ -6,7 +6,7 @@ Shared networking protocol, replication, and movement logic used by both client 
 
 | Module | Purpose |
 |--------|---------|
-| `protocol` | Lightyear protocol registration, shared components (`CharacterAction`, `CameraOrientation`, `CrouchState`, marker components), prediction and rollback setup |
+| `protocol` | Lightyear protocol registration, prediction and rollback setup. Shared type definitions (`CharacterAction`, `CameraOrientation`, `CrouchState`, marker components) are defined in `game-protocol` and re-exported here |
 | `rollback` | Speed-scaled rollback thresholds and comparison functions registered with Lightyear |
 | `config` | Environment variable loading (`Config`), shared networking settings (`SharedSettings`), helper functions |
 | `movement` | `apply_character_movement()` — camera-relative deterministic movement shared by client and server |
@@ -49,4 +49,4 @@ To add new replicated entity types (e.g. health, inventory, vehicles):
 
 ## Dependencies
 
-Depends on `game-core` for config types (`GameCoreConfig`, `MovementConfig`, `CharacterConfig`, etc.) and `CharacterMarker`. Uses Lightyear for networking, Avian3d for physics, and leafwing-input-manager for input.
+Depends on `game-core` for config types (`GameCoreConfig`, `MovementConfig`, `CharacterConfig`, etc.) and `CharacterMarker`. Depends on `game-protocol` for shared type definitions (`CharacterAction`, `CameraOrientation`, `CrouchState`, marker components), which are re-exported for backward compatibility. Uses Lightyear for networking, Avian3d for physics, and leafwing-input-manager for input.

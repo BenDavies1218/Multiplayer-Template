@@ -1,5 +1,5 @@
 [package]
-name = "game-networking"
+name = "game-protocol"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -7,30 +7,13 @@ authors.workspace = true
 publish = false
 
 [dependencies]
-# Internal
-game-core.workspace = true
-game-protocol.workspace = true
-
-# Workspace dependencies
 bevy = { workspace = true, features = [
     "bevy_state",
     "serialize",
 ] }
 lightyear = { workspace = true, features = [
-    "client",
-    "server",
-    "interpolation",
-    "prediction",
     "replication",
     "leafwing",
-    "avian3d",
-] }
-avian3d = { workspace = true, features = [
-    "3d",
-    "f32",
-    "parry-f32",
-    "parallel",
-    "serialize",
 ] }
 leafwing-input-manager = { workspace = true, features = [
     "keyboard",
@@ -38,5 +21,3 @@ leafwing-input-manager = { workspace = true, features = [
     "mouse",
 ] }
 serde = { workspace = true, features = ["alloc", "derive"] }
-dotenvy.workspace = true
-tracing.workspace = true

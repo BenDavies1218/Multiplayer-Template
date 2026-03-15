@@ -24,7 +24,6 @@ use avian3d::prelude::*;
 use game_core::core_config::GameCoreConfig;
 use lightyear::avian3d::plugin::AvianReplicationMode;
 
-use protocol::ProtocolPlugin;
 use replication::{despawn_system, projectile::shoot_bullet};
 
 #[derive(Clone)]
@@ -41,7 +40,7 @@ impl Plugin for NetworkingPlugin {
         app.insert_resource(self.config.clone());
 
         // Networking protocols
-        app.add_plugins(ProtocolPlugin);
+        app.add_plugins(protocol::ProtocolPlugin);
 
         // types needed for replication and interpolation
         app.register_type::<Transform>();

@@ -12,6 +12,7 @@
 
 - [Overview](architecture/overview.md)
 - [game-core](architecture/game-core.md)
+- [game-protocol](architecture/game-protocol.md)
 - [game-networking](architecture/game-networking.md)
 - [game-client](architecture/game-client.md)
 - [game-server](architecture/game-server.md)
