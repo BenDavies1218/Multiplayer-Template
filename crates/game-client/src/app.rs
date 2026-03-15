@@ -136,6 +136,10 @@ pub fn build_full_client_app(
         camera_config: game_camera::CameraConfig::first_person_from_config(&camera_config),
     });
 
+    if client_config.enable_diagnostics {
+        app.add_plugins(game_diagnostics::DiagnosticsPlugin::client());
+    }
+
     spawn_client_connection_from_config(&mut app, client_id, &core_config, &client_config);
 
     // Input delay configuration

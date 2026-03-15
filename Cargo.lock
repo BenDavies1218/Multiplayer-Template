@@ -3332,6 +3332,7 @@ dependencies = [
  "console_error_panic_hook",
  "game-camera",
  "game-core",
+ "game-diagnostics",
  "game-dynamic",
  "game-networking",
  "game-protocol",
@@ -3365,9 +3366,7 @@ dependencies = [
 name = "game-diagnostics"
 version = "0.1.0"
 dependencies = [
- "avian3d",
  "bevy",
- "lightyear",
  "lightyear_prediction",
  "lightyear_sync",
  "tracing",
@@ -6958,6 +6957,7 @@ dependencies = [
  "bevy",
  "clap",
  "game-core",
+ "game-diagnostics",
  "game-dynamic",
  "game-networking",
  "game-server",
@@ -9028,6 +9028,7 @@ dependencies = [
  "bevy",
  "game-camera",
  "game-core",
+ "game-diagnostics",
  "game-dynamic",
  "tracing",
 ]

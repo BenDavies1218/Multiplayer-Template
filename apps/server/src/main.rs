@@ -21,6 +21,8 @@ fn main() {
 
     let mut app = build_server_app_from_config(tick, &core_config);
 
+    let enable_diagnostics = server_config.enable_diagnostics;
+    let diag_interval = server_config.diagnostics_log_interval_secs;
     app.insert_resource(server_config);
     app.add_plugins(ConfigHotReloadPlugin::default());
     app.watch_config::<GameCoreConfig>("game_core_config.json");
@@ -39,6 +41,10 @@ fn main() {
     });
     app.add_plugins(game_core::character::CharacterPlugin);
     app.add_plugins(ServerPlugin);
+
+    if enable_diagnostics {
+        app.add_plugins(game_diagnostics::DiagnosticsPlugin::server_with_interval(diag_interval));
+    }
 
     spawn_server_connection_from_config(&mut app, &core_config);
 

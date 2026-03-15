@@ -13,6 +13,7 @@ doc = false
 [dependencies]
 # Internal crates
 game-core.workspace = true
+game-diagnostics.workspace = true
 game-dynamic.workspace = true
 game-networking.workspace = true
 game-server.workspace = true

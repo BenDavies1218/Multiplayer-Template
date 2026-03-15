@@ -18,52 +18,57 @@ fn main() {
     let core_config: GameCoreConfig = load_config("game_core_config.json");
     let camera_config: GameCameraFileConfig = load_config("game_camera_config.json");
 
-    App::new()
-        .insert_resource(core_config.clone())
-        .add_plugins(
-            DefaultPlugins
-                .set(AssetPlugin {
-                    file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
-                    meta_check: bevy::asset::AssetMetaCheck::Never,
-                    ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "World Viewer - Test Your World Assets".to_string(),
-                        resolution: WindowResolution::new(1920, 1080),
-                        ..default()
-                    }),
+    let mut app = App::new();
+    app.insert_resource(core_config.clone());
+    app.add_plugins(
+        DefaultPlugins
+            .set(AssetPlugin {
+                file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
+                meta_check: bevy::asset::AssetMetaCheck::Never,
+                ..default()
+            })
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "World Viewer - Test Your World Assets".to_string(),
+                    resolution: WindowResolution::new(1920, 1080),
                     ..default()
                 }),
-        )
-        .add_plugins(ConfigHotReloadPlugin::default())
-        .watch_config::<GameCoreConfig>("game_core_config.json")
-        .watch_config::<GameCameraFileConfig>("game_camera_config.json")
-        .add_plugins(CameraPlugin {
-            config: CameraConfig::free_view_from_config(&camera_config),
-        })
-        .add_plugins(PhysicsPlugins::default())
-        .add_plugins(game_core::world::WorldPlugin {
-            config: game_core::world::WorldPluginConfig::viewer(),
-        })
-        .add_plugins(game_core::zones::ZonePlugin {
-            config: game_core::zones::ZonePluginConfig::viewer(),
-        })
-        .add_plugins(game_dynamic::DynamicPlugin {
-            config: game_dynamic::DynamicPluginConfig::viewer(),
-        })
-        .add_plugins(SkyboxPlugin)
-        .add_systems(Startup, setup)
-        .add_systems(
-            Update,
-            (
-                toggle_camera_mode,
-                viewer_camera_controller,
-                cursor_grab,
-                auto_play_gltf_animations,
-            ),
-        )
-        .run();
+                ..default()
+            }),
+    );
+    app.add_plugins(ConfigHotReloadPlugin::default());
+    app.watch_config::<GameCoreConfig>("game_core_config.json");
+    app.watch_config::<GameCameraFileConfig>("game_camera_config.json");
+    app.add_plugins(CameraPlugin {
+        config: CameraConfig::free_view_from_config(&camera_config),
+    });
+    app.add_plugins(PhysicsPlugins::default());
+    app.add_plugins(game_core::world::WorldPlugin {
+        config: game_core::world::WorldPluginConfig::viewer(),
+    });
+    app.add_plugins(game_core::zones::ZonePlugin {
+        config: game_core::zones::ZonePluginConfig::viewer(),
+    });
+    app.add_plugins(game_dynamic::DynamicPlugin {
+        config: game_dynamic::DynamicPluginConfig::viewer(),
+    });
+    app.add_plugins(SkyboxPlugin);
+
+    if core_config.enable_diagnostics {
+        app.add_plugins(game_diagnostics::DiagnosticsPlugin::viewer());
+    }
+
+    app.add_systems(Startup, setup);
+    app.add_systems(
+        Update,
+        (
+            toggle_camera_mode,
+            viewer_camera_controller,
+            cursor_grab,
+            auto_play_gltf_animations,
+        ),
+    );
+    app.run();
 }
 
 /// Marker for the test capsule that camera follows in first/third person.
