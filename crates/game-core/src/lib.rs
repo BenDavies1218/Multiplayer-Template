@@ -24,8 +24,5 @@ pub use character::{
 };
 pub use core_config::{GameCoreConfig, HitboxRegionConfig, HitboxShape};
 pub use performance_config::GamePerformanceConfig;
-pub use simulation_config::{
-    GameSimulationConfig, HitboxRegionConfig as NewHitboxRegionConfig,
-    HitboxShape as NewHitboxShape,
-};
+pub use simulation_config::GameSimulationConfig;
 pub use world_config::GameWorldConfig;
