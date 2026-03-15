@@ -1,0 +1,18 @@
+{
+  "networking": {
+    "fixed_timestep_hz": 64.0,
+    "send_interval_hz": 64.0,
+    "interpolation_buffer_ms": 100,
+    "client_timeout_secs": 3,
+    "protocol_id": 0
+  },
+  "rollback_thresholds": {
+    "position": 5.0,
+    "position_speed_factor": 0.3,
+    "rotation": 0.1,
+    "linear_velocity": 0.5,
+    "angular_velocity": 1.0
+  },
+  "enable_diagnostics": true,
+  "vsync": true
+}

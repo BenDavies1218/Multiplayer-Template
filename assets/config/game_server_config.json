@@ -1,5 +1,9 @@
 {
-  "enable_diagnostics": true,
+  "connection": {
+    "server_host": "127.0.0.1",
+    "server_port": 5888,
+    "steam_app_id": 480
+  },
   "diagnostics_log_interval_secs": 10.0,
   "spawning": {
     "fallback_angle_multiplier": 5.0,

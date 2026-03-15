@@ -1,5 +1,10 @@
 {
   "enable_diagnostics": true,
+  "connection": {
+    "server_host": "127.0.0.1",
+    "server_port": 5888,
+    "client_port": 0
+  },
   "window": {
     "title": "Game Client",
     "width": 1024,
@@ -77,12 +82,35 @@
     "camera_start_position": [0.0, 2.0, 0.0],
     "eye_height_offset": 0.5,
     "projectile_radius": 1.0,
-    "interpolation_send_ratio": 2.0,
-    "vsync": true
+    "interpolation_send_ratio": 2.0
   },
-  "transport": {
-    "token_expiration": -1,
-    "simulate_latency": false
+  "camera": {
+    "first_person": {
+      "sensitivity": 0.002,
+      "free_camera_speed": 0.0,
+      "third_person_distance": 0.0,
+      "third_person_height": 0.0,
+      "smooth_camera": false,
+      "smooth_factor": 0.1
+    },
+    "third_person": {
+      "sensitivity": 0.002,
+      "free_camera_speed": 0.0,
+      "third_person_distance": 7.0,
+      "third_person_height": 1.0,
+      "smooth_camera": true,
+      "smooth_factor": 0.1
+    },
+    "free_view": {
+      "sensitivity": 0.002,
+      "free_camera_speed": 20.0,
+      "third_person_distance": 0.0,
+      "third_person_height": 0.0,
+      "smooth_camera": false,
+      "smooth_factor": 0.1
+    },
+    "pitch_clamp_radians": 1.54,
+    "start_position": [0.0, 20.0, 0.0]
   },
   "character": {
     "model_catalog": {
@@ -93,5 +121,24 @@
       }
     },
     "selected_model": "default"
+  },
+  "transport": {
+    "token_expiration": -1,
+    "simulate_latency": false
+  },
+  "debug": {
+    "colors": {
+      "collision": [1.0, 0.0, 0.0, 0.3],
+      "death_zone": [1.0, 0.0, 0.0, 0.3],
+      "damage_zone": [1.0, 1.0, 0.0, 0.3],
+      "trigger_zone": [0.0, 0.5, 1.0, 0.3],
+      "spawn_point": [0.0, 1.0, 0.0, 0.3],
+      "dynamic_object": [0.0, 1.0, 1.0, 0.3]
+    },
+    "toggle_keys": {
+      "collision": "KeyC",
+      "zone": "KeyZ",
+      "dynamic": "KeyD"
+    }
   }
 }

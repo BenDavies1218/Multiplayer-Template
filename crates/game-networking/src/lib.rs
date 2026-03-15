@@ -14,7 +14,7 @@
 //! | Plugin | Responsibility |
 //! |--------|---------------|
 //! | [`ProtocolPlugin`] | Component registration, prediction config, input plugin |
-//! | [`RollbackPlugin`] | Threshold initialization from [`RollbackConfig`](game_core::core_config::RollbackConfig) |
+//! | [`RollbackPlugin`] | Threshold initialization from [`RollbackConfig`](game_core::performance_config::RollbackConfig) |
 //! | [`ProjectilePlugin`] | Bullet spawning + timed despawn (FixedUpdate) |
 //! | [`MovementPlugin`] | Shared movement function namespace (systems scheduled by consumers) |
 //!

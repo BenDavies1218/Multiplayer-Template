@@ -1,0 +1,13 @@
+{
+  "asset_path": "assets",
+  "world_assets": {
+    "visual_path": "models/world_static.glb",
+    "dynamic_path": "models/world_dynamic.glb",
+    "zones_path": "models/world_zones.glb",
+    "skybox_path": "sunset_sky_hdr_cubemap.exr"
+  },
+  "logging": {
+    "default_level": "info",
+    "filter": "wgpu=error,bevy_render=info,bevy_ecs=warn,bevy_time=warn,naga=warn,bevy_enhanced_input::action::fns=error"
+  }
+}

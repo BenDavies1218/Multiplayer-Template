@@ -1,7 +1,7 @@
 //! Rollback plugin — initializes rollback threshold configuration.
 //!
 //! Must be added before any rollback checks run. Reads thresholds from
-//! [`RollbackConfig`](game_core::core_config::RollbackConfig) and stores them
+//! [`RollbackConfig`](game_core::performance_config::RollbackConfig) and stores them
 //! in a global static for use by the comparison functions in [`crate::rollback`].
 
 use bevy::prelude::*;

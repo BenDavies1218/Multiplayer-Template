@@ -22,9 +22,7 @@ pub use character::{
     CharacterHitboxData, CharacterHitboxMarker, CharacterMarker, CharacterModelId, HitboxRegion,
     attach_hitbox_to_character,
 };
-pub use core_config::{
-    DebugColorsConfig, DebugToggleKeysConfig, GameCoreConfig, HitboxRegionConfig, HitboxShape,
-};
+pub use core_config::{DebugColorsConfig, DebugToggleKeysConfig};
 pub use performance_config::GamePerformanceConfig;
 pub use simulation_config::GameSimulationConfig;
 pub use world_config::GameWorldConfig;
