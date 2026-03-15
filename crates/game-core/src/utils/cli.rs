@@ -10,6 +10,10 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub mode: Option<Mode>,
+
+    /// Run in headless mode (no window, no rendering). For automated testing.
+    #[arg(long, default_value_t = false)]
+    pub headless: bool,
 }
 
 impl Cli {
@@ -68,7 +72,8 @@ pub fn cli() -> Cli {
             Cli {
                 mode: Some(Mode::Client {
                     client_id: Some(client_id),
-                })
+                }),
+                headless: false,
             }
         } else {
             Cli::parse()

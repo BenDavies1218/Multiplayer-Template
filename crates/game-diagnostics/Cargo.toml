@@ -17,6 +17,7 @@ bevy = { workspace = true, features = [
     "bevy_ui",
     "sysinfo_plugin",
 ] }
+lightyear = { workspace = true, features = ["server"] }
 lightyear_sync = "0.26.4"
 lightyear_prediction = "0.26.4"
 tracing.workspace = true

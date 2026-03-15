@@ -93,3 +93,13 @@ pub(crate) fn server_fps(fps: f64) -> Health {
         Health::Critical
     }
 }
+
+pub(crate) fn tick_rate_pct(pct: f64) -> Health {
+    if pct >= 95.0 {
+        Health::Good
+    } else if pct >= 80.0 {
+        Health::Warning
+    } else {
+        Health::Critical
+    }
+}

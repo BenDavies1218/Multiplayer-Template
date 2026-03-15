@@ -49,6 +49,9 @@ fn main() {
     app.add_plugins(ServerPlugin);
 
     if performance_config.enable_diagnostics {
+        app.insert_resource(game_diagnostics::TargetTickRate(
+            performance_config.networking.fixed_timestep_hz,
+        ));
         app.add_plugins(game_diagnostics::DiagnosticsPlugin::server_with_interval(
             diag_interval,
         ));

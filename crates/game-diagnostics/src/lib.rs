@@ -10,6 +10,8 @@ mod overlay;
 mod server_log;
 mod thresholds;
 
+pub use server_log::TargetTickRate;
+
 /// The operating mode for the diagnostics plugin.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DiagnosticsMode {

@@ -3367,6 +3367,7 @@ name = "game-diagnostics"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "lightyear",
  "lightyear_prediction",
  "lightyear_sync",
  "tracing",

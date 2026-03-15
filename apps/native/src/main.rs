@@ -1,5 +1,5 @@
 use game_client::GameClientConfig;
-use game_client::app::build_full_client_app;
+use game_client::app::{build_full_client_app, build_full_headless_client_app};
 use game_core::GamePerformanceConfig;
 use game_core::simulation_config::GameSimulationConfig;
 use game_core::utils::cli::Cli;
@@ -16,16 +16,36 @@ fn main() {
     let client_config: GameClientConfig = load_config("game_client_config.json");
 
     let cli = Cli::default();
-    let client_id = cli
-        .client_id()
-        .expect("You need to specify a client_id via `-c ID`");
 
-    build_full_client_app(
-        simulation_config,
-        performance_config,
-        world_config,
-        client_config,
-        client_id,
-    )
-    .run();
+    let client_id = cli.client_id().unwrap_or_else(|| {
+        if cli.headless {
+            // Generate a pseudo-random client ID from system time
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos() as u64
+        } else {
+            panic!("You need to specify a client_id via `-c ID`")
+        }
+    });
+
+    if cli.headless {
+        build_full_headless_client_app(
+            simulation_config,
+            performance_config,
+            world_config,
+            client_config,
+            client_id,
+        )
+        .run();
+    } else {
+        build_full_client_app(
+            simulation_config,
+            performance_config,
+            world_config,
+            client_config,
+            client_id,
+        )
+        .run();
+    }
 }

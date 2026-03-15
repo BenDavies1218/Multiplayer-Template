@@ -119,6 +119,50 @@ pub fn spawn_client_connection_from_config(
     app.add_systems(Startup, connect);
 }
 
+/// Build a headless client app (no window, no rendering).
+///
+/// Uses `MinimalPlugins` like the server. Suitable for automated testing
+/// and load testing — connects to the server and runs networking/prediction
+/// but skips all rendering, camera, and input display.
+pub fn build_headless_client_app_from_config(
+    tick_duration: Duration,
+    world_config: &GameWorldConfig,
+) -> App {
+    use bevy::diagnostic::DiagnosticsPlugin;
+    use bevy::state::app::StatesPlugin;
+
+    let mut app = App::new();
+    app.add_plugins((
+        MinimalPlugins,
+        AssetPlugin {
+            file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
+            meta_check: bevy::asset::AssetMetaCheck::Never,
+            ..default()
+        },
+        log_plugin_from_config(world_config),
+        StatesPlugin,
+        DiagnosticsPlugin,
+    ));
+
+    // Minimal asset type registration for GLTF loading (collision meshes, zones)
+    app.add_plugins(bevy::gltf::GltfPlugin::default());
+    app.add_plugins(bevy::transform::TransformPlugin);
+    app.add_plugins(bevy::scene::ScenePlugin);
+    app.init_asset::<bevy::pbr::StandardMaterial>();
+    app.init_asset::<bevy::mesh::Mesh>();
+    app.init_asset::<bevy::scene::Scene>();
+    app.init_asset::<Image>();
+
+    // Add Lightyear client plugins
+    app.add_plugins(lightyear::prelude::client::ClientPlugins { tick_duration });
+
+    // Insert a default GameClientConfig so headless plugins that read it don't panic
+    let default_client_config = GameClientConfig::default();
+    app.insert_resource(default_client_config);
+
+    app
+}
+
 /// Build a complete client app with all plugins.
 ///
 /// This is the standard client setup used by both native and web apps.
@@ -166,6 +210,67 @@ pub fn build_full_client_app(
     // Insert debug config resources as standalone resources for game-core debug systems
     app.insert_resource(client_config.debug.colors.clone());
     app.insert_resource(client_config.debug.toggle_keys.clone());
+
+    if performance_config.enable_diagnostics {
+        app.add_plugins(game_diagnostics::DiagnosticsPlugin::client());
+    }
+
+    spawn_client_connection_from_config(
+        &mut app,
+        client_id,
+        &client_config,
+        &performance_config,
+        &world_config,
+    );
+
+    // Input delay configuration
+    {
+        use lightyear::prelude::client::{InputDelayConfig, InputTimelineConfig};
+        let client_entity = app
+            .world_mut()
+            .query_filtered::<Entity, With<Client>>()
+            .single(app.world_mut())
+            .unwrap();
+        app.world_mut().entity_mut(client_entity).insert(
+            InputTimelineConfig::default().with_input_delay(InputDelayConfig::fixed_input_delay(0)),
+        );
+    }
+
+    app
+}
+
+/// Build a complete headless client app with networking but no rendering.
+///
+/// Same as [`build_full_client_app`] but without window, rendering, camera,
+/// or visual plugins. Used for automated/load testing.
+pub fn build_full_headless_client_app(
+    simulation_config: GameSimulationConfig,
+    performance_config: GamePerformanceConfig,
+    world_config: GameWorldConfig,
+    client_config: GameClientConfig,
+    client_id: u64,
+) -> App {
+    let tick = Duration::from_secs_f64(1.0 / performance_config.networking.fixed_timestep_hz);
+    let mut app = build_headless_client_app_from_config(tick, &world_config);
+
+    app.insert_resource(client_config.clone());
+
+    app.add_plugins(game_networking::NetworkingPlugin {
+        simulation: simulation_config.clone(),
+        performance: performance_config.clone(),
+    });
+    app.add_plugins(game_core::world::WorldPlugin {
+        config: game_core::world::WorldPluginConfig::client(),
+    });
+    app.add_plugins(game_core::zones::ZonePlugin {
+        config: game_core::zones::ZonePluginConfig::client(),
+    });
+    app.add_plugins(game_dynamic::DynamicPlugin {
+        config: game_dynamic::DynamicPluginConfig::client(),
+    });
+
+    // ClientPlugin adds InputPlugin + PredictionPlugin + LifecyclePlugin (no rendering)
+    app.add_plugins(crate::ClientPlugin);
 
     if performance_config.enable_diagnostics {
         app.add_plugins(game_diagnostics::DiagnosticsPlugin::client());
