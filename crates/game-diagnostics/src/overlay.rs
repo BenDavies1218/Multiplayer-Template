@@ -1,6 +1,6 @@
 //! On-screen diagnostics overlay for client and viewer modes.
 //!
-//! Toggled with F3. Shows FPS, frame time, entity count, and (for Client mode)
+//! Toggled with P. Shows FPS, frame time, entity count, and (for Client mode)
 //! networking metrics from Lightyear.
 
 use bevy::diagnostic::{
@@ -58,7 +58,7 @@ fn toggle_overlay(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Visibility, With<DiagnosticsOverlay>>,
 ) {
-    if keyboard.just_pressed(KeyCode::F3) {
+    if keyboard.just_pressed(KeyCode::KeyP) {
         for mut visibility in query.iter_mut() {
             *visibility = match *visibility {
                 Visibility::Hidden => Visibility::Visible,
