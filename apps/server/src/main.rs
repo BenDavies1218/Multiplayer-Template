@@ -1,11 +1,11 @@
 use core::time::Duration;
 
 use game_core::GameCoreConfig;
-use game_dynamic::{DynamicPlugin, DynamicPluginConfig};
 use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
 use game_core::utils::config_loader::load_config;
 use game_core::world::{WorldPlugin, WorldPluginConfig};
 use game_core::zones::{ZonePlugin, ZonePluginConfig};
+use game_dynamic::{DynamicPlugin, DynamicPluginConfig};
 use game_networking::NetworkingPlugin;
 use game_networking::config;
 use game_server::app::{build_server_app_from_config, spawn_server_connection_from_config};
@@ -43,7 +43,9 @@ fn main() {
     app.add_plugins(ServerPlugin);
 
     if enable_diagnostics {
-        app.add_plugins(game_diagnostics::DiagnosticsPlugin::server_with_interval(diag_interval));
+        app.add_plugins(game_diagnostics::DiagnosticsPlugin::server_with_interval(
+            diag_interval,
+        ));
     }
 
     spawn_server_connection_from_config(&mut app, &core_config);

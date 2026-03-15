@@ -235,10 +235,8 @@ pub fn process_dynamic_objects(
 
                             // Spawn visual mesh with original material (client)
                             if plugin_config.enable_visuals {
-                                let visual_material = primitive
-                                    .material
-                                    .clone()
-                                    .unwrap_or_else(|| {
+                                let visual_material =
+                                    primitive.material.clone().unwrap_or_else(|| {
                                         materials
                                             .as_mut()
                                             .map(|m| m.add(StandardMaterial::default()))

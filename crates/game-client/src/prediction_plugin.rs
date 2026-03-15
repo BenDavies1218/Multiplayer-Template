@@ -30,10 +30,7 @@ impl Plugin for PredictionPlugin {
         // ── Update: diagnostics ─────────────────────────────────────────────
         app.add_systems(
             Update,
-            (
-                log_new_predicted_entities,
-                log_despawned_predicted_entities,
-            ),
+            (log_new_predicted_entities, log_despawned_predicted_entities),
         );
     }
 }

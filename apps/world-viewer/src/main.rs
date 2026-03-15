@@ -6,9 +6,7 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
-use game_camera::{
-    CameraConfig, CameraPlugin, CameraViewMode, GameCamera, GameCameraFileConfig,
-};
+use game_camera::{CameraConfig, CameraPlugin, CameraViewMode, GameCamera, GameCameraFileConfig};
 use game_core::GameCoreConfig;
 use game_core::skybox::SkyboxPlugin;
 use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
@@ -239,28 +237,22 @@ fn viewer_camera_controller(
             }
 
             let target_pos = target_transform.translation;
-            let eye_height = core_config.character.capsule_height / 2.0
-                + core_config.character.capsule_radius;
+            let eye_height =
+                core_config.character.capsule_height / 2.0 + core_config.character.capsule_radius;
 
             match config.view_mode {
                 CameraViewMode::FirstPerson => {
-                    cam_transform.translation =
-                        target_pos + Vec3::new(0.0, eye_height, 0.0);
+                    cam_transform.translation = target_pos + Vec3::new(0.0, eye_height, 0.0);
                 }
                 CameraViewMode::ThirdPerson => {
-                    let look_dir = Quat::from_euler(
-                        EulerRot::YXZ,
-                        game_camera.yaw,
-                        game_camera.pitch,
-                        0.0,
-                    ) * Vec3::NEG_Z;
-                    let offset = target_pos
-                        + Vec3::new(0.0, config.third_person_height, 0.0)
+                    let look_dir =
+                        Quat::from_euler(EulerRot::YXZ, game_camera.yaw, game_camera.pitch, 0.0)
+                            * Vec3::NEG_Z;
+                    let offset = target_pos + Vec3::new(0.0, config.third_person_height, 0.0)
                         - look_dir * config.third_person_distance;
                     if config.smooth_camera {
-                        cam_transform.translation = cam_transform
-                            .translation
-                            .lerp(offset, config.smooth_factor);
+                        cam_transform.translation =
+                            cam_transform.translation.lerp(offset, config.smooth_factor);
                     } else {
                         cam_transform.translation = offset;
                     }

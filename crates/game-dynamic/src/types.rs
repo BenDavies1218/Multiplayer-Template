@@ -271,10 +271,23 @@ pub enum LightEffectType {
 /// Color effect variant.
 #[derive(Debug, Clone)]
 pub enum LightColorEffectType {
-    Fixed { color: [f32; 3] },
-    Cycle { colors: Vec<[f32; 3]>, speed: f32 },
-    Flicker { min: [f32; 3], max: [f32; 3], speed: f32 },
-    Pulse { min: [f32; 3], max: [f32; 3], speed: f32 },
+    Fixed {
+        color: [f32; 3],
+    },
+    Cycle {
+        colors: Vec<[f32; 3]>,
+        speed: f32,
+    },
+    Flicker {
+        min: [f32; 3],
+        max: [f32; 3],
+        speed: f32,
+    },
+    Pulse {
+        min: [f32; 3],
+        max: [f32; 3],
+        speed: f32,
+    },
 }
 
 // ---------------------------------------------------------------------------
@@ -324,7 +337,6 @@ impl FromStr for EasingType {
 }
 
 impl EasingType {
-
     pub fn apply(&self, t: f32) -> f32 {
         match self {
             Self::Linear => t,

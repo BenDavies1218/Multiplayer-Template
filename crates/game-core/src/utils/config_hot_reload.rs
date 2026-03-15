@@ -210,24 +210,14 @@ impl bevy::prelude::Plugin for ConfigHotReloadPlugin {
 pub trait ConfigWatchExt {
     fn watch_config<T>(&mut self, _filename: &str) -> &mut Self
     where
-        T: bevy::prelude::Resource
-            + serde::de::DeserializeOwned
-            + Default
-            + Send
-            + Sync
-            + 'static;
+        T: bevy::prelude::Resource + serde::de::DeserializeOwned + Default + Send + Sync + 'static;
 }
 
 #[cfg(target_family = "wasm")]
 impl ConfigWatchExt for bevy::prelude::App {
     fn watch_config<T>(&mut self, _filename: &str) -> &mut Self
     where
-        T: bevy::prelude::Resource
-            + serde::de::DeserializeOwned
-            + Default
-            + Send
-            + Sync
-            + 'static,
+        T: bevy::prelude::Resource + serde::de::DeserializeOwned + Default + Send + Sync + 'static,
     {
         self
     }

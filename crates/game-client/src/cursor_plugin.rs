@@ -9,7 +9,7 @@ use bevy::{
 };
 use game_core::core_config::parse_key_code;
 
-use crate::client_config::{parse_mouse_button, GameClientConfig};
+use crate::client_config::{GameClientConfig, parse_mouse_button};
 
 /// Manages cursor grab/release based on configured key/button bindings.
 pub struct CursorPlugin;
