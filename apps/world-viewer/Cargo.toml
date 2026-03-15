@@ -13,6 +13,7 @@ doc = false
 [dependencies]
 # Internal crates
 game-core.workspace = true
+game-dynamic.workspace = true
 game-camera.workspace = true
 
 # Bevy with 3D rendering features

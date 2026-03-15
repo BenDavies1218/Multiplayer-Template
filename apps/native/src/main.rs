@@ -6,7 +6,7 @@ use game_camera::GameCameraFileConfig;
 use game_client::app::{build_client_app_from_config, spawn_client_connection_from_config};
 use game_client::{ClientPlugin, DynamicRenderingPlugin, FirstPersonPlugin, GameClientConfig};
 use game_core::GameCoreConfig;
-use game_core::dynamic::{DynamicPlugin, DynamicPluginConfig};
+use game_dynamic::{DynamicPlugin, DynamicPluginConfig};
 use game_core::utils::cli::Cli;
 use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
 use game_core::utils::config_loader::load_config;

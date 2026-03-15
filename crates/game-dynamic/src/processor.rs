@@ -7,7 +7,7 @@ use super::debug::{DynamicDebugMesh, DynamicDebugSettings};
 use super::types::DynamicObjectsConfig;
 use super::types::*;
 use super::{DynamicLoader, DynamicPluginConfig};
-use crate::world::{extract_mesh_indices, extract_mesh_vertices};
+use game_core::world::{extract_mesh_indices, extract_mesh_vertices};
 
 /// Process dynamic object nodes from the loaded GLB.
 ///

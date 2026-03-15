@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/game-core",
     "crates/game-protocol",
+    "crates/game-dynamic",
     "crates/game-networking",
     "crates/game-client",
     "crates/game-server",
@@ -26,6 +27,7 @@ repository = "https://github.com/BenDavies1218/Multiplayer-Template"
 # Internal crates
 game-core = { path = "crates/game-core" }
 game-protocol = { path = "crates/game-protocol" }
+game-dynamic = { path = "crates/game-dynamic" }
 game-networking = { path = "crates/game-networking" }
 game-client = { path = "crates/game-client" }
 game-server = { path = "crates/game-server" }

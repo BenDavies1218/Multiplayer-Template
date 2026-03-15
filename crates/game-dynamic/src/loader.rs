@@ -2,7 +2,7 @@ use bevy::gltf::Gltf;
 use bevy::prelude::*;
 
 use super::DynamicLoader;
-use crate::core_config::GameCoreConfig;
+use game_core::core_config::GameCoreConfig;
 
 /// Load dynamic object assets at startup.
 ///

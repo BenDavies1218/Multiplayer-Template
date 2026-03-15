@@ -1,8 +1,24 @@
+//! Game Dynamic - Data-driven interactable object system
+//!
+//! This crate provides the dynamic object system for loading, processing, and
+//! managing interactive game objects exported from Blender. It includes:
+//!
+//! - **Loader/Processor** — Loads dynamic objects from GLB files and spawns ECS entities
+//! - **Triggers** — Collision, proximity, timer, delay, and state-change trigger detection
+//! - **Actions** — State mutations, visual effects, light control, mesh tweens
+//! - **Light Effects** — Procedural intensity and color effects (flicker, pulse, cycle, fixed)
+//! - **Mesh Effects** — Tweened translation, rotation, and scale transforms with easing
+//! - **Debug** — Visualization overlay for the world viewer
+//!
+//! Dynamic objects are defined in `dynamic_objects_config.json` and loaded from
+//! `world_dynamic.glb`. The server runs trigger detection and state mutations;
+//! clients execute visual effects; the viewer provides debug visualization.
+
 use bevy::gltf::Gltf;
 use bevy::prelude::*;
 
-use crate::utils::config_hot_reload::ConfigWatchExt;
-use crate::utils::config_loader::load_config;
+use game_core::utils::config_hot_reload::ConfigWatchExt;
+use game_core::utils::config_loader::load_config;
 
 pub mod actions;
 pub mod debug;

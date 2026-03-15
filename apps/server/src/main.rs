@@ -1,7 +1,7 @@
 use core::time::Duration;
 
 use game_core::GameCoreConfig;
-use game_core::dynamic::{DynamicPlugin, DynamicPluginConfig};
+use game_dynamic::{DynamicPlugin, DynamicPluginConfig};
 use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
 use game_core::utils::config_loader::load_config;
 use game_core::world::{WorldPlugin, WorldPluginConfig};

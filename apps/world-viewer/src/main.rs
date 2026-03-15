@@ -49,8 +49,8 @@ fn main() {
         .add_plugins(game_core::zones::ZonePlugin {
             config: game_core::zones::ZonePluginConfig::viewer(),
         })
-        .add_plugins(game_core::dynamic::DynamicPlugin {
-            config: game_core::dynamic::DynamicPluginConfig::viewer(),
+        .add_plugins(game_dynamic::DynamicPlugin {
+            config: game_dynamic::DynamicPluginConfig::viewer(),
         })
         .add_plugins(SkyboxPlugin)
         .add_systems(Startup, setup)

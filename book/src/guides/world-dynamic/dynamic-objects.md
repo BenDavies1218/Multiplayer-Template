@@ -10,7 +10,7 @@ Dynamic objects are loaded from a GLB file (`world_dynamic.glb`) containing mesh
 
 **Key files:**
 
-- `crates/game-core/src/dynamic/` — plugin, loader, processor, triggers, actions, types, light_effects, mesh_effects, debug
+- `crates/game-dynamic/src/` — plugin, loader, processor, triggers, actions, types, light_effects, mesh_effects, debug
 - `crates/game-client/src/dynamic_rendering.rs` — client-side visual action execution
 - `tools/glb-parser/` — CLI tool to generate type-aware config templates from GLB files
 
@@ -1187,8 +1187,8 @@ Debug meshes are semi-transparent overlays rendered on top of dynamic object col
 
 **Key files:**
 
-- `crates/game-core/src/dynamic/debug.rs` -- `DynamicDebugSettings`, toggle and visibility systems
-- `crates/game-core/src/dynamic/processor.rs` -- spawns debug meshes alongside dynamic entities
+- `crates/game-dynamic/src/debug.rs` -- `DynamicDebugSettings`, toggle and visibility systems
+- `crates/game-dynamic/src/processor.rs` -- spawns debug meshes alongside dynamic entities
 
 ---
 
