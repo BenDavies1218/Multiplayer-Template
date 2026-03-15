@@ -5,13 +5,19 @@ Authoritative client-server multiplayer 3D game built with Bevy 0.18, Lightyear 
 ## Crate Separation
 
 ```text
-┌──────────────┐     ┌──────────────────┐
-│  game-core   │◄────│  game-networking  │
-│  (config,    │     │  (protocol,       │
-│   world,     │     │   movement,       │
-│   zones,     │     │   replication)    │
-│   dynamic)   │     └────────┬─────────┘
-└──────┬───────┘              │
+┌────────────────┐
+│  game-protocol │  (shared type definitions:
+│                │   CharacterAction, markers,
+│                │   CameraOrientation, etc.)
+└───────┬────────┘
+        │
+        ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────────┐
+│  game-core   │◄─│ game-dynamic │◄─│  game-networking  │
+│  (config,    │  │ (triggers,   │  │  (protocol reg.,  │
+│   world,     │  │  actions,    │  │   movement,       │
+│   zones)     │  │  effects)    │  │   replication)    │
+└──────┬───────┘  └──────────────┘  └────────┬─────────┘
        │         ┌────────────┼────────────┐
        │         │            │            │
        ▼         ▼            ▼            ▼
@@ -20,8 +26,10 @@ Authoritative client-server multiplayer 3D game built with Bevy 0.18, Lightyear 
   └──────────┘ └──────────┘ └──────────┘
 ```
 
+- **game-protocol** — Shared type definitions (actions, markers, components) used across the networking stack. Leaf crate with minimal dependencies.
 - **game-core** — Shared config, world/zone loading, character definitions. Used by all apps.
-- **game-networking** — Shared networking protocol, replication, movement logic. Depends on `game-core`.
+- **game-dynamic** — Data-driven interactable object system (triggers, actions, light effects, mesh tweens, debug). Depends on `game-core` and `game-protocol`.
+- **game-networking** — Shared networking protocol registration, replication, movement logic. Depends on `game-core`, `game-protocol`, and `game-dynamic`.
 - **game-client** — Client systems: prediction, rendering, input, transport setup.
 - **game-server** — Server systems: authoritative simulation, player management, spawning.
 - **game-camera** — Camera modes: first-person, third-person, free-view.

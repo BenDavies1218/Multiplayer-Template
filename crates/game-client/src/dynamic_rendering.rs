@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use game_core::dynamic::{
+use game_dynamic::{
     light_effects, mesh_effects, ActionType, ActiveLightEffects, DynamicActionEvent,
     DynamicObject, DynamicObjectRegistry, DynamicState,
 };

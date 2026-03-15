@@ -3,7 +3,7 @@ use bevy::prelude::*;
 
 use super::events::{DynamicActionEvent, DynamicTriggerEvent};
 use super::types::*;
-use crate::character::CharacterMarker;
+use game_core::character::CharacterMarker;
 
 /// Detect when characters enter/exit dynamic object sensor colliders.
 #[allow(clippy::type_complexity)]

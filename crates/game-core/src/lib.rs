@@ -9,7 +9,6 @@
 
 pub mod character;
 pub mod core_config;
-pub mod dynamic;
 pub mod skybox;
 pub mod utils;
 pub mod world;

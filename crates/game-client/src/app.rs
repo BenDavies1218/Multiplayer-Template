@@ -11,6 +11,7 @@ use lightyear::prelude::*;
 
 use game_core::GameCoreConfig;
 use game_core::utils::cli::log_plugin_from_config;
+use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
 use game_networking::config::shared_settings_from_config;
 
 use crate::client_config::GameClientConfig;
@@ -95,4 +96,60 @@ pub fn spawn_client_connection_from_config(
         shared: shared_settings_from_config(core_config),
     });
     app.add_systems(Startup, connect);
+}
+
+/// Build a complete client app with all plugins.
+///
+/// This is the standard client setup used by both native and web apps.
+/// It adds config hot-reload, networking, world/zone/dynamic plugins (client mode),
+/// rendering, input, prediction, and camera — then sets up the transport connection
+/// and input delay.
+pub fn build_full_client_app(
+    core_config: GameCoreConfig,
+    client_config: GameClientConfig,
+    camera_config: game_camera::GameCameraFileConfig,
+    client_id: u64,
+) -> App {
+    let tick = Duration::from_secs_f64(1.0 / core_config.networking.fixed_timestep_hz);
+    let mut app = build_client_app_from_config(tick, &client_config, &core_config);
+
+    app.insert_resource(camera_config.clone());
+    app.add_plugins(ConfigHotReloadPlugin::default());
+    app.watch_config::<GameCoreConfig>("game_core_config.json");
+    app.watch_config::<GameClientConfig>("game_client_config.json");
+    app.watch_config::<game_camera::GameCameraFileConfig>("game_camera_config.json");
+    app.add_plugins(game_networking::NetworkingPlugin {
+        config: core_config.clone(),
+    });
+    app.add_plugins(game_core::world::WorldPlugin {
+        config: game_core::world::WorldPluginConfig::client(),
+    });
+    app.add_plugins(game_core::zones::ZonePlugin {
+        config: game_core::zones::ZonePluginConfig::client(),
+    });
+    app.add_plugins(game_dynamic::DynamicPlugin {
+        config: game_dynamic::DynamicPluginConfig::client(),
+    });
+    app.add_plugins(crate::DynamicRenderingPlugin);
+    app.add_plugins(crate::ClientPlugin);
+    app.add_plugins(crate::FirstPersonPlugin {
+        camera_config: game_camera::CameraConfig::first_person_from_config(&camera_config),
+    });
+
+    spawn_client_connection_from_config(&mut app, client_id, &core_config, &client_config);
+
+    // Input delay configuration
+    {
+        use lightyear::prelude::client::{InputDelayConfig, InputTimelineConfig};
+        let client_entity = app
+            .world_mut()
+            .query_filtered::<Entity, With<Client>>()
+            .single(app.world_mut())
+            .unwrap();
+        app.world_mut().entity_mut(client_entity).insert(
+            InputTimelineConfig::default().with_input_delay(InputDelayConfig::fixed_input_delay(0)),
+        );
+    }
+
+    app
 }

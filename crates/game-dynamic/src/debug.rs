@@ -1,4 +1,4 @@
-use crate::core_config::{GameCoreConfig, color_from_array, parse_key_code};
+use game_core::core_config::{GameCoreConfig, color_from_array, parse_key_code};
 use bevy::prelude::*;
 
 /// Resource to control dynamic object debug visualization.
