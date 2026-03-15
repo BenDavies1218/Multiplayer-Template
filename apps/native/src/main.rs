@@ -1,6 +1,6 @@
 use game_camera::GameCameraFileConfig;
-use game_client::app::build_full_client_app;
 use game_client::GameClientConfig;
+use game_client::app::build_full_client_app;
 use game_core::GameCoreConfig;
 use game_core::utils::cli::Cli;
 use game_core::utils::config_loader::load_config;

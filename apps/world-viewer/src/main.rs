@@ -6,9 +6,7 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
-use game_camera::{
-    CameraConfig, CameraPlugin, CameraViewMode, GameCamera, GameCameraFileConfig,
-};
+use game_camera::{CameraConfig, CameraPlugin, CameraViewMode, GameCamera, GameCameraFileConfig};
 use game_core::GameCoreConfig;
 use game_core::skybox::SkyboxPlugin;
 use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
@@ -18,52 +16,57 @@ fn main() {
     let core_config: GameCoreConfig = load_config("game_core_config.json");
     let camera_config: GameCameraFileConfig = load_config("game_camera_config.json");
 
-    App::new()
-        .insert_resource(core_config.clone())
-        .add_plugins(
-            DefaultPlugins
-                .set(AssetPlugin {
-                    file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
-                    meta_check: bevy::asset::AssetMetaCheck::Never,
-                    ..default()
-                })
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "World Viewer - Test Your World Assets".to_string(),
-                        resolution: WindowResolution::new(1920, 1080),
-                        ..default()
-                    }),
+    let mut app = App::new();
+    app.insert_resource(core_config.clone());
+    app.add_plugins(
+        DefaultPlugins
+            .set(AssetPlugin {
+                file_path: game_core::utils::config_loader::resolve_asset_path_for_bevy(),
+                meta_check: bevy::asset::AssetMetaCheck::Never,
+                ..default()
+            })
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "World Viewer - Test Your World Assets".to_string(),
+                    resolution: WindowResolution::new(1920, 1080),
                     ..default()
                 }),
-        )
-        .add_plugins(ConfigHotReloadPlugin::default())
-        .watch_config::<GameCoreConfig>("game_core_config.json")
-        .watch_config::<GameCameraFileConfig>("game_camera_config.json")
-        .add_plugins(CameraPlugin {
-            config: CameraConfig::free_view_from_config(&camera_config),
-        })
-        .add_plugins(PhysicsPlugins::default())
-        .add_plugins(game_core::world::WorldPlugin {
-            config: game_core::world::WorldPluginConfig::viewer(),
-        })
-        .add_plugins(game_core::zones::ZonePlugin {
-            config: game_core::zones::ZonePluginConfig::viewer(),
-        })
-        .add_plugins(game_dynamic::DynamicPlugin {
-            config: game_dynamic::DynamicPluginConfig::viewer(),
-        })
-        .add_plugins(SkyboxPlugin)
-        .add_systems(Startup, setup)
-        .add_systems(
-            Update,
-            (
-                toggle_camera_mode,
-                viewer_camera_controller,
-                cursor_grab,
-                auto_play_gltf_animations,
-            ),
-        )
-        .run();
+                ..default()
+            }),
+    );
+    app.add_plugins(ConfigHotReloadPlugin::default());
+    app.watch_config::<GameCoreConfig>("game_core_config.json");
+    app.watch_config::<GameCameraFileConfig>("game_camera_config.json");
+    app.add_plugins(CameraPlugin {
+        config: CameraConfig::free_view_from_config(&camera_config),
+    });
+    app.add_plugins(PhysicsPlugins::default());
+    app.add_plugins(game_core::world::WorldPlugin {
+        config: game_core::world::WorldPluginConfig::viewer(),
+    });
+    app.add_plugins(game_core::zones::ZonePlugin {
+        config: game_core::zones::ZonePluginConfig::viewer(),
+    });
+    app.add_plugins(game_dynamic::DynamicPlugin {
+        config: game_dynamic::DynamicPluginConfig::viewer(),
+    });
+    app.add_plugins(SkyboxPlugin);
+
+    if core_config.enable_diagnostics {
+        app.add_plugins(game_diagnostics::DiagnosticsPlugin::viewer());
+    }
+
+    app.add_systems(Startup, setup);
+    app.add_systems(
+        Update,
+        (
+            toggle_camera_mode,
+            viewer_camera_controller,
+            cursor_grab,
+            auto_play_gltf_animations,
+        ),
+    );
+    app.run();
 }
 
 /// Marker for the test capsule that camera follows in first/third person.
@@ -234,28 +237,22 @@ fn viewer_camera_controller(
             }
 
             let target_pos = target_transform.translation;
-            let eye_height = core_config.character.capsule_height / 2.0
-                + core_config.character.capsule_radius;
+            let eye_height =
+                core_config.character.capsule_height / 2.0 + core_config.character.capsule_radius;
 
             match config.view_mode {
                 CameraViewMode::FirstPerson => {
-                    cam_transform.translation =
-                        target_pos + Vec3::new(0.0, eye_height, 0.0);
+                    cam_transform.translation = target_pos + Vec3::new(0.0, eye_height, 0.0);
                 }
                 CameraViewMode::ThirdPerson => {
-                    let look_dir = Quat::from_euler(
-                        EulerRot::YXZ,
-                        game_camera.yaw,
-                        game_camera.pitch,
-                        0.0,
-                    ) * Vec3::NEG_Z;
-                    let offset = target_pos
-                        + Vec3::new(0.0, config.third_person_height, 0.0)
+                    let look_dir =
+                        Quat::from_euler(EulerRot::YXZ, game_camera.yaw, game_camera.pitch, 0.0)
+                            * Vec3::NEG_Z;
+                    let offset = target_pos + Vec3::new(0.0, config.third_person_height, 0.0)
                         - look_dir * config.third_person_distance;
                     if config.smooth_camera {
-                        cam_transform.translation = cam_transform
-                            .translation
-                            .lerp(offset, config.smooth_factor);
+                        cam_transform.translation =
+                            cam_transform.translation.lerp(offset, config.smooth_factor);
                     } else {
                         cam_transform.translation = offset;
                     }

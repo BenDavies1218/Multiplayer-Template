@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use game_dynamic::{
-    light_effects, mesh_effects, ActionType, ActiveLightEffects, DynamicActionEvent,
-    DynamicObject, DynamicObjectRegistry, DynamicState,
+    ActionType, ActiveLightEffects, DynamicActionEvent, DynamicObject, DynamicObjectRegistry,
+    DynamicState, light_effects, mesh_effects,
 };
 
 /// Client-side plugin for visual action execution on dynamic objects.

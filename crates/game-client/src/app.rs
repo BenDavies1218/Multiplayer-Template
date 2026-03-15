@@ -22,7 +22,11 @@ pub fn window_plugin_from_config(config: &GameClientConfig) -> WindowPlugin {
         primary_window: Some(Window {
             title: format!("{}: {}", config.window.title, env!("CARGO_PKG_NAME")),
             resolution: (config.window.width, config.window.height).into(),
-            present_mode: PresentMode::AutoVsync,
+            present_mode: if config.rendering.vsync {
+                PresentMode::AutoVsync
+            } else {
+                PresentMode::AutoNoVsync
+            },
             // set to true if we want to capture tab etc in wasm
             prevent_default_event_handling: true,
             ..Default::default()
@@ -135,6 +139,10 @@ pub fn build_full_client_app(
     app.add_plugins(crate::FirstPersonPlugin {
         camera_config: game_camera::CameraConfig::first_person_from_config(&camera_config),
     });
+
+    if client_config.enable_diagnostics {
+        app.add_plugins(game_diagnostics::DiagnosticsPlugin::client());
+    }
 
     spawn_client_connection_from_config(&mut app, client_id, &core_config, &client_config);
 

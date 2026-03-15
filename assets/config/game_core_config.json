@@ -85,5 +85,6 @@
     "velocity": 50.0,
     "lifetime_ms": 5000,
     "radius": 0.1
-  }
+  },
+  "enable_diagnostics": true
 }

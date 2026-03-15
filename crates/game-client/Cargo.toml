@@ -9,6 +9,7 @@ publish = false
 [dependencies]
 # Internal
 game-core.workspace = true
+game-diagnostics.workspace = true
 game-dynamic.workspace = true
 game-networking.workspace = true
 game-protocol.workspace = true

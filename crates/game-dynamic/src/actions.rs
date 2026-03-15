@@ -68,8 +68,7 @@ pub fn execute_state_actions(
                 }
             }
             ActionType::SetState => {
-                if let Some(value) =
-                    event.action.params.get("value").and_then(|v| v.as_str())
+                if let Some(value) = event.action.params.get("value").and_then(|v| v.as_str())
                     && let Ok((mut state, obj)) = state_query.get_mut(event.object)
                 {
                     info!(

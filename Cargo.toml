@@ -8,6 +8,7 @@ members = [
     "crates/game-client",
     "crates/game-server",
     "crates/game-camera",
+    "crates/game-diagnostics",
     "apps/server",
     "apps/native",
     "apps/web",
@@ -32,6 +33,7 @@ game-networking = { path = "crates/game-networking" }
 game-client = { path = "crates/game-client" }
 game-server = { path = "crates/game-server" }
 game-camera = { path = "crates/game-camera" }
+game-diagnostics = { path = "crates/game-diagnostics" }
 
 # External dependencies - versions shared across all crates
 bevy = { version = "0.18", default-features = false }

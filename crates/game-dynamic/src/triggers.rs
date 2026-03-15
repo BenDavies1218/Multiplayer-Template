@@ -163,10 +163,7 @@ pub fn detect_delay_triggers(
 
 /// Detect onStateChange triggers — fires when an entity's own state changes.
 pub fn detect_state_change_triggers(
-    query: Query<
-        (Entity, &DynamicState, &DynamicBehavior, &DynamicEnabled),
-        Changed<DynamicState>,
-    >,
+    query: Query<(Entity, &DynamicState, &DynamicBehavior, &DynamicEnabled), Changed<DynamicState>>,
     mut trigger_events: MessageWriter<DynamicTriggerEvent>,
 ) {
     for (entity, state, behavior, enabled) in query.iter() {

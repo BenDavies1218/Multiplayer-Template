@@ -1,0 +1,22 @@
+[package]
+name = "game-diagnostics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+bevy = { workspace = true, features = [
+    "bevy_state",
+    "bevy_log",
+    "serialize",
+    "bevy_render",
+    "bevy_color",
+    "bevy_text",
+    "bevy_ui",
+    "sysinfo_plugin",
+] }
+lightyear_sync = "0.26.4"
+lightyear_prediction = "0.26.4"
+tracing.workspace = true

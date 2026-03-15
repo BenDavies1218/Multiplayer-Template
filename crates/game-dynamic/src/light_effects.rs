@@ -65,9 +65,7 @@ fn compute_intensity(effect: &LightEffectInstance) -> f32 {
         LightEffectType::Flicker => {
             let t = effect.elapsed * effect.speed;
             // Multi-frequency noise approximation
-            let noise = (t * 1.0).sin() * 0.5
-                + (t * 2.3).sin() * 0.3
-                + (t * 5.7).sin() * 0.2;
+            let noise = (t * 1.0).sin() * 0.5 + (t * 2.3).sin() * 0.3 + (t * 5.7).sin() * 0.2;
             // noise range is roughly [-1, 1], map to [min, max]
             let normalized = (noise + 1.0) * 0.5;
             min + (max - min) * normalized
@@ -78,9 +76,7 @@ fn compute_intensity(effect: &LightEffectInstance) -> f32 {
 /// Compute color from an active color effect.
 fn compute_color(effect: &LightColorEffectInstance) -> Color {
     match &effect.effect_type {
-        LightColorEffectType::Fixed { color } => {
-            Color::linear_rgb(color[0], color[1], color[2])
-        }
+        LightColorEffectType::Fixed { color } => Color::linear_rgb(color[0], color[1], color[2]),
         LightColorEffectType::Cycle { colors, speed } => {
             if colors.is_empty() {
                 return Color::WHITE;
@@ -105,9 +101,7 @@ fn compute_color(effect: &LightColorEffectInstance) -> Color {
         }
         LightColorEffectType::Flicker { min, max, speed } => {
             let t = effect.elapsed * speed;
-            let noise = (t * 1.0).sin() * 0.5
-                + (t * 2.3).sin() * 0.3
-                + (t * 5.7).sin() * 0.2;
+            let noise = (t * 1.0).sin() * 0.5 + (t * 2.3).sin() * 0.3 + (t * 5.7).sin() * 0.2;
             let normalized = (noise + 1.0) * 0.5;
 
             Color::linear_rgb(
@@ -180,24 +174,16 @@ pub fn apply_start_light_effect(
         .get("effect")
         .and_then(|v| v.as_str())
         .unwrap_or("fixed");
-    let channel = params
-        .get("channel")
-        .and_then(|v| v.as_str())
-        .unwrap_or("");
+    let channel = params.get("channel").and_then(|v| v.as_str()).unwrap_or("");
     let min = params.get("min").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
     let max = params.get("max").and_then(|v| v.as_f64()).unwrap_or(1.0) as f32;
-    let speed = params
-        .get("speed")
-        .and_then(|v| v.as_f64())
-        .unwrap_or(1.0) as f32;
+    let speed = params.get("speed").and_then(|v| v.as_f64()).unwrap_or(1.0) as f32;
 
     match effect {
         "flicker" => {
             if channel == "color" {
-                let min_color = parse_color_param(params, "min_color")
-                    .unwrap_or([0.0, 0.0, 0.0]);
-                let max_color = parse_color_param(params, "max_color")
-                    .unwrap_or([1.0, 1.0, 1.0]);
+                let min_color = parse_color_param(params, "min_color").unwrap_or([0.0, 0.0, 0.0]);
+                let max_color = parse_color_param(params, "max_color").unwrap_or([1.0, 1.0, 1.0]);
                 effects.color_effect = Some(LightColorEffectInstance {
                     effect_type: LightColorEffectType::Flicker {
                         min: min_color,
@@ -219,10 +205,8 @@ pub fn apply_start_light_effect(
         }
         "pulse" => {
             if channel == "color" {
-                let min_color = parse_color_param(params, "min_color")
-                    .unwrap_or([0.0, 0.0, 0.0]);
-                let max_color = parse_color_param(params, "max_color")
-                    .unwrap_or([1.0, 1.0, 1.0]);
+                let min_color = parse_color_param(params, "min_color").unwrap_or([0.0, 0.0, 0.0]);
+                let max_color = parse_color_param(params, "max_color").unwrap_or([1.0, 1.0, 1.0]);
                 effects.color_effect = Some(LightColorEffectInstance {
                     effect_type: LightColorEffectType::Pulse {
                         min: min_color,

@@ -2,11 +2,24 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Server configuration loaded from game_server_config.json
-#[derive(Resource, Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Resource, Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GameServerConfig {
     pub spawning: SpawningConfig,
     pub transport: ServerTransportJsonConfig,
+    pub enable_diagnostics: bool,
+    pub diagnostics_log_interval_secs: f64,
+}
+
+impl Default for GameServerConfig {
+    fn default() -> Self {
+        Self {
+            spawning: SpawningConfig::default(),
+            transport: ServerTransportJsonConfig::default(),
+            enable_diagnostics: false,
+            diagnostics_log_interval_secs: 10.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

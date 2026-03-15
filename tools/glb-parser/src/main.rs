@@ -163,7 +163,10 @@ fn detect_node_type(node: &GltfNode, root: &GltfRoot) -> DetectedNode {
             .and_then(|re| re.khr_lights_punctual.as_ref())
             .and_then(|lp| lp.lights.get(light_ref.light))
             .map(|light| LightInfo {
-                light_type: light.light_type.clone().unwrap_or_else(|| "point".to_string()),
+                light_type: light
+                    .light_type
+                    .clone()
+                    .unwrap_or_else(|| "point".to_string()),
                 color: light.color,
                 intensity: light.intensity,
             });

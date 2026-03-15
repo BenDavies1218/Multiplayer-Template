@@ -33,18 +33,10 @@ pub fn tick_mesh_tweens(
                     tween.target.y.to_radians(),
                     tween.target.z.to_radians(),
                 );
-                let start_quat = Quat::from_euler(
-                    EulerRot::XYZ,
-                    start_rad.x,
-                    start_rad.y,
-                    start_rad.z,
-                );
-                let target_quat = Quat::from_euler(
-                    EulerRot::XYZ,
-                    target_rad.x,
-                    target_rad.y,
-                    target_rad.z,
-                );
+                let start_quat =
+                    Quat::from_euler(EulerRot::XYZ, start_rad.x, start_rad.y, start_rad.z);
+                let target_quat =
+                    Quat::from_euler(EulerRot::XYZ, target_rad.x, target_rad.y, target_rad.z);
                 transform.rotation = start_quat.slerp(target_quat, eased);
             }
             TweenType::Scale => {
@@ -107,11 +99,7 @@ pub fn start_tween_from_action(
             if let Some(rotation) = parse_vec3(params, "rotation") {
                 // Extract current euler angles in degrees for the start value
                 let (x, y, z) = transform.rotation.to_euler(EulerRot::XYZ);
-                let current_degrees = Vec3::new(
-                    x.to_degrees(),
-                    y.to_degrees(),
-                    z.to_degrees(),
-                );
+                let current_degrees = Vec3::new(x.to_degrees(), y.to_degrees(), z.to_degrees());
                 commands.entity(entity).insert(DynamicTween {
                     tween_type: TweenType::Rotation,
                     start: current_degrees,

@@ -1,4 +1,6 @@
 {
+  "enable_diagnostics": true,
+  "diagnostics_log_interval_secs": 10.0,
   "spawning": {
     "fallback_angle_multiplier": 5.0,
     "fallback_radius": 2.0,

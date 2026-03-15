@@ -1,5 +1,5 @@
-use game_core::core_config::{GameCoreConfig, color_from_array, parse_key_code};
 use bevy::prelude::*;
+use game_core::core_config::{GameCoreConfig, color_from_array, parse_key_code};
 
 /// Resource to control dynamic object debug visualization.
 #[derive(Resource, Debug)]
