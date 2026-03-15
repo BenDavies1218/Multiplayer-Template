@@ -25,20 +25,11 @@ impl Default for ClientConnectionConfig {
 }
 
 /// Debug visualization and toggle key settings.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct DebugConfig {
     pub colors: DebugColorsConfig,
     pub toggle_keys: DebugToggleKeysConfig,
-}
-
-impl Default for DebugConfig {
-    fn default() -> Self {
-        Self {
-            colors: DebugColorsConfig::default(),
-            toggle_keys: DebugToggleKeysConfig::default(),
-        }
-    }
 }
 
 /// Client configuration loaded from game_client_config.json

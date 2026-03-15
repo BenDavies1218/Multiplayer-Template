@@ -12,24 +12,13 @@ use serde::{Deserialize, Serialize};
 ///
 /// Both the client (for prediction) and server (for authoritative simulation)
 /// load these values so that physics and game rules stay in sync.
-#[derive(Resource, Serialize, Deserialize, Clone, Debug)]
+#[derive(Resource, Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(default)]
 pub struct GameSimulationConfig {
     pub movement: MovementConfig,
     pub character: CharacterConfig,
     pub projectile: ProjectileConfig,
     pub zones: ZonesConfig,
-}
-
-impl Default for GameSimulationConfig {
-    fn default() -> Self {
-        Self {
-            movement: MovementConfig::default(),
-            character: CharacterConfig::default(),
-            projectile: ProjectileConfig::default(),
-            zones: ZonesConfig::default(),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
