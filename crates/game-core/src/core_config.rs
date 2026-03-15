@@ -21,6 +21,7 @@ pub struct GameCoreConfig {
     pub debug_toggle_keys: DebugToggleKeysConfig,
     pub logging: LoggingConfig,
     pub projectile: ProjectileConfig,
+    pub enable_diagnostics: bool,
 }
 
 impl Default for GameCoreConfig {
@@ -37,6 +38,7 @@ impl Default for GameCoreConfig {
             debug_toggle_keys: DebugToggleKeysConfig::default(),
             logging: LoggingConfig::default(),
             projectile: ProjectileConfig::default(),
+            enable_diagnostics: false,
         }
     }
 }

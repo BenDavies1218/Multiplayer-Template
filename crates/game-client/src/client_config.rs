@@ -13,6 +13,7 @@ pub struct GameClientConfig {
     pub rendering: RenderingConfig,
     pub transport: ClientTransportConfig,
     pub character: CharacterClientConfig,
+    pub enable_diagnostics: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
