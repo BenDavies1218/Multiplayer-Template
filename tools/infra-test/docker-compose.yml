@@ -1,6 +1,7 @@
 services:
   server:
     image: ghcr.io/bendavies1218/multiplayer-template-server:latest
+    platform: linux/amd64
     ports:
       - "5888:5888"
     volumes:
@@ -12,7 +13,7 @@ services:
       - SERVER_PORT=5888
       - ASSET_PATH=/data/assets
     healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "5888"]
+      test: ["CMD-SHELL", "cat /proc/1/status | grep -q 'State.*S\\|State.*R'"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -22,7 +23,8 @@ services:
 
   client:
     image: ghcr.io/bendavies1218/multiplayer-template-native:latest
-    command: ["client", "--headless"]
+    platform: linux/amd64
+    command: ["--headless", "client"]
     environment:
       - RUST_LOG=${RUST_LOG:-info}
       - ASSET_PATH=/data/assets

@@ -152,6 +152,8 @@ pub fn build_headless_client_app_from_config(
     app.init_asset::<bevy::mesh::Mesh>();
     app.init_asset::<bevy::scene::Scene>();
     app.init_asset::<Image>();
+    // Register PBR types needed by glTF scene spawning (normally done by PbrPlugin)
+    app.register_type::<bevy::pbr::MeshMaterial3d<bevy::pbr::StandardMaterial>>();
 
     // Add Lightyear client plugins
     app.add_plugins(lightyear::prelude::client::ClientPlugins { tick_duration });
@@ -253,7 +255,14 @@ pub fn build_full_headless_client_app(
     let tick = Duration::from_secs_f64(1.0 / performance_config.networking.fixed_timestep_hz);
     let mut app = build_headless_client_app_from_config(tick, &world_config);
 
+    app.insert_resource(world_config.clone());
     app.insert_resource(client_config.clone());
+
+    app.add_plugins(ConfigHotReloadPlugin::default());
+    app.watch_config::<GameSimulationConfig>("game_simulation_config.json");
+    app.watch_config::<GamePerformanceConfig>("game_performance_config.json");
+    app.watch_config::<GameWorldConfig>("game_world_config.json");
+    app.watch_config::<GameClientConfig>("game_client_config.json");
 
     app.add_plugins(game_networking::NetworkingPlugin {
         simulation: simulation_config.clone(),
@@ -269,11 +278,16 @@ pub fn build_full_headless_client_app(
         config: game_dynamic::DynamicPluginConfig::client(),
     });
 
-    // ClientPlugin adds InputPlugin + PredictionPlugin + LifecyclePlugin (no rendering)
-    app.add_plugins(crate::ClientPlugin);
+    // Skip InputPlugin in headless mode — no gamepad/keyboard events available.
+    // Only add PredictionPlugin + LifecyclePlugin.
+    // LifecyclePlugin needs ActiveInputDevice, which InputPlugin normally initializes.
+    app.init_resource::<crate::client_config::ActiveInputDevice>();
+    app.add_plugins(crate::prediction_plugin::PredictionPlugin);
+    app.add_plugins(crate::lifecycle_plugin::LifecyclePlugin);
 
     if performance_config.enable_diagnostics {
-        app.add_plugins(game_diagnostics::DiagnosticsPlugin::client());
+        // Use server-style log diagnostics — headless has no window or keyboard input
+        app.add_plugins(game_diagnostics::DiagnosticsPlugin::server());
     }
 
     spawn_client_connection_from_config(
