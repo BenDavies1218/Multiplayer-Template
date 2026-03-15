@@ -8,7 +8,7 @@
 
 use bevy::prelude::*;
 use game_camera::{CameraConfig, CameraPlugin, GameCamera};
-use game_core::GameCoreConfig;
+use game_core::GameSimulationConfig;
 use game_networking::protocol::{CharacterMarker, CrouchState};
 use lightyear::prelude::*;
 
@@ -55,7 +55,7 @@ fn fps_camera_follow(
         (&Transform, &CrouchState),
         (With<CharacterMarker>, With<Predicted>, Without<GameCamera>),
     >,
-    core_config: Res<GameCoreConfig>,
+    sim_config: Res<GameSimulationConfig>,
     client_config: Res<GameClientConfig>,
 ) {
     let Ok(mut camera_transform) = camera_query.single_mut() else {
@@ -64,12 +64,12 @@ fn fps_camera_follow(
 
     if let Some((player_transform, crouch_state)) = player_query.iter().next() {
         let capsule_height = if crouch_state.0 {
-            core_config.movement.crouch_capsule_height
+            sim_config.movement.crouch_capsule_height
         } else {
-            core_config.character.capsule_height
+            sim_config.character.capsule_height
         };
         let eye_height = capsule_height / 2.0
-            + core_config.character.capsule_radius
+            + sim_config.character.capsule_radius
             + client_config.rendering.eye_height_offset;
         camera_transform.translation =
             player_transform.translation + Vec3::new(0.0, eye_height, 0.0);

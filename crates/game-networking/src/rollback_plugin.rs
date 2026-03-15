@@ -5,7 +5,7 @@
 //! in a global static for use by the comparison functions in [`crate::rollback`].
 
 use bevy::prelude::*;
-use game_core::core_config::RollbackConfig;
+use game_core::performance_config::RollbackConfig;
 
 use crate::rollback;
 

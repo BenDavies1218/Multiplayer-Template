@@ -2,7 +2,7 @@ use bevy::gltf::Gltf;
 use bevy::prelude::*;
 
 use super::DynamicLoader;
-use game_core::core_config::GameCoreConfig;
+use game_core::world_config::GameWorldConfig;
 
 /// Load dynamic object assets at startup.
 ///
@@ -11,7 +11,7 @@ use game_core::core_config::GameCoreConfig;
 pub fn load_dynamic_assets(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    config: Res<GameCoreConfig>,
+    config: Res<GameWorldConfig>,
 ) {
     let handle: Handle<Gltf> = asset_server.load(config.world_assets.dynamic_path.clone());
     commands.spawn(DynamicLoader {

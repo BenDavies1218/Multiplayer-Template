@@ -1,5 +1,5 @@
 use super::components::{CharacterHitboxMarker, HitboxRegion};
-use crate::core_config::{GameCoreConfig, HitboxShape};
+use crate::simulation_config::{GameSimulationConfig, HitboxShape};
 use crate::world::parse_extras;
 use avian3d::prelude::*;
 use bevy::gltf::{Gltf, GltfNode};
@@ -37,7 +37,7 @@ pub fn process_character_model_hitboxes(
     loader_query: Query<(Entity, &CharacterModelLoader)>,
     gltf_assets: Res<Assets<Gltf>>,
     gltf_nodes: Res<Assets<GltfNode>>,
-    config: Res<GameCoreConfig>,
+    config: Res<GameSimulationConfig>,
 ) {
     for (entity, loader) in loader_query.iter() {
         let Some(gltf) = gltf_assets.get(&loader.handle) else {

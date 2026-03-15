@@ -84,8 +84,8 @@ pub fn log_plugin() -> LogPlugin {
     }
 }
 
-/// Config-aware log plugin that reads level and filter from `GameCoreConfig`.
-pub fn log_plugin_from_config(config: &crate::core_config::GameCoreConfig) -> LogPlugin {
+/// Config-aware log plugin that reads level and filter from `GameWorldConfig`.
+pub fn log_plugin_from_config(config: &crate::world_config::GameWorldConfig) -> LogPlugin {
     let level = match config.logging.default_level.as_str() {
         "trace" => Level::TRACE,
         "debug" => Level::DEBUG,

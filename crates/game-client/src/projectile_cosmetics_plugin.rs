@@ -5,7 +5,7 @@
 
 use avian3d::prelude::*;
 use bevy::{color::palettes::css::MAGENTA, prelude::*};
-use game_core::GameCoreConfig;
+use game_core::GameSimulationConfig;
 use game_protocol::ProjectileMarker;
 use lightyear::prelude::*;
 
@@ -37,14 +37,14 @@ fn add_projectile_cosmetics(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     config: Res<GameClientConfig>,
-    core_config: Res<GameCoreConfig>,
+    sim_config: Res<GameSimulationConfig>,
 ) {
     for entity in &projectile_query {
         commands.entity(entity).insert((
             Mesh3d(meshes.add(Sphere::new(config.rendering.projectile_radius))),
             MeshMaterial3d(materials.add(Color::from(MAGENTA))),
             RigidBody::Dynamic,
-            Collider::sphere(core_config.projectile.radius),
+            Collider::sphere(sim_config.projectile.radius),
         ));
     }
 }

@@ -7,17 +7,26 @@ use avian3d::prelude::*;
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use game_camera::{CameraConfig, CameraPlugin, CameraViewMode, GameCamera, GameCameraFileConfig};
-use game_core::GameCoreConfig;
+use game_core::core_config::{DebugColorsConfig, DebugToggleKeysConfig};
+use game_core::performance_config::GamePerformanceConfig;
+use game_core::simulation_config::GameSimulationConfig;
 use game_core::skybox::SkyboxPlugin;
 use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
 use game_core::utils::config_loader::load_config;
+use game_core::world_config::GameWorldConfig;
 
 fn main() {
-    let core_config: GameCoreConfig = load_config("game_core_config.json");
+    let simulation_config: GameSimulationConfig = load_config("game_simulation_config.json");
+    let performance_config: GamePerformanceConfig = load_config("game_performance_config.json");
+    let world_config: GameWorldConfig = load_config("game_world_config.json");
     let camera_config: GameCameraFileConfig = load_config("game_camera_config.json");
 
     let mut app = App::new();
-    app.insert_resource(core_config.clone());
+    app.insert_resource(simulation_config.clone());
+    app.insert_resource(world_config.clone());
+    // Insert debug config resources as standalone resources for game-core debug systems
+    app.insert_resource(DebugColorsConfig::default());
+    app.insert_resource(DebugToggleKeysConfig::default());
     app.add_plugins(
         DefaultPlugins
             .set(AssetPlugin {
@@ -35,7 +44,9 @@ fn main() {
             }),
     );
     app.add_plugins(ConfigHotReloadPlugin::default());
-    app.watch_config::<GameCoreConfig>("game_core_config.json");
+    app.watch_config::<GameSimulationConfig>("game_simulation_config.json");
+    app.watch_config::<GamePerformanceConfig>("game_performance_config.json");
+    app.watch_config::<GameWorldConfig>("game_world_config.json");
     app.watch_config::<GameCameraFileConfig>("game_camera_config.json");
     app.add_plugins(CameraPlugin {
         config: CameraConfig::free_view_from_config(&camera_config),
@@ -52,7 +63,7 @@ fn main() {
     });
     app.add_plugins(SkyboxPlugin);
 
-    if core_config.enable_diagnostics {
+    if performance_config.enable_diagnostics {
         app.add_plugins(game_diagnostics::DiagnosticsPlugin::viewer());
     }
 
@@ -73,7 +84,12 @@ fn main() {
 #[derive(Component)]
 struct ViewerTarget;
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<GameCoreConfig>) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    sim_config: Res<GameSimulationConfig>,
+    world_config: Res<GameWorldConfig>,
+) {
     info!("=== World Viewer Started ===");
     info!("Controls:");
     info!("  WASD - Move (camera in FreeView, capsule in FP/TP)");
@@ -88,7 +104,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Gam
     info!("  1 - Toggle red light (intensity + color)");
     info!("  2 - Toggle blue light (intensity + color)");
     info!("");
-    info!("Loading world from: {}", config.world_assets.visual_path);
+    info!(
+        "Loading world from: {}",
+        world_config.world_assets.visual_path
+    );
 
     commands.spawn((
         Camera3d::default(),
@@ -98,8 +117,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Gam
 
     // Spawn a test character capsule with physics to test collision
     let capsule_mesh = Capsule3d::new(
-        config.character.capsule_radius,
-        config.character.capsule_height,
+        sim_config.character.capsule_radius,
+        sim_config.character.capsule_height,
     );
     commands.spawn((
         Name::new("Test Character (Physics Enabled)"),
@@ -112,8 +131,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, config: Res<Gam
         Transform::from_xyz(0.0, 5.0, 0.0),
         RigidBody::Dynamic,
         Collider::capsule(
-            config.character.capsule_radius,
-            config.character.capsule_height,
+            sim_config.character.capsule_radius,
+            sim_config.character.capsule_height,
         ),
         LockedAxes::default()
             .lock_rotation_x()
@@ -158,7 +177,7 @@ fn viewer_camera_controller(
     time: Res<Time>,
     keys: Res<ButtonInput<KeyCode>>,
     config: Res<CameraConfig>,
-    core_config: Res<GameCoreConfig>,
+    sim_config: Res<GameSimulationConfig>,
     mut camera_query: Query<(&GameCamera, &mut Transform), Without<ViewerTarget>>,
     mut target_query: Query<(&Transform, &mut LinearVelocity), With<ViewerTarget>>,
 ) {
@@ -222,7 +241,7 @@ fn viewer_camera_controller(
                 move_dir += right;
             }
 
-            let speed = core_config.movement.max_speed;
+            let speed = sim_config.movement.max_speed;
             if move_dir.length() > 0.0 {
                 move_dir = move_dir.normalize();
                 velocity.x = move_dir.x * speed;
@@ -233,12 +252,12 @@ fn viewer_camera_controller(
             }
 
             if keys.just_pressed(KeyCode::Space) {
-                velocity.y = core_config.movement.jump_impulse;
+                velocity.y = sim_config.movement.jump_impulse;
             }
 
             let target_pos = target_transform.translation;
-            let eye_height =
-                core_config.character.capsule_height / 2.0 + core_config.character.capsule_radius;
+            let eye_height = sim_config.character.capsule_height / 2.0
+                + sim_config.character.capsule_radius;
 
             match config.view_mode {
                 CameraViewMode::FirstPerson => {

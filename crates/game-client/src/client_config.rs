@@ -1,18 +1,58 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use game_core::core_config::{DebugColorsConfig, DebugToggleKeysConfig};
 use leafwing_input_manager::prelude::GamepadStick;
 use serde::{Deserialize, Serialize};
+
+/// Connection settings for the client (server address, ports).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ClientConnectionConfig {
+    pub server_host: String,
+    pub server_port: u16,
+    pub client_port: u16,
+}
+
+impl Default for ClientConnectionConfig {
+    fn default() -> Self {
+        Self {
+            server_host: "127.0.0.1".to_string(),
+            server_port: 5888,
+            client_port: 0,
+        }
+    }
+}
+
+/// Debug visualization and toggle key settings.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct DebugConfig {
+    pub colors: DebugColorsConfig,
+    pub toggle_keys: DebugToggleKeysConfig,
+}
+
+impl Default for DebugConfig {
+    fn default() -> Self {
+        Self {
+            colors: DebugColorsConfig::default(),
+            toggle_keys: DebugToggleKeysConfig::default(),
+        }
+    }
+}
 
 /// Client configuration loaded from game_client_config.json
 #[derive(Resource, Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct GameClientConfig {
+    pub connection: ClientConnectionConfig,
     pub window: WindowConfig,
     pub input: InputConfig,
     pub rendering: RenderingConfig,
-    pub transport: ClientTransportConfig,
+    pub camera: game_camera::GameCameraFileConfig,
     pub character: CharacterClientConfig,
+    pub transport: ClientTransportConfig,
+    pub debug: DebugConfig,
     pub enable_diagnostics: bool,
 }
 
@@ -153,7 +193,6 @@ pub struct RenderingConfig {
     pub eye_height_offset: f32,
     pub projectile_radius: f32,
     pub interpolation_send_ratio: f32,
-    pub vsync: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -308,7 +347,6 @@ impl Default for RenderingConfig {
             eye_height_offset: 0.5,
             projectile_radius: 1.0,
             interpolation_send_ratio: 2.0,
-            vsync: true,
         }
     }
 }

@@ -22,7 +22,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use avian3d::prelude::*;
 use bevy::prelude::*;
 
-use game_core::core_config::RollbackConfig;
+use game_core::performance_config::RollbackConfig;
 
 // ---------------------------------------------------------------------------
 // Global config — set once at startup

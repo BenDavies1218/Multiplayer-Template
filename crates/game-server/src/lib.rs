@@ -16,5 +16,5 @@ pub mod transport;
 
 // Re-export
 pub use server::ServerPlugin;
-pub use server_config::GameServerConfig;
+pub use server_config::{GameServerConfig, ServerConnectionConfig};
 pub use transport::{ExampleServer, ServerTransports, WebTransportCertificateSettings, start};

@@ -6,14 +6,15 @@ use bevy::diagnostic::DiagnosticsPlugin;
 use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
 
-use game_core::GameCoreConfig;
+use game_core::performance_config::GamePerformanceConfig;
 use game_core::utils::cli::log_plugin_from_config;
-use game_networking::config::shared_settings_from_config;
+use game_core::world_config::GameWorldConfig;
+use game_networking::config::shared_settings_from_performance;
 
 use crate::server_config::GameServerConfig;
 use crate::transport::{ExampleServer, ServerTransports, WebTransportCertificateSettings, start};
 
-pub fn new_headless_app_from_config(core_config: &GameCoreConfig) -> App {
+pub fn new_headless_app_from_config(world_config: &GameWorldConfig) -> App {
     let mut app = App::new();
     app.add_plugins((
         MinimalPlugins,
@@ -22,7 +23,7 @@ pub fn new_headless_app_from_config(core_config: &GameCoreConfig) -> App {
             meta_check: bevy::asset::AssetMetaCheck::Never,
             ..default()
         },
-        log_plugin_from_config(core_config),
+        log_plugin_from_config(world_config),
         StatesPlugin,
         DiagnosticsPlugin,
     ));
@@ -42,22 +43,24 @@ pub fn new_headless_app_from_config(core_config: &GameCoreConfig) -> App {
 }
 
 /// Build a server app with headless mode and lightyear server plugins using config
-pub fn build_server_app_from_config(tick_duration: Duration, core_config: &GameCoreConfig) -> App {
-    let mut app = new_headless_app_from_config(core_config);
+pub fn build_server_app_from_config(
+    tick_duration: Duration,
+    world_config: &GameWorldConfig,
+) -> App {
+    let mut app = new_headless_app_from_config(world_config);
     app.add_plugins(lightyear::prelude::server::ServerPlugins { tick_duration });
     app
 }
 
 /// Spawn the server connection entity using config values.
 /// Transport type is determined by game_server_config.json (defaults to UDP).
-pub fn spawn_server_connection_from_config(app: &mut App, core_config: &GameCoreConfig) {
-    let server_config = app
-        .world()
-        .get_resource::<GameServerConfig>()
-        .cloned()
-        .unwrap_or_default();
-    let shared = shared_settings_from_config(core_config);
-    let port = core_config.networking.server_port;
+pub fn spawn_server_connection_from_config(
+    app: &mut App,
+    server_config: &GameServerConfig,
+    performance_config: &GamePerformanceConfig,
+) {
+    let shared = shared_settings_from_performance(performance_config);
+    let port = server_config.connection.server_port;
 
     let transport = match server_config.transport.transport_type.as_str() {
         "webtransport" => ServerTransports::WebTransport {

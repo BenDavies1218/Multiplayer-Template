@@ -2,7 +2,7 @@ use super::spawn_points::SpawnPoints;
 use super::zone_debug::{ZoneDebugMesh, ZoneDebugSettings};
 use super::zones::*;
 use super::{ZoneLoader, ZonePluginConfig};
-use crate::core_config::GameCoreConfig;
+use crate::simulation_config::GameSimulationConfig;
 use crate::world::{
     CollisionDebugMesh, CollisionDebugSettings, WorldCollisionBundle, extract_mesh_indices,
     extract_mesh_vertices, parse_extras,
@@ -34,7 +34,7 @@ pub fn process_zone_meshes(
     plugin_config: Res<ZonePluginConfig>,
     debug_settings: Option<Res<ZoneDebugSettings>>,
     collision_debug_settings: Option<Res<CollisionDebugSettings>>,
-    config: Res<GameCoreConfig>,
+    config: Res<GameSimulationConfig>,
 ) {
     for (entity, loader) in zone_query.iter() {
         let Some(gltf) = gltf_assets.get(&loader.handle) else {

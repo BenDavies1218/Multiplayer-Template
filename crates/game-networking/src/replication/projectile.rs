@@ -11,7 +11,7 @@ use lightyear::prelude::*;
 
 use super::DespawnAfter;
 use crate::protocol::{CameraOrientation, CharacterAction, CharacterMarker, ProjectileMarker};
-use game_core::core_config::GameCoreConfig;
+use game_core::simulation_config::GameSimulationConfig;
 
 #[allow(clippy::type_complexity)]
 pub fn shoot_bullet(
@@ -30,7 +30,7 @@ pub fn shoot_bullet(
             With<CharacterMarker>,
         ),
     >,
-    config: Res<GameCoreConfig>,
+    config: Res<GameSimulationConfig>,
     time: Res<Time<Fixed>>,
 ) {
     for (action_state, position, orientation, controlled_by) in &query {

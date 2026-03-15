@@ -2,14 +2,14 @@ use bevy::prelude::*;
 use bevy::scene::SceneRoot;
 
 use super::{WorldAssets, WorldPluginConfig, WorldVisual};
-use crate::core_config::GameCoreConfig;
+use crate::world_config::GameWorldConfig;
 
 /// Load world visual assets at startup
 pub fn load_world_assets(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     plugin_config: Res<WorldPluginConfig>,
-    config: Res<GameCoreConfig>,
+    config: Res<GameWorldConfig>,
 ) {
     let mut visual_handle = None;
 

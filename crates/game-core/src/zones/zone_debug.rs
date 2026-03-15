@@ -1,4 +1,4 @@
-use crate::core_config::{GameCoreConfig, color_from_array, parse_key_code};
+use crate::core_config::{DebugColorsConfig, DebugToggleKeysConfig, color_from_array, parse_key_code};
 use bevy::prelude::*;
 
 /// Resource to control zone debug visualization
@@ -36,9 +36,9 @@ pub struct ZoneDebugMesh;
 pub fn toggle_zone_debug(
     keys: Res<ButtonInput<KeyCode>>,
     mut settings: ResMut<ZoneDebugSettings>,
-    config: Res<GameCoreConfig>,
+    config: Res<DebugToggleKeysConfig>,
 ) {
-    let key = parse_key_code(&config.debug_toggle_keys.zone).unwrap_or(KeyCode::KeyZ);
+    let key = parse_key_code(&config.zone).unwrap_or(KeyCode::KeyZ);
     if keys.just_pressed(key) {
         settings.visible = !settings.visible;
         info!(
@@ -66,13 +66,13 @@ pub fn update_zone_debug_visibility(
     }
 }
 
-/// Startup system to apply zone debug colors from `GameCoreConfig`.
+/// Startup system to apply zone debug colors from `DebugColorsConfig`.
 pub fn apply_zone_debug_config(
-    config: Res<GameCoreConfig>,
+    config: Res<DebugColorsConfig>,
     mut settings: ResMut<ZoneDebugSettings>,
 ) {
-    settings.death_zone_color = color_from_array(config.debug_colors.death_zone);
-    settings.damage_zone_color = color_from_array(config.debug_colors.damage_zone);
-    settings.trigger_zone_color = color_from_array(config.debug_colors.trigger_zone);
-    settings.spawn_point_color = color_from_array(config.debug_colors.spawn_point);
+    settings.death_zone_color = color_from_array(config.death_zone);
+    settings.damage_zone_color = color_from_array(config.damage_zone);
+    settings.trigger_zone_color = color_from_array(config.trigger_zone);
+    settings.spawn_point_color = color_from_array(config.spawn_point);
 }

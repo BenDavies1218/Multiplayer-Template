@@ -255,7 +255,7 @@ impl Default for ZonesConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Resource, Serialize, Deserialize, Clone, Debug)]
 #[serde(default)]
 pub struct DebugColorsConfig {
     pub collision: [f32; 4],
@@ -279,7 +279,7 @@ impl Default for DebugColorsConfig {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Resource, Serialize, Deserialize, Clone, Debug)]
 #[serde(default)]
 pub struct DebugToggleKeysConfig {
     pub collision: String,

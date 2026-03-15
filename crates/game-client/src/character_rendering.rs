@@ -1,7 +1,7 @@
 use crate::client_config::GameClientConfig;
 use bevy::prelude::*;
 use game_camera::GameCamera;
-use game_core::{GameCoreConfig, character::CharacterModelId};
+use game_core::{GameSimulationConfig, character::CharacterModelId};
 use game_networking::protocol::{CharacterMarker, ColorComponent};
 use lightyear::prelude::*;
 use std::collections::HashMap;
@@ -93,7 +93,7 @@ fn add_character_cosmetics(
     >,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    core_config: Res<GameCoreConfig>,
+    sim_config: Res<GameSimulationConfig>,
     character_models: Option<Res<CharacterModelAssets>>,
     camera_query: Query<Entity, With<GameCamera>>,
     pov_query: Query<Entity, With<PovModel>>,
@@ -148,8 +148,8 @@ fn add_character_cosmetics(
             // Fallback to capsule if model not found
             commands.entity(entity).insert((
                 Mesh3d(meshes.add(Capsule3d::new(
-                    core_config.character.capsule_radius,
-                    core_config.character.capsule_height,
+                    sim_config.character.capsule_radius,
+                    sim_config.character.capsule_height,
                 ))),
                 MeshMaterial3d(materials.add(color.0)),
             ));

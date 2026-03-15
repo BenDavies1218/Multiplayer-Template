@@ -5,7 +5,7 @@
 
 use bevy::{core_pipeline::Skybox, prelude::*};
 use game_camera::{GameCamera, GameCameraFileConfig};
-use game_core::{GameCoreConfig, skybox::prepare_skybox_cubemap, world::WorldAssets};
+use game_core::{skybox::prepare_skybox_cubemap, world::WorldAssets, world_config::GameWorldConfig};
 
 /// Tracks all client assets that must load before the camera spawns.
 #[derive(Resource)]
@@ -28,10 +28,10 @@ impl Plugin for ClientSkyboxPlugin {
 /// Kick off loading the skybox. World assets are already loaded by WorldPlugin in Startup.
 fn start_loading_assets(
     mut commands: Commands,
-    core_config: Res<GameCoreConfig>,
+    world_config: Res<GameWorldConfig>,
     asset_server: Res<AssetServer>,
 ) {
-    let skybox = asset_server.load(&core_config.world_assets.skybox_path);
+    let skybox = asset_server.load(&world_config.world_assets.skybox_path);
     commands.insert_resource(PendingClientAssets {
         skybox,
         ready: false,

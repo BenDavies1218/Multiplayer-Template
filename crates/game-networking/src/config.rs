@@ -7,6 +7,8 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::time::Duration;
 
 use game_core::core_config::GameCoreConfig;
+use game_core::performance_config::GamePerformanceConfig;
+use game_core::world_config::GameWorldConfig;
 
 // ---------------------------------------------------------------------------
 // Environment variable configuration
@@ -144,6 +146,48 @@ impl Config {
                 .unwrap_or_else(|_| "./certificates/digest.txt".to_string()),
         }
     }
+
+    /// Create a Config using the new split config types as defaults.
+    /// Environment variables still override.
+    pub fn from_configs(
+        performance: &GamePerformanceConfig,
+        world: &GameWorldConfig,
+        server_host: &str,
+        server_port: u16,
+    ) -> Self {
+        Self {
+            server_host: std::env::var("SERVER_HOST")
+                .unwrap_or_else(|_| server_host.to_string()),
+            server_port: std::env::var("SERVER_PORT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(server_port),
+            fixed_timestep_hz: std::env::var("FIXED_TIMESTEP_HZ")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(performance.networking.fixed_timestep_hz),
+            send_interval_hz: std::env::var("SEND_INTERVAL_HZ")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(performance.networking.send_interval_hz),
+            client_timeout_secs: std::env::var("CLIENT_TIMEOUT_SECS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(performance.networking.client_timeout_secs),
+            interpolation_buffer_ms: std::env::var("INTERPOLATION_BUFFER_MS")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(performance.networking.interpolation_buffer_ms),
+            rust_log: std::env::var("RUST_LOG")
+                .unwrap_or_else(|_| world.logging.default_level.clone()),
+            cert_path: std::env::var("CERT_PATH")
+                .unwrap_or_else(|_| "./certificates/cert.pem".to_string()),
+            key_path: std::env::var("KEY_PATH")
+                .unwrap_or_else(|_| "./certificates/key.pem".to_string()),
+            digest_path: std::env::var("DIGEST_PATH")
+                .unwrap_or_else(|_| "./certificates/digest.txt".to_string()),
+        }
+    }
 }
 
 /// Initialize environment variables from .env file
@@ -189,6 +233,19 @@ pub fn send_interval_from_config(config: &GameCoreConfig) -> Duration {
 
 pub fn steam_app_id_from_config(config: &GameCoreConfig) -> u32 {
     config.networking.steam_app_id
+}
+
+// --- New config-type-aware helpers ---
+
+pub fn shared_settings_from_performance(config: &GamePerformanceConfig) -> SharedSettings {
+    SharedSettings {
+        protocol_id: config.networking.protocol_id,
+        private_key: [0u8; 32],
+    }
+}
+
+pub fn send_interval_from_performance(config: &GamePerformanceConfig) -> Duration {
+    Duration::from_secs_f64(1.0 / config.networking.send_interval_hz)
 }
 
 #[cfg(test)]

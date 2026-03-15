@@ -58,6 +58,8 @@ pub use projectile_cosmetics_plugin::ProjectileCosmeticsPlugin;
 pub use visual_interpolation_plugin::VisualInterpolationPlugin;
 
 // Re-export other public types
-pub use client_config::GameClientConfig;
+pub use client_config::{
+    ClientConnectionConfig, DebugConfig, GameClientConfig,
+};
 pub use dynamic_rendering::DynamicRenderingPlugin;
 pub use transport::{ClientTransports, ExampleClient, connect};

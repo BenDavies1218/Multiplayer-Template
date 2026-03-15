@@ -9,20 +9,25 @@ use bevy::winit::WinitSettings;
 use lightyear::link::RecvLinkConditioner;
 use lightyear::prelude::*;
 
-use game_core::GameCoreConfig;
+use game_core::performance_config::GamePerformanceConfig;
+use game_core::simulation_config::GameSimulationConfig;
 use game_core::utils::cli::log_plugin_from_config;
 use game_core::utils::config_hot_reload::{ConfigHotReloadPlugin, ConfigWatchExt};
-use game_networking::config::shared_settings_from_config;
+use game_core::world_config::GameWorldConfig;
+use game_networking::config::shared_settings_from_performance;
 
 use crate::client_config::GameClientConfig;
 use crate::transport::{ClientTransports, ExampleClient, connect};
 
-pub fn window_plugin_from_config(config: &GameClientConfig) -> WindowPlugin {
+pub fn window_plugin_from_config(
+    config: &GameClientConfig,
+    performance_config: &GamePerformanceConfig,
+) -> WindowPlugin {
     WindowPlugin {
         primary_window: Some(Window {
             title: format!("{}: {}", config.window.title, env!("CARGO_PKG_NAME")),
             resolution: (config.window.width, config.window.height).into(),
-            present_mode: if config.rendering.vsync {
+            present_mode: if performance_config.vsync {
                 PresentMode::AutoVsync
             } else {
                 PresentMode::AutoNoVsync
@@ -35,7 +40,11 @@ pub fn window_plugin_from_config(config: &GameClientConfig) -> WindowPlugin {
     }
 }
 
-pub fn new_gui_app_from_config(config: &GameClientConfig, core_config: &GameCoreConfig) -> App {
+pub fn new_gui_app_from_config(
+    config: &GameClientConfig,
+    world_config: &GameWorldConfig,
+    performance_config: &GamePerformanceConfig,
+) -> App {
     let mut app = App::new();
     app.add_plugins(
         DefaultPlugins
@@ -46,8 +55,8 @@ pub fn new_gui_app_from_config(config: &GameClientConfig, core_config: &GameCore
                 meta_check: bevy::asset::AssetMetaCheck::Never,
                 ..default()
             })
-            .set(log_plugin_from_config(core_config))
-            .set(window_plugin_from_config(config)),
+            .set(log_plugin_from_config(world_config))
+            .set(window_plugin_from_config(config, performance_config)),
     );
     // we want the same frequency of updates for both focused and unfocused
     // Otherwise when testing the movement can look choppy for unfocused windows
@@ -61,9 +70,10 @@ pub fn new_gui_app_from_config(config: &GameClientConfig, core_config: &GameCore
 pub fn build_client_app_from_config(
     tick_duration: Duration,
     config: &GameClientConfig,
-    core_config: &GameCoreConfig,
+    world_config: &GameWorldConfig,
+    performance_config: &GamePerformanceConfig,
 ) -> App {
-    let mut app = new_gui_app_from_config(config, core_config);
+    let mut app = new_gui_app_from_config(config, world_config, performance_config);
     app.add_plugins(lightyear::prelude::client::ClientPlugins { tick_duration });
     app
 }
@@ -72,8 +82,9 @@ pub fn build_client_app_from_config(
 pub fn spawn_client_connection_from_config(
     app: &mut App,
     client_id: u64,
-    core_config: &GameCoreConfig,
     client_config: &GameClientConfig,
+    performance_config: &GamePerformanceConfig,
+    world_config: &GameWorldConfig,
 ) {
     let conditioner = if client_config.transport.simulate_latency {
         Some(RecvLinkConditioner::new(
@@ -84,8 +95,14 @@ pub fn spawn_client_connection_from_config(
     };
     app.world_mut().spawn(ExampleClient {
         client_id,
-        client_port: core_config.networking.client_port,
-        server_addr: game_networking::config::Config::from_core_config(core_config).server_addr(),
+        client_port: client_config.connection.client_port,
+        server_addr: game_networking::config::Config::from_configs(
+            performance_config,
+            world_config,
+            &client_config.connection.server_host,
+            client_config.connection.server_port,
+        )
+        .server_addr(),
         conditioner,
         transport: {
             #[cfg(not(target_family = "wasm"))]
@@ -97,7 +114,7 @@ pub fn spawn_client_connection_from_config(
                 ClientTransports::WebTransport
             }
         },
-        shared: shared_settings_from_config(core_config),
+        shared: shared_settings_from_performance(performance_config),
     });
     app.add_systems(Startup, connect);
 }
@@ -109,21 +126,27 @@ pub fn spawn_client_connection_from_config(
 /// rendering, input, prediction, and camera — then sets up the transport connection
 /// and input delay.
 pub fn build_full_client_app(
-    core_config: GameCoreConfig,
+    simulation_config: GameSimulationConfig,
+    performance_config: GamePerformanceConfig,
+    world_config: GameWorldConfig,
     client_config: GameClientConfig,
-    camera_config: game_camera::GameCameraFileConfig,
     client_id: u64,
 ) -> App {
-    let tick = Duration::from_secs_f64(1.0 / core_config.networking.fixed_timestep_hz);
-    let mut app = build_client_app_from_config(tick, &client_config, &core_config);
+    let tick = Duration::from_secs_f64(1.0 / performance_config.networking.fixed_timestep_hz);
+    let mut app =
+        build_client_app_from_config(tick, &client_config, &world_config, &performance_config);
 
-    app.insert_resource(camera_config.clone());
+    // Insert camera file config as resource (used by ClientSkyboxPlugin)
+    app.insert_resource(client_config.camera.clone());
+
     app.add_plugins(ConfigHotReloadPlugin::default());
-    app.watch_config::<GameCoreConfig>("game_core_config.json");
+    app.watch_config::<GameSimulationConfig>("game_simulation_config.json");
+    app.watch_config::<GamePerformanceConfig>("game_performance_config.json");
+    app.watch_config::<GameWorldConfig>("game_world_config.json");
     app.watch_config::<GameClientConfig>("game_client_config.json");
-    app.watch_config::<game_camera::GameCameraFileConfig>("game_camera_config.json");
     app.add_plugins(game_networking::NetworkingPlugin {
-        config: core_config.clone(),
+        simulation: simulation_config.clone(),
+        performance: performance_config.clone(),
     });
     app.add_plugins(game_core::world::WorldPlugin {
         config: game_core::world::WorldPluginConfig::client(),
@@ -137,14 +160,24 @@ pub fn build_full_client_app(
     app.add_plugins(crate::DynamicRenderingPlugin);
     app.add_plugins(crate::ClientPlugin);
     app.add_plugins(crate::FirstPersonPlugin {
-        camera_config: game_camera::CameraConfig::first_person_from_config(&camera_config),
+        camera_config: game_camera::CameraConfig::first_person_from_config(&client_config.camera),
     });
 
-    if client_config.enable_diagnostics {
+    // Insert debug config resources as standalone resources for game-core debug systems
+    app.insert_resource(client_config.debug.colors.clone());
+    app.insert_resource(client_config.debug.toggle_keys.clone());
+
+    if performance_config.enable_diagnostics {
         app.add_plugins(game_diagnostics::DiagnosticsPlugin::client());
     }
 
-    spawn_client_connection_from_config(&mut app, client_id, &core_config, &client_config);
+    spawn_client_connection_from_config(
+        &mut app,
+        client_id,
+        &client_config,
+        &performance_config,
+        &world_config,
+    );
 
     // Input delay configuration
     {

@@ -1,22 +1,41 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
+/// Connection settings for the server (bind address, port, Steam).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ServerConnectionConfig {
+    pub server_host: String,
+    pub server_port: u16,
+    pub steam_app_id: u32,
+}
+
+impl Default for ServerConnectionConfig {
+    fn default() -> Self {
+        Self {
+            server_host: "127.0.0.1".to_string(),
+            server_port: 5888,
+            steam_app_id: 480,
+        }
+    }
+}
+
 /// Server configuration loaded from game_server_config.json
 #[derive(Resource, Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GameServerConfig {
+    pub connection: ServerConnectionConfig,
     pub spawning: SpawningConfig,
     pub transport: ServerTransportJsonConfig,
-    pub enable_diagnostics: bool,
     pub diagnostics_log_interval_secs: f64,
 }
 
 impl Default for GameServerConfig {
     fn default() -> Self {
         Self {
+            connection: ServerConnectionConfig::default(),
             spawning: SpawningConfig::default(),
             transport: ServerTransportJsonConfig::default(),
-            enable_diagnostics: false,
             diagnostics_log_interval_secs: 10.0,
         }
     }

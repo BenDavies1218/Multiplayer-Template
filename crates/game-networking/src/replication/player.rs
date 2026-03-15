@@ -15,7 +15,7 @@ pub struct CharacterPhysicsBundle {
 
 impl CharacterPhysicsBundle {
     /// Create a physics bundle using values from `CharacterConfig`.
-    pub fn new(character: &game_core::core_config::CharacterConfig) -> Self {
+    pub fn new(character: &game_core::simulation_config::CharacterConfig) -> Self {
         Self {
             collider: Collider::capsule(character.capsule_radius, character.capsule_height),
             rigid_body: RigidBody::Dynamic,

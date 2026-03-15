@@ -12,7 +12,8 @@
 use avian3d::prelude::*;
 use bevy::prelude::*;
 use game_camera::GameCamera;
-use game_core::GameCoreConfig;
+use game_core::GameSimulationConfig;
+use game_core::performance_config::GamePerformanceConfig;
 use game_networking::movement::apply_character_movement;
 use game_networking::protocol::{CharacterAction, CharacterMarker, CrouchState};
 use leafwing_input_manager::prelude::*;
@@ -35,7 +36,8 @@ pub fn handle_character_actions(
         ),
         With<Predicted>,
     >,
-    config: Res<GameCoreConfig>,
+    config: Res<GameSimulationConfig>,
+    perf_config: Res<GamePerformanceConfig>,
 ) {
     for (entity, action_state, position, mut linear_velocity, mut crouch_state) in &mut query {
         let camera_yaw = action_state.axis_pair(&CharacterAction::Look).x;
@@ -49,7 +51,7 @@ pub fn handle_character_actions(
             &mut crouch_state,
             &config.movement,
             &config.character,
-            config.networking.fixed_timestep_hz as f32,
+            perf_config.networking.fixed_timestep_hz as f32,
         );
     }
 }

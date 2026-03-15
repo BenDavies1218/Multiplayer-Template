@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use leafwing_input_manager::prelude::ActionState;
 
 use crate::protocol::{CharacterAction, CrouchState};
-use game_core::core_config::{CharacterConfig, GameCoreConfig, MovementConfig};
+use game_core::simulation_config::{CharacterConfig, GameSimulationConfig, MovementConfig};
 
 /// Apply camera-relative character movement via direct velocity setting.
 /// Used by both client (predicted) and server (authoritative).
@@ -99,7 +99,7 @@ pub fn apply_character_movement(
 /// Run as a separate system to avoid conflicts with SpatialQuery.
 pub fn update_crouch_collider(
     mut query: Query<(Entity, &CrouchState, &mut Collider), Changed<CrouchState>>,
-    config: Res<GameCoreConfig>,
+    config: Res<GameSimulationConfig>,
 ) {
     for (entity, crouch_state, mut collider) in &mut query {
         if crouch_state.0 {

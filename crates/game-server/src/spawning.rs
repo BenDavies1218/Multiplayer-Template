@@ -6,10 +6,11 @@
 
 use avian3d::prelude::Position;
 use bevy::prelude::*;
-use game_core::GameCoreConfig;
+use game_core::GameSimulationConfig;
 use game_core::character::{CharacterHitboxData, CharacterModelId, attach_hitbox_to_character};
+use game_core::performance_config::GamePerformanceConfig;
 use game_core::zones::SpawnPoints;
-use game_networking::config::send_interval_from_config;
+use game_networking::config::send_interval_from_performance;
 use game_networking::protocol::*;
 use game_networking::replication::CharacterPhysicsBundle;
 use leafwing_input_manager::prelude::*;
@@ -23,9 +24,9 @@ use crate::server_config::{GameServerConfig, parse_css_color};
 pub(crate) fn handle_new_client(
     trigger: On<Add, LinkOf>,
     mut commands: Commands,
-    config: Res<GameCoreConfig>,
+    perf_config: Res<GamePerformanceConfig>,
 ) {
-    let interval = send_interval_from_config(&config);
+    let interval = send_interval_from_performance(&perf_config);
     commands
         .entity(trigger.entity)
         .insert(ReplicationSender::new(
@@ -49,7 +50,7 @@ pub(crate) fn handle_connected(
     mut spawn_points: Option<ResMut<SpawnPoints>>,
     hitbox_data: Option<Res<CharacterHitboxData>>,
     server_config: Res<GameServerConfig>,
-    core_config: Res<GameCoreConfig>,
+    sim_config: Res<GameSimulationConfig>,
 ) {
     let Ok(client_id) = query.get(trigger.entity) else {
         return;
@@ -100,7 +101,7 @@ pub(crate) fn handle_connected(
                 owner: trigger.entity,
                 lifetime: Default::default(),
             },
-            CharacterPhysicsBundle::new(&core_config.character),
+            CharacterPhysicsBundle::new(&sim_config.character),
             ColorComponent(color),
             CharacterMarker,
             CameraOrientation {

@@ -4,7 +4,7 @@ use bevy::{
     render::render_resource::{TextureViewDescriptor, TextureViewDimension},
 };
 
-use crate::GameCoreConfig;
+use crate::world_config::GameWorldConfig;
 
 pub struct SkyboxPlugin;
 
@@ -21,10 +21,10 @@ impl Plugin for SkyboxPlugin {
 
 fn start_loading_skybox(
     mut commands: Commands,
-    core_config: Res<GameCoreConfig>,
+    world_config: Res<GameWorldConfig>,
     asset_server: Res<AssetServer>,
 ) {
-    let handle = asset_server.load(&core_config.world_assets.skybox_path);
+    let handle = asset_server.load(&world_config.world_assets.skybox_path);
     commands.insert_resource(PendingSkybox(handle));
 }
 

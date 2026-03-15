@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use game_core::core_config::{GameCoreConfig, color_from_array, parse_key_code};
+use game_core::core_config::{DebugColorsConfig, DebugToggleKeysConfig, color_from_array, parse_key_code};
 
 /// Resource to control dynamic object debug visualization.
 #[derive(Resource, Debug)]
@@ -23,19 +23,19 @@ pub struct DynamicDebugMesh;
 
 /// Startup system to apply debug colors from config.
 pub fn apply_dynamic_debug_config(
-    config: Res<GameCoreConfig>,
+    config: Res<DebugColorsConfig>,
     mut settings: ResMut<DynamicDebugSettings>,
 ) {
-    settings.dynamic_object_color = color_from_array(config.debug_colors.dynamic_object);
+    settings.dynamic_object_color = color_from_array(config.dynamic_object);
 }
 
 /// Toggle dynamic debug visualization with configurable key.
 pub fn toggle_dynamic_debug(
     keys: Res<ButtonInput<KeyCode>>,
     mut settings: ResMut<DynamicDebugSettings>,
-    config: Res<GameCoreConfig>,
+    config: Res<DebugToggleKeysConfig>,
 ) {
-    let key = parse_key_code(&config.debug_toggle_keys.dynamic).unwrap_or(KeyCode::KeyD);
+    let key = parse_key_code(&config.dynamic).unwrap_or(KeyCode::KeyD);
     if keys.just_pressed(key) {
         settings.visible = !settings.visible;
         info!(

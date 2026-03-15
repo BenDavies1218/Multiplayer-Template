@@ -7,7 +7,8 @@ use bevy::prelude::*;
 use crate::client_config::GameClientConfig;
 use bevy::ecs::lifecycle::HookContext;
 use bevy::ecs::world::DeferredWorld;
-use game_core::GameCoreConfig;
+use game_core::performance_config::GamePerformanceConfig;
+use game_core::world_config::GameWorldConfig;
 use game_networking::config::Config;
 use game_networking::config::SharedSettings;
 use lightyear::interpolation::timeline::InterpolationConfig;
@@ -50,13 +51,22 @@ impl ExampleClient {
                 .get_resource::<GameClientConfig>()
                 .cloned()
                 .unwrap_or_default();
-            let core_config = world
-                .get_resource::<GameCoreConfig>()
+            let performance_config = world
+                .get_resource::<GamePerformanceConfig>()
+                .cloned()
+                .unwrap_or_default();
+            let world_config = world
+                .get_resource::<GameWorldConfig>()
                 .cloned()
                 .unwrap_or_default();
             let mut entity_mut = world.entity_mut(entity);
             let settings = entity_mut.take::<ExampleClient>().unwrap();
-            let config = Config::from_core_config(&core_config);
+            let config = Config::from_configs(
+                &performance_config,
+                &world_config,
+                &settings.server_addr.ip().to_string(),
+                settings.server_addr.port(),
+            );
             let client_addr = SocketAddr::new(Ipv4Addr::UNSPECIFIED.into(), settings.client_port);
             entity_mut.insert((
                 Client::default(),

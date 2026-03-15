@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::core_config::GameCoreConfig;
+use crate::simulation_config::GameSimulationConfig;
 
 pub mod components;
 pub mod hitbox_loader;
@@ -31,7 +31,7 @@ impl Plugin for CharacterPlugin {
 fn load_character_models(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    config: Res<GameCoreConfig>,
+    config: Res<GameSimulationConfig>,
 ) {
     for (id, path) in &config.character.model_catalog {
         let handle = asset_server.load(path.clone());

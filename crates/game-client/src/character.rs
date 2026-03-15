@@ -5,7 +5,7 @@
 //! bundle, and orientation state.
 
 use bevy::prelude::*;
-use game_core::GameCoreConfig;
+use game_core::GameSimulationConfig;
 use game_core::core_config::parse_key_code;
 use game_networking::protocol::{CameraOrientation, CharacterAction, CharacterMarker, CrouchState};
 use game_networking::replication::CharacterPhysicsBundle;
@@ -158,7 +158,7 @@ pub fn handle_new_character(
         (Added<Predicted>, With<CharacterMarker>),
     >,
     client_config: Res<GameClientConfig>,
-    core_config: Res<GameCoreConfig>,
+    sim_config: Res<GameSimulationConfig>,
     active_device: Res<ActiveInputDevice>,
 ) {
     for (entity, is_controlled) in &mut character_query {
@@ -177,7 +177,7 @@ pub fn handle_new_character(
 
         info!("[character] {entity:?} — attaching physics + orientation");
         commands.entity(entity).insert((
-            CharacterPhysicsBundle::new(&core_config.character),
+            CharacterPhysicsBundle::new(&sim_config.character),
             CameraOrientation {
                 yaw: 0.0,
                 pitch: 0.0,
