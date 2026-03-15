@@ -35,6 +35,7 @@ bevy = { workspace = true, features = [
     "png",
     "jpeg",
     "ktx2",
+    "exr",
     "file_watcher",
 ] }
 

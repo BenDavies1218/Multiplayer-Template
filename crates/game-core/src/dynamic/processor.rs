@@ -116,13 +116,14 @@ pub fn process_dynamic_objects(
                         light_info.color[1],
                         light_info.color[2],
                     );
-                    let intensity = light_info.intensity;
+                    let scales = &objects_config.light_intensity_scales;
+                    let raw_intensity = light_info.intensity;
 
                     match light_info.light_type.as_str() {
                         "point" => {
                             entity_commands.insert(PointLight {
                                 color,
-                                intensity,
+                                intensity: raw_intensity * scales.point,
                                 shadows_enabled: true,
                                 ..default()
                             });
@@ -130,7 +131,7 @@ pub fn process_dynamic_objects(
                         "spot" => {
                             entity_commands.insert(SpotLight {
                                 color,
-                                intensity,
+                                intensity: raw_intensity * scales.spot,
                                 shadows_enabled: true,
                                 ..default()
                             });
@@ -138,7 +139,7 @@ pub fn process_dynamic_objects(
                         "directional" => {
                             entity_commands.insert(DirectionalLight {
                                 color,
-                                illuminance: intensity,
+                                illuminance: raw_intensity * scales.directional,
                                 shadows_enabled: true,
                                 ..default()
                             });

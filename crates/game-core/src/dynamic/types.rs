@@ -149,9 +149,33 @@ pub struct DynamicNodeConfig {
     pub state: Option<DynamicStateConfig>,
 }
 
+/// Per-light-type intensity multipliers to convert Blender export values to Bevy units.
+///
+/// Blender exports intensity in watts, but Bevy expects lumens (point/spot) or lux
+/// (directional). Adjust these to match your scene.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct LightIntensityScales {
+    pub point: f32,
+    pub spot: f32,
+    pub directional: f32,
+}
+
+impl Default for LightIntensityScales {
+    fn default() -> Self {
+        Self {
+            point: 1.0,
+            spot: 1.0,
+            directional: 1.0,
+        }
+    }
+}
+
 /// Root config for dynamic objects. Loaded from `dynamic_objects_config.json`.
 #[derive(Resource, Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DynamicObjectsConfig {
+    #[serde(default)]
+    pub light_intensity_scales: LightIntensityScales,
     #[serde(default)]
     pub nodes: HashMap<String, DynamicNodeConfig>,
 }

@@ -50,10 +50,10 @@ impl DynamicPluginConfig {
         }
     }
 
-    /// World viewer: load with debug visualization.
+    /// World viewer: load with debug visualization and triggers for effects.
     pub fn viewer() -> Self {
         Self {
-            enable_triggers: false,
+            enable_triggers: true,
             enable_visuals: false,
             enable_debug: true,
         }
@@ -116,13 +116,27 @@ impl Plugin for DynamicPlugin {
 
         // Light effects and mesh tweens (client + viewer)
         if self.config.enable_visuals || self.config.enable_debug {
-            app.add_systems(
-                Update,
-                (
-                    light_effects::tick_light_effects,
-                    mesh_effects::tick_mesh_tweens,
-                ),
-            );
+            // When triggers run locally (viewer), handle effect actions here.
+            // On the client, DynamicRenderingPlugin handles them instead.
+            if self.config.enable_triggers {
+                app.add_systems(
+                    Update,
+                    (
+                        execute_effect_actions,
+                        light_effects::tick_light_effects,
+                        mesh_effects::tick_mesh_tweens,
+                    )
+                        .chain(),
+                );
+            } else {
+                app.add_systems(
+                    Update,
+                    (
+                        light_effects::tick_light_effects,
+                        mesh_effects::tick_mesh_tweens,
+                    ),
+                );
+            }
         }
 
         // Debug visualization (viewer-only)
@@ -136,6 +150,45 @@ impl Plugin for DynamicPlugin {
                     debug::update_dynamic_debug_visibility,
                 ),
             );
+        }
+    }
+}
+
+/// Handle effect-related actions (light effects, tweens) locally.
+///
+/// This runs when triggers and visuals/debug are both active on the same app
+/// (e.g., the world viewer). The client's `DynamicRenderingPlugin` handles
+/// additional visual actions (animations, text, sound) that aren't needed here.
+fn execute_effect_actions(
+    mut commands: Commands,
+    mut action_events: MessageReader<DynamicActionEvent>,
+    mut effects_query: Query<&mut ActiveLightEffects>,
+    transform_query: Query<&Transform>,
+) {
+    for event in action_events.read() {
+        match event.action.action_type {
+            ActionType::StartLightEffect => {
+                if let Ok(mut effects) = effects_query.get_mut(event.object) {
+                    light_effects::apply_start_light_effect(&mut effects, &event.action.params);
+                }
+            }
+            ActionType::StopLightEffect => {
+                if let Ok(mut effects) = effects_query.get_mut(event.object) {
+                    light_effects::apply_stop_light_effect(&mut effects, &event.action.params);
+                }
+            }
+            ActionType::MoveTo | ActionType::RotateTo | ActionType::ScaleTo => {
+                if let Ok(transform) = transform_query.get(event.object) {
+                    mesh_effects::start_tween_from_action(
+                        &mut commands,
+                        event.object,
+                        transform,
+                        &event.action.action_type,
+                        &event.action.params,
+                    );
+                }
+            }
+            _ => {}
         }
     }
 }

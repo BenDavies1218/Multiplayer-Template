@@ -44,6 +44,10 @@
 - [Collision](guides/world-zones/collision.md)
 - [Zones](guides/world-zones/zones.md)
 
+# Tools
+
+- [glb-parser](tools/glb-parser.md)
+
 ---
 
 [Contributing](contributing.md)
