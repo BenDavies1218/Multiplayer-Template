@@ -9,9 +9,12 @@
 
 pub mod character;
 pub mod core_config;
+pub mod performance_config;
+pub mod simulation_config;
 pub mod skybox;
 pub mod utils;
 pub mod world;
+pub mod world_config;
 pub mod zones;
 
 // Re-export commonly used items
@@ -20,3 +23,9 @@ pub use character::{
     attach_hitbox_to_character,
 };
 pub use core_config::{GameCoreConfig, HitboxRegionConfig, HitboxShape};
+pub use performance_config::GamePerformanceConfig;
+pub use simulation_config::{
+    GameSimulationConfig, HitboxRegionConfig as NewHitboxRegionConfig,
+    HitboxShape as NewHitboxShape,
+};
+pub use world_config::GameWorldConfig;
