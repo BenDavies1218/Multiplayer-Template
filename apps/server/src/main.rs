@@ -26,6 +26,7 @@ fn main() {
     let mut app = build_server_app_from_config(tick, &world_config);
 
     let diag_interval = server_config.diagnostics_log_interval_secs;
+    app.insert_resource(world_config);
     app.insert_resource(server_config.clone());
     app.add_plugins(ConfigHotReloadPlugin::default());
     app.watch_config::<GameSimulationConfig>("game_simulation_config.json");

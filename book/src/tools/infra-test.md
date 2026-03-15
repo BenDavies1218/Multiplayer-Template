@@ -110,7 +110,7 @@ Key metrics for load testing:
 
 ```
 tools/infra-test/
-├── docker-compose.yml          # Service definitions
+├── docker-compose.yml          # GHCR image definitions
 ├── prometheus.yml               # Prometheus scrape config
 ├── run.sh                       # CLI entrypoint
 └── grafana/
