@@ -46,6 +46,7 @@
 - [Tools]()
   - [glb-parser](tools/glb-parser.md)
   - [bake-skybox-cubemap](tools/bake-skybox-cubemap.md)
+  - [infra-test](tools/infra-test.md)
 
 ---
 
