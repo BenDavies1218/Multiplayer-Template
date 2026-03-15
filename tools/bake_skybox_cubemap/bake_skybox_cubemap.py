@@ -9,7 +9,7 @@ The game renderer detects 1:6 aspect ratio and uses the fast
 reinterpret_stacked_2d_as_array(6) path — no CPU conversion at runtime.
 
 Usage:
-    python3 scripts/bake_skybox_cubemap.py [--face-size 1024] [--input path] [--output path]
+    python3 tools/bake_skybox_cubemap/bake_skybox_cubemap.py [--face-size 1024] [--input path] [--output path]
 
 Requirements:
     pip install numpy openexr

@@ -10,7 +10,7 @@ The client loads a skybox image (EXR format) and applies it as a cubemap texture
 
 **Key file:** `crates/game-client/src/renderer.rs` (skybox loading and conversion)
 **Key file:** `assets/config/game_core_config.json` (skybox path config)
-**Key file:** `scripts/bake_skybox_cubemap.py` (offline cubemap baking)
+**Key file:** `tools/bake_skybox_cubemap/bake_skybox_cubemap.py` (offline cubemap baking)
 
 ---
 
@@ -41,7 +41,7 @@ The path is relative to the `assets/` directory.
 
 ---
 
-## Pre-Baking a Cubemap (Recommended)
+## Pre-Baking a Cubemap
 
 Runtime conversion of large equirectangular images blocks the main thread and can cause network timeouts. Pre-baking converts the image offline so loading is instant.
 
@@ -57,13 +57,13 @@ From the project root:
 
 ```bash
 # Default: 1024 face size, reads assets/sunset_sky_hdr.exr
-python3 scripts/bake_skybox_cubemap.py
+python3 tools/bake_skybox_cubemap/bake_skybox_cubemap.py
 
 # Custom face size (higher = better quality, larger file)
-python3 scripts/bake_skybox_cubemap.py --face-size 2048
+python3 tools/bake_skybox_cubemap/bake_skybox_cubemap.py --face-size 2048
 
 # Custom input/output paths
-python3 scripts/bake_skybox_cubemap.py -i assets/my_skybox.exr -o assets/my_skybox_cubemap.exr
+python3 tools/bake_skybox_cubemap/bake_skybox_cubemap.py -i assets/my_skybox.exr -o assets/my_skybox_cubemap.exr
 ```
 
 ### Options

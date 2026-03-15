@@ -1,4 +1,4 @@
-# Multiplayer-Template
+# Multiplayer Bevy Template
 
 > A production-ready multiplayer game template using Bevy + Lightyear
 
@@ -8,27 +8,9 @@
 [![Docker World Viewer](https://github.com/BenDavies1218/Multiplayer-Template/workflows/Docker%20World%20Viewer/badge.svg)](https://github.com/BenDavies1218/Multiplayer-Template/actions)
 [![Deploy Web](https://github.com/BenDavies1218/Multiplayer-Template/workflows/Deploy%20Web/badge.svg)](https://github.com/BenDavies1218/Multiplayer-Template/actions)
 
-A multiplayer 3D character controller game template built with Bevy, featuring client-side prediction, server reconciliation, and smooth interpolation using the Lightyear networking library. Perfect for starting your multiplayer game project with a solid foundation.
+An authoritative client-server multiplayer 3D game template built with [Bevy 0.18](https://bevyengine.org/), [Lightyear 0.26](https://github.com/cBournhonesque/lightyear) for networking/replication, and [Avian3d 0.5](https://github.com/Jondolf/avian) for physics. Clients use prediction and server reconciliation for responsive gameplay. Runs on native desktop, web (WASM), and Docker.
 
-## Features
-
-- **Client-Side Prediction**: Immediate local player response with server reconciliation
-- **Smooth Interpolation**: 100ms interpolation buffer for remote players
-- **Rollback & Correction**: Visual error smoothing over multiple frames
-- **Physics**: Avian3d physics engine with networked replication
-- **Multiple Transports**: Support for UDP, WebSocket, and WebTransport
-- **Cross-Platform**: Native desktop and WASM web builds
-- **JSON Configuration**: All game settings driven by JSON config files in `assets/config/`
-- **Camera Modes**: First-person, third-person, and free-view camera system
-- **Dynamic Objects**: Data-driven interactable objects (doors, pickups, lights) defined via Blender custom properties
-
-## Technology Stack
-
-- **[Bevy 0.18](https://bevyengine.org/)**: Game engine
-- **[Lightyear 0.26.4](https://github.com/cBournhonesque/lightyear)**: Networking and replication
-- **[Avian3d 0.5](https://github.com/Jondolf/avian)**: Physics engine
-- **[Leafwing Input Manager 0.20](https://github.com/leafwing-studios/leafwing-input-manager)**: Input handling
-- **[Trunk](https://trunkrs.dev/)**: WASM build tool
+Use this template as a starting point for building multiplayer games with Bevy. It handles the hard parts — networked physics, client-side prediction, rollback, visual interpolation, and cross-platform transport — so you can focus on game logic.
 
 ## Quick Start
 
@@ -41,23 +23,49 @@ cargo dev-native
 
 # Or run the web client
 cd apps/web && trunk serve
+
+# Or use Docker
+docker compose up -d  # Server on :5888, web client on :8080
 ```
 
 ### Controls
 
-- **W/A/S/D**: Move
-- **Space**: Jump
-- **Left Shift**: Sprint
-- **C**: Crouch
-- **Q**: Shoot
-- **Left Click**: Grab cursor
-- **Escape**: Release cursor
+| Action             | Key          |
+| ------------------ | ------------ |
+| Move               | W/A/S/D      |
+| Jump               | Space        |
+| Sprint             | Left Shift   |
+| Crouch             | Left Ctrl    |
+| Prone              | C            |
+| Fire               | Left Click   |
+| Aim Down Sights    | Right Click  |
+| Tactical Equipment | Middle Click |
+| Reload             | R            |
+| Melee              | V            |
+| Interact           | E            |
+| Lethal Equipment   | Q            |
+| Primary Weapon     | 1            |
+| Secondary Weapon   | 2            |
+| Pause              | Escape       |
+
+All bindings are configurable via `assets/config/game_client_config.json`. Gamepad is also supported.
+
+## What's Included
+
+- **Authoritative server** with client-side prediction and server reconciliation
+- **Smooth interpolation** with configurable buffer for remote players
+- **Rollback and correction** with visual error smoothing
+- **Networked physics** via Avian3d with replication
+- **Multiple transports** — UDP (native), WebSocket, and WebTransport
+- **Cross-platform** — native desktop (Linux/macOS/Windows) and WASM web builds
+- **JSON-driven configuration** — all game settings in `assets/config/`
+- **Camera system** — first-person, third-person, and free-view modes
+- **Dynamic objects** — data-driven interactables Trigger & Action architecture (doors, pickups, lights, animations).
+- **World pipeline** — Blender-exported glTF/GLB with collision meshes, spawn points, zones, and triggers
 
 ## Documentation
 
 Full documentation is available in the **[Multiplayer Bevy Template Book](book/src/SUMMARY.md)**.
-
-The book covers:
 
 - **[Getting Started](book/src/getting-started/installation.md)** — Installation, quick start, configuration
 - **[Architecture](book/src/architecture/overview.md)** — Crate structure, plugin pattern, networking
@@ -72,14 +80,6 @@ cargo install mdbook
 cd book
 mdbook serve --open
 ```
-
-## Docker Quick Start
-
-```bash
-docker compose up -d
-```
-
-This starts the server on port 5888 and the web client on port 8080.
 
 ## Release Binaries
 
@@ -96,4 +96,4 @@ Pre-built binaries are available on the [Releases](../../releases) page, trigger
 
 ## License
 
-MIT OR Apache-2.0
+MIT
