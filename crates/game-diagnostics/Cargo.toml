@@ -17,15 +17,6 @@ bevy = { workspace = true, features = [
     "bevy_ui",
     "sysinfo_plugin",
 ] }
-lightyear = { workspace = true, features = [
-    "replication",
-    "prediction",
-] }
 lightyear_sync = "0.26.4"
 lightyear_prediction = "0.26.4"
-avian3d = { workspace = true, features = [
-    "3d",
-    "f32",
-    "parry-f32",
-] }
 tracing.workspace = true
