@@ -3368,6 +3368,8 @@ dependencies = [
  "avian3d",
  "bevy",
  "lightyear",
+ "lightyear_prediction",
+ "lightyear_sync",
  "tracing",
 ]
 
