@@ -3334,6 +3334,7 @@ dependencies = [
  "game-core",
  "game-dynamic",
  "game-networking",
+ "game-protocol",
  "getrandom 0.2.17",
  "leafwing-input-manager",
  "lightyear",

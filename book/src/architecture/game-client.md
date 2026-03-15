@@ -2,37 +2,64 @@
 
 Client-side game logic: input handling, prediction, rendering, and network transport.
 
+## Sub-plugin Architecture
+
+The two main convenience plugins, `ClientPlugin` and `FirstPersonPlugin`, are thin wrappers that compose smaller, independently-usable sub-plugins. Apps can replace a convenience plugin with a hand-picked subset of sub-plugins for debugging or special-purpose builds.
+
+### `ClientPlugin` wraps:
+
+| Sub-plugin | Purpose |
+|------------|---------|
+| `InputPlugin` | Input device detection, InputMap rebuilding, camera-to-ActionState sync |
+| `PredictionPlugin` | Predicted movement simulation and prediction diagnostics |
+| `LifecyclePlugin` | Attaches InputMap, physics bundle, and orientation to new predicted characters |
+
+### `FirstPersonPlugin` wraps:
+
+| Sub-plugin | Purpose |
+|------------|---------|
+| `CameraPlugin` | Camera modes from `game-camera` |
+| `CharacterRenderingPlugin` | Character model preloading and attachment |
+| `ClientSkyboxPlugin` | Skybox loading and camera spawning |
+| `VisualInterpolationPlugin` | Frame interpolation for smooth rendering between network ticks |
+| `ProjectileCosmeticsPlugin` | Projectile sphere meshes and physics colliders |
+| `CursorPlugin` | Cursor grab/release handling |
+| `AnimationPlugin` | Auto-play glTF animations |
+
+`FirstPersonPlugin` also registers the `fps_camera_follow` system directly, as it is the glue between camera, character, and config.
+
 ## Modules
 
 | Module | Purpose |
 |--------|---------|
 | `app` | Builds the client Bevy app with window, rendering, and input plugins |
-| `client` | `ClientPlugin` — input processing, predicted movement, crouch state |
+| `client` | `ClientPlugin` — thin wrapper over InputPlugin + PredictionPlugin + LifecyclePlugin |
 | `client_config` | `GameClientConfig` loaded from `assets/config/game_client_config.json` |
 | `character` | Attaches `InputMap` and physics bundle to new predicted characters |
 | `character_rendering` | `CharacterRenderingPlugin` — preloads character models, attaches POV (local) and third-person (remote) models |
-| `renderer` | `FirstPersonPlugin` — skybox, projectile cosmetics, camera follow, frame interpolation |
+| `renderer` | `FirstPersonPlugin` — thin wrapper over rendering sub-plugins plus camera follow |
 | `transport` | Network transport setup: UDP, WebSocket, WebTransport (runtime-configurable) |
 | `prediction` | Prediction speed scaling for rollback thresholds |
 | `movement` | Client-side movement: applies shared movement on predicted entities, syncs camera to ActionState |
 | `input_device` | Runtime input device detection and hot-switching (keyboard/gamepad) |
 | `diagnostics` | Predicted entity lifecycle logging |
-| `dynamic_rendering` | Client-side visual action execution for dynamic objects (light effects start/stop, mesh tweens move_to/rotate_to/scale_to, animations, text, sound) |
+| `dynamic_rendering` | Client-side visual action execution for dynamic objects |
+| `input_plugin` | `InputPlugin` sub-plugin |
+| `prediction_plugin` | `PredictionPlugin` sub-plugin |
+| `lifecycle_plugin` | `LifecyclePlugin` sub-plugin |
+| `visual_interpolation_plugin` | `VisualInterpolationPlugin` sub-plugin |
+| `projectile_cosmetics_plugin` | `ProjectileCosmeticsPlugin` sub-plugin |
+| `cursor_plugin` | `CursorPlugin` sub-plugin |
+| `client_skybox_plugin` | `ClientSkyboxPlugin` sub-plugin |
+| `animation_plugin` | `AnimationPlugin` sub-plugin |
 
 ## Plugins
 
 ### `ClientPlugin`
-- Syncs mouse input to `CameraOrientation` as character action input
-- Applies predicted movement via shared `apply_character_movement()` from `game-networking`
-- Sets up `InputMap` with keyboard/gamepad bindings for new characters
-- Manages crouch state prediction
+Convenience wrapper that adds `InputPlugin`, `PredictionPlugin`, and `LifecyclePlugin`.
 
 ### `FirstPersonPlugin`
-- Attaches camera to character at eye height
-- Includes `CharacterRenderingPlugin` for model attachment
-- Renders projectiles with sphere meshes
-- Loads EXR skybox cubemap
-- Runs frame interpolation for smooth rendering between network ticks
+Convenience wrapper that adds `CameraPlugin`, `CharacterRenderingPlugin`, `ClientSkyboxPlugin`, `VisualInterpolationPlugin`, `ProjectileCosmeticsPlugin`, `CursorPlugin`, `AnimationPlugin`, and the `fps_camera_follow` system.
 
 ### `CharacterRenderingPlugin`
 - Preloads character models from config catalog (third-person + POV variants)
@@ -55,4 +82,4 @@ Client-side game logic: input handling, prediction, rendering, and network trans
 
 ## Dependencies
 
-Depends on `game-core` (config, world), `game-networking` (protocol, movement, replication types), and `game-camera` (camera system). Uses Lightyear client features with WebTransport, WebSocket, and UDP support.
+Depends on `game-core` (config, world), `game-protocol` (shared types), `game-networking` (protocol registration, movement, replication types), and `game-camera` (camera system). Uses Lightyear client features with WebTransport, WebSocket, and UDP support.

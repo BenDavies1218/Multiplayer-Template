@@ -11,6 +11,7 @@ publish = false
 game-core.workspace = true
 game-dynamic.workspace = true
 game-networking.workspace = true
+game-protocol.workspace = true
 game-camera.workspace = true
 
 # Workspace dependencies
