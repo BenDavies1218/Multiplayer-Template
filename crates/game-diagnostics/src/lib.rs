@@ -8,6 +8,7 @@ use bevy::prelude::*;
 mod metrics;
 mod overlay;
 mod server_log;
+mod thresholds;
 
 /// The operating mode for the diagnostics plugin.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

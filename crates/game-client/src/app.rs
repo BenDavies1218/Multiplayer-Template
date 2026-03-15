@@ -22,7 +22,11 @@ pub fn window_plugin_from_config(config: &GameClientConfig) -> WindowPlugin {
         primary_window: Some(Window {
             title: format!("{}: {}", config.window.title, env!("CARGO_PKG_NAME")),
             resolution: (config.window.width, config.window.height).into(),
-            present_mode: PresentMode::AutoVsync,
+            present_mode: if config.rendering.vsync {
+                PresentMode::AutoVsync
+            } else {
+                PresentMode::AutoNoVsync
+            },
             // set to true if we want to capture tab etc in wasm
             prevent_default_event_handling: true,
             ..Default::default()

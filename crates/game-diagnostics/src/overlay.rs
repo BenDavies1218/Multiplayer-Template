@@ -3,13 +3,17 @@
 //! Toggled with P. Shows FPS, frame time, entity count, and (for Client mode)
 //! networking metrics from Lightyear.
 
+use core::time::Duration;
+
 use bevy::diagnostic::{
     DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin,
     SystemInformationDiagnosticsPlugin,
 };
 use bevy::prelude::*;
+use bevy::time::common_conditions::on_timer;
 
 use crate::DiagnosticsMode;
+use crate::thresholds;
 
 /// Marker component for the overlay root node.
 #[derive(Component)]
@@ -26,7 +30,13 @@ struct OverlayMode(DiagnosticsMode);
 pub(crate) fn setup_overlay(app: &mut App, mode: DiagnosticsMode) {
     app.insert_resource(OverlayMode(mode));
     app.add_systems(Startup, spawn_overlay);
-    app.add_systems(Update, (toggle_overlay, update_overlay));
+    app.add_systems(
+        Update,
+        (
+            toggle_overlay,
+            update_overlay.run_if(on_timer(Duration::from_secs(1))),
+        ),
+    );
 }
 
 fn spawn_overlay(mut commands: Commands) {
@@ -89,7 +99,8 @@ fn update_overlay(
         .get(&FrameTimeDiagnosticsPlugin::FPS)
         .and_then(|d| d.smoothed())
     {
-        lines.push(format!("FPS: {:.1}", fps));
+        let h = thresholds::client_fps(fps);
+        lines.push(format!("{} FPS: {:.1}", h.emoji(), fps));
     }
 
     // Frame time
@@ -97,7 +108,8 @@ fn update_overlay(
         .get(&FrameTimeDiagnosticsPlugin::FRAME_TIME)
         .and_then(|d| d.smoothed())
     {
-        lines.push(format!("Frame: {:.2}ms", frame_time));
+        let h = thresholds::frame_time_ms(frame_time);
+        lines.push(format!("{} Frame: {:.2}ms", h.emoji(), frame_time));
     }
 
     // Entity count
@@ -132,13 +144,15 @@ fn update_overlay(
             .get(&PingDiagnosticsPlugin::RTT)
             .and_then(|d| d.smoothed())
         {
-            lines.push(format!("RTT: {:.1}ms", rtt));
+            let h = thresholds::rtt_ms(rtt);
+            lines.push(format!("{} RTT: {:.1}ms", h.emoji(), rtt));
         }
         if let Some(jitter) = diagnostics
             .get(&PingDiagnosticsPlugin::JITTER)
             .and_then(|d| d.smoothed())
         {
-            lines.push(format!("Jitter: {:.1}ms", jitter));
+            let h = thresholds::jitter_ms(jitter);
+            lines.push(format!("{} Jitter: {:.1}ms", h.emoji(), jitter));
         }
 
         use lightyear_prediction::diagnostics::PredictionDiagnosticsPlugin;
@@ -147,13 +161,15 @@ fn update_overlay(
             .get(&PredictionDiagnosticsPlugin::ROLLBACKS)
             .and_then(|d| d.smoothed())
         {
-            lines.push(format!("Rollbacks: {:.1}/s", rollbacks));
+            let h = thresholds::rollbacks_per_sec(rollbacks);
+            lines.push(format!("{} Rollbacks: {:.1}/s", h.emoji(), rollbacks));
         }
         if let Some(depth) = diagnostics
             .get(&PredictionDiagnosticsPlugin::ROLLBACK_DEPTH)
             .and_then(|d| d.smoothed())
         {
-            lines.push(format!("Depth: {:.1}", depth));
+            let h = thresholds::rollback_depth(depth);
+            lines.push(format!("{} Depth: {:.1}", h.emoji(), depth));
         }
     }
 

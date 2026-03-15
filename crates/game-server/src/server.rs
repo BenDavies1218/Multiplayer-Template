@@ -7,7 +7,6 @@ use game_networking::movement::update_crouch_collider;
 use lightyear::connection::client::Connected;
 use lightyear::prelude::server::ClientOf;
 
-use crate::diagnostics::log_server_character_state;
 use crate::movement::handle_character_actions;
 use crate::spawning::{handle_connected, handle_new_client};
 
@@ -18,12 +17,7 @@ impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             FixedUpdate,
-            (
-                handle_character_actions,
-                update_crouch_collider,
-                log_server_character_state,
-            )
-                .chain(),
+            (handle_character_actions, update_crouch_collider).chain(),
         );
 
         app.add_observer(handle_new_client);

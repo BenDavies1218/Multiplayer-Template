@@ -4,9 +4,12 @@
 
 use bevy::diagnostic::{
     DiagnosticsStore, EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin,
+    SystemInformationDiagnosticsPlugin,
 };
 use bevy::prelude::*;
 use lightyear_prediction::diagnostics::PredictionDiagnosticsPlugin;
+
+use crate::thresholds;
 
 /// Timer resource controlling log output frequency.
 #[derive(Resource)]
@@ -55,8 +58,23 @@ fn log_diagnostics(
         .and_then(|d| d.smoothed())
         .unwrap_or(0.0);
 
+    let cpu = diagnostics
+        .get(&SystemInformationDiagnosticsPlugin::SYSTEM_CPU_USAGE)
+        .and_then(|d| d.smoothed())
+        .unwrap_or(0.0);
+
+    let mem = diagnostics
+        .get(&SystemInformationDiagnosticsPlugin::SYSTEM_MEM_USAGE)
+        .and_then(|d| d.smoothed())
+        .unwrap_or(0.0);
+
+    let fps_e = thresholds::server_fps(fps).emoji();
+    let frame_e = thresholds::frame_time_ms(frame_time).emoji();
+    let rb_e = thresholds::rollbacks_per_sec(rollbacks).emoji();
+    let dep_e = thresholds::rollback_depth(depth).emoji();
+
     info!(
-        "[DIAGNOSTICS] FPS: {:.1} | Frame: {:.2}ms | Entities: {} | Rollbacks: {:.1}/s | Depth: {:.1}",
-        fps, frame_time, entities, rollbacks, depth
+        "[DIAGNOSTICS] {} FPS: {:.1} | {} Frame: {:.2}ms | Entities: {} | CPU: {:.1}% | RAM: {:.0}MB | {} Rollbacks: {:.1}/s | {} Depth: {:.1}",
+        fps_e, fps, frame_e, frame_time, entities, cpu, mem, rb_e, rollbacks, dep_e, depth
     );
 }

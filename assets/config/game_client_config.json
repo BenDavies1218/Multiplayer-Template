@@ -1,4 +1,5 @@
 {
+  "enable_diagnostics": true,
   "window": {
     "title": "Game Client",
     "width": 1024,
@@ -76,7 +77,8 @@
     "camera_start_position": [0.0, 2.0, 0.0],
     "eye_height_offset": 0.5,
     "projectile_radius": 1.0,
-    "interpolation_send_ratio": 2.0
+    "interpolation_send_ratio": 2.0,
+    "vsync": true
   },
   "transport": {
     "token_expiration": -1,

@@ -153,6 +153,7 @@ pub struct RenderingConfig {
     pub eye_height_offset: f32,
     pub projectile_radius: f32,
     pub interpolation_send_ratio: f32,
+    pub vsync: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -307,6 +308,7 @@ impl Default for RenderingConfig {
             eye_height_offset: 0.5,
             projectile_radius: 1.0,
             interpolation_send_ratio: 2.0,
+            vsync: true,
         }
     }
 }
