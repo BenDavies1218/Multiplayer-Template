@@ -1,0 +1,29 @@
+[package]
+name = "game-diagnostics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+bevy = { workspace = true, features = [
+    "bevy_state",
+    "bevy_log",
+    "serialize",
+    "bevy_render",
+    "bevy_color",
+    "bevy_text",
+    "bevy_ui",
+    "sysinfo_plugin",
+] }
+lightyear = { workspace = true, features = [
+    "replication",
+    "prediction",
+] }
+avian3d = { workspace = true, features = [
+    "3d",
+    "f32",
+    "parry-f32",
+] }
+tracing.workspace = true
